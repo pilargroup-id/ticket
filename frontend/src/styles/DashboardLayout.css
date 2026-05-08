@@ -1,0 +1,109 @@
+/* ============================================
+   DASHBOARD LAYOUT - CONSISTENT MODERN SYSTEM
+   ============================================ */
+
+.dashboard-layout {
+  min-height: 100vh;
+  position: relative;
+  background: radial-gradient(circle at 10% 10%, rgba(21,82,184,0.10) 0%, transparent 40%),
+              radial-gradient(circle at 80% 90%, rgba(21,82,184,0.08) 0%, transparent 42%),
+              linear-gradient(135deg, var(--gray-50) 0%, var(--blue-50) 100%);
+  /* ❗ jangan hidden, biar ga aneh pas fixed header/nav */
+  overflow: visible;
+  color: var(--text);
+}
+
+/* ============================================
+   MAIN CONTENT AREA (beside sidebar)
+   ============================================ */
+.dashboard-content {
+  position: relative;
+  min-height: 100vh;
+  margin-left: var(--sidebar-width);
+  transition: margin-left var(--transition-slow);
+}
+
+.dashboard-content.sidebar-collapsed {
+  margin-left: var(--sidebar-collapsed-width);
+}
+
+/* wrapper container */
+.dashboard-container {
+  min-height: 100vh;
+}
+
+/* ============================================
+   SCROLLABLE CONTENT WRAPPER
+   ============================================ */
+.dashboard-content-wrapper {
+  /* ✅ biar konten mulai setelah header fixed */
+  padding-top: var(--header-height);
+
+  /* ✅ base padding konsisten */
+  padding-left: var(--content-pad-x);
+  padding-right: var(--content-pad-x);
+  padding-bottom: var(--content-pad-b);
+  padding-top: calc(var(--header-height) + var(--content-pad-y));
+  padding-bottom: calc(var(--content-pad-y) + 12px);
+
+  min-height: 100vh;
+  width: 100%;
+
+  /* surface modern */
+  background: var(--surface);
+  border-radius: 0;
+  box-shadow: none;
+
+  /* ✅ ini penting: scroll yang rapi */
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+
+/* Tablet & below: sidebar off */
+@media (max-width: 1024px) {
+  .dashboard-content {
+    margin-left: 0;
+  }
+}
+
+/* Mobile: header fixed (HeaderCard) + bottom nav fixed */
+@media (max-width: 767px) {
+  .dashboard-content {
+    margin-left: 0;
+  }
+
+  .dashboard-content-wrapper {
+    /* header mobile fixed */
+    padding-top: calc(var(--mobile-header-height) + var(--content-pad-y));
+
+    /* ✅ KUNCI: kasih ruang untuk bottom nav + safe area */
+    padding-bottom: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom) + 18px);
+
+    /* padding lebih rapet di mobile */
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+}
+
+/* ============================================
+   SCROLLBAR (subtle, modern)
+   ============================================ */
+.dashboard-content-wrapper::-webkit-scrollbar {
+  width: 8px;
+}
+.dashboard-content-wrapper::-webkit-scrollbar-track {
+  background: rgba(17,24,39,0.06);
+  border-radius: var(--radius-full);
+}
+.dashboard-content-wrapper::-webkit-scrollbar-thumb {
+  background: rgba(21,82,184,0.35);
+  border-radius: var(--radius-full);
+}
+.dashboard-content-wrapper::-webkit-scrollbar-thumb:hover {
+  background: rgba(21,82,184,0.55);
+}

@@ -1,0 +1,27 @@
+/* src/styles/ExcecutiveTicketInsight.css */
+/* Layout only — biar 100% ikut theme global */
+
+.eti-wrap {
+  width: 100%;
+}
+
+.eti-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.eti-controlsRange {
+  align-items: flex-end;
+}
+
+.eti-field {
+  min-width: 130px;
+}
+
+@media (max-width: 600px) {
+  .eti-field {
+    min-width: 100%;
+  }
+}

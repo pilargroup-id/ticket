@@ -1,0 +1,18 @@
+.btn-feedback {
+  background-color: var(--blue-600) !important;
+  color: white !important;
+  border-radius: var(--radius-md);
+  padding: 6px 14px;
+  font-size: 14px;
+  box-shadow: none !important;
+}
+
+.btn-feedback:hover {
+  background-color: var(--blue-700) !important;
+  box-shadow: none !important;
+}
+
+.btn-feedback.Mui-disabled {
+  background-color: var(--gray-300) !important;
+  color: var(--gray-600) !important;
+}

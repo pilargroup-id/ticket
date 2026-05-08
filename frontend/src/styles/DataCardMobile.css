@@ -1,0 +1,369 @@
+/* ===============================
+   DataCard Mobile - Clean Modern (fixed)
+   - kompatibel MUI Button & native button
+   - action area rapih, gak "putih semua"
+   - spacing & typography konsisten
+   =============================== */
+
+.dtm-wrap {
+  width: 100%;
+  padding: 0 2px;
+  box-sizing: border-box;
+}
+
+/* ===============================
+   Toolbar
+   =============================== */
+.dtm-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.dtm-search {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(17, 24, 39, 0.12);
+  background: #fff;
+}
+
+.dtm-search-input {
+  width: 100%;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 14px;
+  font-weight: 650;
+  color: rgba(17, 24, 39, 0.9);
+}
+
+.dtm-search-input::placeholder {
+  color: rgba(17, 24, 39, 0.45);
+  font-weight: 650;
+}
+
+.dtm-clear {
+  width: 28px;
+  height: 28px;
+  border-radius: 10px;
+  border: 1px solid rgba(17, 24, 39, 0.1);
+  background: #fff;
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 1;
+  color: rgba(17, 24, 39, 0.65);
+  transition: transform 150ms ease, background 150ms ease;
+}
+
+.dtm-clear:hover {
+  background: rgba(17, 24, 39, 0.04);
+}
+
+.dtm-clear:active {
+  transform: scale(0.98);
+}
+
+.dtm-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* Buttons (native) */
+.dtm-btn {
+  border-radius: 12px;
+  padding: 8px 10px;
+  border: 1px solid rgba(17, 24, 39, 0.14);
+  background: #fff;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 850;
+  transition: background 150ms ease, transform 150ms ease, border-color 150ms ease;
+  white-space: nowrap;
+}
+
+.dtm-btn:active {
+  transform: scale(0.98);
+}
+
+.dtm-btn-ghost:hover {
+  background: rgba(17, 24, 39, 0.04);
+}
+
+.dtm-btn-primary {
+  border-color: rgba(13, 60, 148, 0.25);
+  background: rgba(13, 60, 148, 0.10);
+  color: rgba(13, 60, 148, 0.95);
+}
+
+.dtm-btn-primary:hover {
+  background: rgba(13, 60, 148, 0.14);
+}
+
+/* ===============================
+   Card
+   =============================== */
+.dtm-card {
+  background: #fff;
+  border-radius: 14px;
+  border: 1px solid rgba(17, 24, 39, 0.10);
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+
+.dtm-card-body {
+  padding: 12px 12px 6px;
+}
+
+.dtm-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(17, 24, 39, 0.06);
+}
+
+.dtm-row:last-child {
+  border-bottom: none;
+}
+
+.dtm-label {
+  font-size: 12px;
+  font-weight: 850;
+  color: rgba(17, 24, 39, 0.60);
+  flex-shrink: 0;
+}
+
+.dtm-value {
+  font-size: 13px;
+  font-weight: 750;
+  color: rgba(17, 24, 39, 0.90);
+  text-align: right;
+  max-width: 68%;
+  overflow-wrap: anywhere;
+}
+
+/* ===============================
+   Actions (MUI Button friendly)
+   =============================== */
+.dtm-card-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  padding: 10px 12px 12px; /* ✅ lebih rapi dari cuma top padding */
+  border-top: 1px solid rgba(15, 23, 42, 0.08);
+  flex-wrap: wrap;
+  background: rgba(15, 23, 42, 0.012); /* ✅ sedikit aja biar kebaca area */
+}
+
+/* ✅ PENTING: jangan override semua button di sini.
+   Kalau ada rule lama: .dtm-card-actions button { background:#fff ... } => HAPUS */
+
+/* ✅ Style untuk MUI Button */
+.dtm-card-actions .MuiButton-root {
+  border-radius: 10px;
+  text-transform: none;
+  font-weight: 850;
+  box-shadow: none;
+  min-height: 34px;
+  padding: 6px 10px;
+  line-height: 1.1;
+}
+
+/* ✅ biar labelnya tidak kepanjangan */
+.dtm-card-actions .MuiButton-root .MuiButton-startIcon,
+.dtm-card-actions .MuiButton-root .MuiButton-endIcon {
+  margin-left: 0;
+  margin-right: 0;
+}
+
+/* Outlined ga pucet */
+.dtm-card-actions .MuiButton-outlined {
+  background: rgba(255, 255, 255, 0.92);
+}
+
+/* Contained tetap clean */
+.dtm-card-actions .MuiButton-contained {
+  box-shadow: none;
+}
+
+/* Native buttons kalau renderActionsMobile lu ada yang return <button> */
+.dtm-card-actions > button {
+  border-radius: 10px;
+  padding: 6px 10px;
+  min-height: 34px;
+  font-weight: 850;
+  border: 1px solid rgba(17, 24, 39, 0.14);
+  background: #fff;
+  cursor: pointer;
+  transition: transform 150ms ease, background 150ms ease;
+}
+
+.dtm-card-actions > button:hover {
+  background: rgba(17, 24, 39, 0.04);
+}
+
+.dtm-card-actions > button:active {
+  transform: scale(0.98);
+}
+
+/* ===============================
+   Empty state
+   =============================== */
+.dtm-empty {
+  padding: 28px 14px;
+  text-align: center;
+  border-radius: 14px;
+  border: 1px dashed rgba(17, 24, 39, 0.18);
+  background: rgba(17, 24, 39, 0.015);
+}
+
+.dtm-empty-title {
+  font-size: 16px;
+  font-weight: 950;
+  color: rgba(17, 24, 39, 0.92);
+}
+
+.dtm-empty-desc {
+  margin-top: 6px;
+  font-size: 13px;
+  font-weight: 650;
+  color: rgba(17, 24, 39, 0.62);
+}
+
+.dtm-empty-cta {
+  margin-top: 14px;
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+/* ===============================
+   Pagination
+   =============================== */
+.dtm-pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.dtm-page-label {
+  font-size: 13px;
+  font-weight: 850;
+  color: rgba(17, 24, 39, 0.70);
+}
+
+.dtm-page-btn {
+  padding: 8px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(17, 24, 39, 0.14);
+  background: #fff;
+  cursor: pointer;
+  font-weight: 900;
+  font-size: 13px;
+  transition: background 150ms ease, transform 150ms ease;
+}
+
+.dtm-page-btn:hover:not(:disabled) {
+  background: rgba(17, 24, 39, 0.04);
+}
+
+.dtm-page-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.dtm-page-btn:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+/* ===============================
+   Responsive tweaks
+   =============================== */
+@media (max-width: 767px) {
+  .dtm-card-actions {
+    justify-content: flex-start; /* ✅ mobile lebih enak */
+  }
+
+  .dtm-card-actions .MuiButton-root {
+    font-size: 12px;
+    padding: 6px 10px;
+  }
+}
+
+@media (max-width: 380px) {
+  .dtm-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .dtm-actions {
+    justify-content: flex-end;
+  }
+}
+.dtm-card-actions .MuiButton-root{
+  min-width: auto;
+}
+/* ===============================
+   Actions (MUI Button friendly)
+   =============================== */
+.dtm-card-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  padding: 10px 12px 12px;
+  border-top: 1px solid rgba(15, 23, 42, 0.08);
+  flex-wrap: wrap;
+  background: rgba(42, 15, 21, 0.012);
+}
+
+/* ✅ Style untuk MUI Button */
+.dtm-card-actions .MuiButton-root {
+  border-radius: 10px;
+  text-transform: none;
+  font-weight: 850;
+  box-shadow: none;
+  min-height: 34px;
+  padding: 6px 10px;
+  line-height: 1.1;
+}
+
+.dtm-card-actions .MuiButton-containedError {
+  background-color: #dc2626 !important; /* red-600 */
+  color: #fff !important;
+}
+
+.dtm-card-actions .MuiButton-containedError:hover {
+  background-color: #b91c1c !important; /* red-700 */
+}
+
+/* ✅ Native button cuma berlaku kalau renderActionsMobile return <button> biasa */
+.dtm-card-actions > button:not(.MuiButtonBase-root) {
+  border-radius: 10px;
+  padding: 6px 10px;
+  min-height: 34px;
+  font-weight: 850;
+  border: 1px solid rgba(17, 24, 39, 0.14);
+  background: #fff;
+  cursor: pointer;
+  transition: transform 150ms ease, background 150ms ease;
+}
+
+.dtm-card-actions > button:not(.MuiButtonBase-root):hover {
+  background: rgba(17, 24, 39, 0.04);
+}
+
+.dtm-card-actions > button:not(.MuiButtonBase-root):active {
+  transform: scale(0.98);
+}
+
+

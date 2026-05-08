@@ -1,0 +1,440 @@
+/* src/styles/BottomNav.css */
+
+/* ============================================
+   TOKENS
+   ============================================ */
+
+:root {
+  --bn-accent: rgba(99, 102, 241, 1);
+  --bn-accent-soft: rgba(99, 102, 241, 0.12);
+
+  --bn-text: rgba(17, 24, 39, 0.92);
+  --bn-sub: rgba(17, 24, 39, 0.6);
+
+  --bn-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --bn-fast: 140ms;
+  --bn-med: 180ms;
+}
+
+/* anti highlight di mobile */
+.bottom-nav button,
+.bn-float button {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+/* ============================================
+   BOTTOM NAV WRAPPER
+   ============================================ */
+
+.bottom-nav {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+
+  background: linear-gradient(180deg, var(--blue-900), var(--blue-800));
+
+  height: var(--bottom-nav-height);
+  padding: 10px 14px calc(10px + env(safe-area-inset-bottom));
+
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  gap: 8px;
+
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 -10px 28px rgba(10, 42, 102, 0.28);
+
+  z-index: 1000;
+  overflow: visible;
+
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+
+  transform: translateZ(0);
+  will-change: transform, opacity;
+}
+
+.bottom-nav.center-only {
+  justify-content: center;
+  gap: 18px;
+}
+
+/* ============================================
+   NAV ITEMS
+   ============================================ */
+
+.bottom-nav-item {
+  appearance: none;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+
+  display: grid;
+  place-items: center;
+
+  width: 52px;
+  height: 44px;
+  border-radius: 14px;
+
+  color: rgba(255, 255, 255, 0.65);
+  position: relative;
+
+  transition:
+    transform var(--bn-med) var(--bn-ease),
+    background var(--bn-med) var(--bn-ease),
+    color var(--bn-med) var(--bn-ease);
+
+  will-change: transform, background, color;
+}
+
+.bottom-nav-item svg {
+  width: 24px;
+  height: 24px;
+  transition: transform var(--bn-med) var(--bn-ease);
+  will-change: transform;
+}
+
+@media (hover: hover) {
+  .bottom-nav-item:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.92);
+    transform: translateY(-1px);
+  }
+}
+
+.bottom-nav-item:active {
+  transform: translateY(0) scale(0.96);
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.bottom-nav-item:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.55);
+  outline-offset: 2px;
+}
+
+.bottom-nav-item.active {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.bottom-nav-item.active svg {
+  transform: translateY(-1px);
+}
+
+.bottom-nav-item.active::after {
+  content: "";
+  position: absolute;
+  bottom: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 18px;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 999px;
+}
+
+/* ============================================
+   FAB
+   ============================================ */
+
+.bottom-nav-fab {
+  appearance: none;
+  border: none;
+  cursor: pointer;
+
+  width: 58px;
+  height: 58px;
+  border-radius: 999px;
+
+  background: #fff;
+  color: var(--blue-900);
+
+  display: grid;
+  place-items: center;
+
+  border: 4px solid var(--blue-800);
+  margin-top: -28px;
+
+  box-shadow:
+    0 10px 22px rgba(0, 0, 0, 0.18),
+    0 2px 0 rgba(255, 255, 255, 0.45) inset;
+
+  transition:
+    transform var(--bn-med) var(--bn-ease),
+    box-shadow var(--bn-med) var(--bn-ease),
+    background var(--bn-med) var(--bn-ease);
+
+  will-change: transform, box-shadow;
+  transform: translateZ(0);
+}
+
+.bottom-nav-fab svg {
+  width: 26px;
+  height: 26px;
+  transition: transform 220ms var(--bn-ease);
+  will-change: transform;
+}
+
+@media (hover: hover) {
+  .bottom-nav-fab:hover {
+    background: #f8fafc;
+    transform: translateY(-2px);
+    box-shadow:
+      0 14px 30px rgba(0, 0, 0, 0.22),
+      0 2px 0 rgba(255, 255, 255, 0.55) inset;
+  }
+
+  .bottom-nav-fab:hover svg {
+    transform: rotate(90deg);
+  }
+}
+
+.bottom-nav-fab:active {
+  transform: translateY(-1px) scale(0.97);
+}
+
+.bottom-nav-fab:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.55);
+  outline-offset: 3px;
+}
+
+/* ============================================
+   ENTRANCE ANIMATION
+   ============================================ */
+
+@media (max-width: 768px) {
+  .bottom-nav {
+    animation: slideUpNav 240ms var(--bn-ease);
+  }
+}
+
+@keyframes slideUpNav {
+  from {
+    transform: translateY(22%) translateZ(0);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0) translateZ(0);
+    opacity: 1;
+  }
+}
+
+/* ============================================
+   FLOATING MENU (ICON ONLY) + STAGGER + EXIT
+   ============================================ */
+
+.bn-float {
+  position: fixed;
+  z-index: 99999;
+
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  background: transparent;
+  border: none;
+  padding: 0;
+
+  opacity: 0;
+  transform: translateX(-50%) translateY(10px) scale(0.98);
+  transition:
+    opacity var(--bn-fast) var(--bn-ease),
+    transform var(--bn-med) var(--bn-ease);
+
+  pointer-events: auto;
+
+  will-change: transform, opacity;
+  transform-origin: bottom center;
+}
+
+.bn-float.open {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0) scale(1);
+}
+
+.bn-float::after {
+  display: none;
+}
+
+/* tombol bulat melayang - biru ngikut global */
+.bn-float-btn {
+  appearance: none;
+  border: none;
+  cursor: pointer;
+
+  width: 48px;
+  height: 48px;
+  border-radius: 999px;
+
+  display: grid;
+  place-items: center;
+
+  background: var(--blue-900);
+  color: #fff;
+
+  box-shadow:
+    0 10px 24px rgba(13, 60, 148, 0.3),
+    0 2px 6px rgba(0, 0, 0, 0.18);
+
+  transition:
+    transform var(--bn-med) var(--bn-ease),
+    box-shadow var(--bn-med) var(--bn-ease),
+    background var(--bn-med) var(--bn-ease);
+
+  will-change: transform, box-shadow;
+  transform: translateZ(0);
+}
+
+.bn-float-btn:hover {
+  background: var(--blue-800);
+  transform: translateY(-2px);
+  box-shadow:
+    0 14px 30px rgba(13, 60, 148, 0.38),
+    0 4px 10px rgba(0, 0, 0, 0.22);
+}
+
+.bn-float-btn:active {
+  transform: translateY(0) scale(0.96);
+  box-shadow: 0 8px 18px rgba(13, 60, 148, 0.28);
+}
+
+.bn-float-btn:focus-visible {
+  outline: 3px solid rgba(255, 255, 255, 0.6);
+  outline-offset: 2px;
+}
+
+/* STAGGER POP 1-by-1 (open) */
+.bn-float.open .bn-float-btn {
+  animation: bnPop 320ms var(--bn-ease) both;
+  animation-delay: calc(var(--i) * 80ms);
+}
+
+@keyframes bnPop {
+  0% {
+    opacity: 0;
+    transform: translateY(10px) scale(0.86);
+    filter: blur(1px);
+  }
+  60% {
+    opacity: 1;
+    transform: translateY(-2px) scale(1.03);
+    filter: blur(0);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+/* EXIT (close) */
+.bn-float.closing {
+  opacity: 0;
+  transform: translateX(-50%) translateY(10px) scale(0.98);
+  pointer-events: none;
+  transition:
+    opacity 140ms var(--bn-ease),
+    transform 240ms var(--bn-ease);
+}
+
+/* tombol keluar 1-by-1 kebalik (yang bawah duluan) */
+.bn-float.closing .bn-float-btn {
+  animation: bnPopOut 220ms var(--bn-ease) both;
+  animation-delay: calc((1 - var(--i)) * 70ms);
+}
+
+@keyframes bnPopOut {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(8px) scale(0.86);
+    filter: blur(1px);
+  }
+}
+
+/* ============================================
+   REDUCE MOTION
+   ============================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  .bottom-nav,
+  .bottom-nav-item,
+  .bottom-nav-fab,
+  .bn-float,
+  .bn-float-btn {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+/* ============================================
+   DESKTOP HIDDEN
+   ============================================ */
+
+@media (min-width: 769px) {
+  .bottom-nav {
+    display: none;
+  }
+}
+
+/* wrapper always exists, open/close by class */
+.bn-float {
+  position: fixed;
+  z-index: 99999;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: transparent;
+  border: none;
+  padding: 0;
+
+  opacity: 0;
+  transform: translateX(-50%) translateY(10px) scale(0.98);
+  transition: opacity 140ms var(--bn-ease), transform 240ms var(--bn-ease);
+  transform-origin: bottom center;
+  will-change: transform, opacity;
+
+  pointer-events: none; /* default: nonaktif */
+}
+
+.bn-float.open {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0) scale(1);
+  pointer-events: auto; /* aktif pas open */
+}
+
+.bn-float.closing {
+  opacity: 0;
+  transform: translateX(-50%) translateY(10px) scale(0.98);
+  pointer-events: none; /* nonaktif pas close */
+}
+
+/* ✅ STAGGER POP IN */
+.bn-float.open .bn-float-btn {
+  animation: bnPop 320ms var(--bn-ease) both;
+  animation-delay: calc(var(--i) * 80ms);
+}
+
+/* ✅ STAGGER POP OUT */
+.bn-float.closing .bn-float-btn {
+  animation: bnPopOut 220ms var(--bn-ease) both;
+  animation-delay: calc((1 - var(--i)) * 70ms);
+}
+
+@keyframes bnPop {
+  0% { opacity: 0; transform: translateY(10px) scale(0.86); filter: blur(1px); }
+  60% { opacity: 1; transform: translateY(-2px) scale(1.03); filter: blur(0); }
+  100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+}
+
+@keyframes bnPopOut {
+  0% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+  100% { opacity: 0; transform: translateY(8px) scale(0.86); filter: blur(1px); }
+}
+

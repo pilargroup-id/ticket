@@ -1,0 +1,318 @@
+/* ============================================
+   MODERN DESKTOP HEADER - CLEAN PROFESSIONAL
+   ============================================ */
+
+.desktop-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1001;
+  background: linear-gradient(135deg, var(--blue-800) 0%, var(--blue-800) 100%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.438);
+  height: var(--header-height);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: all var(--transition-slow);
+}
+
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 var(--spacing-lg);
+  max-width: 100%;
+  height: 100%;
+}
+
+/* ===== BACK BUTTON (DESKTOP HEADER) ===== */
+.header-back-btn {
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: #fff;
+  cursor: pointer;
+  transition: 0.15s ease;
+  margin-right: 8px;
+}
+
+.header-back-btn:hover {
+  background: #f3f4f6;
+}
+
+/* ============================================
+   LEFT SECTION
+   ============================================ */
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  flex: 1;
+}
+
+.header-toggle-btn {
+  width: 42px;
+  height: 42px;
+  border-radius: var(--radius-md);
+  border: none;
+  background: transparent;
+  color: var(--white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all var(--transition-base);
+  flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.header-toggle-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.1);
+  opacity: 0;
+  transition: opacity var(--transition-base);
+  border-radius: var(--radius-md);
+}
+
+.header-toggle-btn:hover::before {
+  opacity: 1;
+}
+
+.header-toggle-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: var(--white);
+  transform: scale(1.05);
+}
+
+.header-toggle-btn:active {
+  transform: scale(0.95);
+}
+
+.header-logo-text {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--white);
+  letter-spacing: -0.5px;
+  white-space: nowrap;
+}
+
+/* ============================================
+   PROFILE SECTION
+   ============================================ */
+
+.header-profile {
+  position: relative;
+}
+
+.header-profile-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: 6px 12px 6px 6px;
+  border: none;
+  border-radius: var(--radius-lg);
+  background: transparent;
+  cursor: pointer;
+  transition: all var(--transition-base);
+}
+
+.header-profile-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateY(-1px);
+}
+
+.header-avatar {
+  transition: transform var(--transition-base);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.header-profile-btn:hover .header-avatar {
+  transform: scale(1.05);
+}
+
+.header-user-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+
+.header-user-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--white);
+  line-height: 1.2;
+  letter-spacing: 0.2px;
+}
+
+.header-user-role {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.75);
+  line-height: 1.2;
+}
+
+.header-chevron {
+  color: rgba(255, 255, 255, 0.7);
+  transition: transform var(--transition-base), color var(--transition-base);
+  flex-shrink: 0;
+}
+
+.header-profile-btn:hover .header-chevron {
+  color: var(--white);
+}
+
+.header-chevron.open {
+  transform: rotate(180deg);
+  color: var(--white);
+}
+
+/* ============================================
+   DROPDOWN MENU - CLEAN DESIGN
+   ============================================ */
+
+.header-dropdown {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  min-width: 220px;
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xl);
+  padding: var(--spacing-sm);
+  animation: dropdownSlideIn var(--transition-base);
+  z-index: 1000;
+  overflow: hidden;
+}
+
+.header-dropdown::before {
+  content: '';
+  position: absolute;
+  top: -8px;
+  right: 20px;
+  width: 16px;
+  height: 16px;
+  background: var(--white);
+  border-left: 1px solid var(--gray-200);
+  border-top: 1px solid var(--gray-200);
+  transform: rotate(45deg);
+}
+
+@keyframes dropdownSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.header-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  width: 100%;
+  padding: 12px 14px;
+  border: none;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--gray-700);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-base);
+  text-align: left;
+  position: relative;
+  overflow: hidden;
+}
+
+.header-dropdown-item::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--blue-50);
+  opacity: 0;
+  transition: opacity var(--transition-base);
+  border-radius: var(--radius-md);
+}
+
+.header-dropdown-item:hover::before {
+  opacity: 1;
+}
+
+.header-dropdown-item:hover {
+  color: var(--blue-700);
+  transform: translateX(4px);
+}
+
+.header-dropdown-item.logout {
+  color: var(--danger);
+}
+
+.header-dropdown-item.logout::before {
+  background: var(--danger-light);
+}
+
+.header-dropdown-item.logout:hover {
+  color: var(--danger);
+}
+
+.header-dropdown-item svg {
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+  transition: transform var(--transition-base);
+}
+
+.header-dropdown-item:hover svg {
+  transform: scale(1.1);
+}
+
+.header-dropdown-item span {
+  position: relative;
+  z-index: 1;
+}
+
+.header-dropdown-divider {
+  height: 1px;
+  background: var(--gray-200);
+  margin: var(--spacing-xs) 0;
+}
+
+/* ============================================
+   RESPONSIVE - MOBILE HIDDEN
+   ============================================ */
+
+@media (max-width: 768px) {
+  .desktop-header {
+    display: none;
+  }
+}
+
+/* ============================================
+   TABLET ADJUSTMENTS
+   ============================================ */
+
+@media (max-width: 1024px) {
+  .header-user-info {
+    display: none;
+  }
+
+  .header-profile-btn {
+    padding: 6px;
+    gap: 0;
+  }
+
+  .header-chevron {
+    display: none;
+  }
+}

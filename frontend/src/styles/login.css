@@ -1,0 +1,764 @@
+
+
+/* ==================== RESET & BASE ==================== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Inter", "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+  overflow-x: hidden;
+}
+
+/* ==================== MAIN CONTAINER ==================== */
+.login-container {
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+/* ==================== ANIMATED BACKGROUND ==================== */
+.animated-bg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  opacity: 0.3;
+}
+
+.circle {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(212, 175, 55, 0.4), transparent);
+  animation: float 20s infinite ease-in-out;
+}
+
+.circle-1 {
+  width: 300px;
+  height: 300px;
+  top: -100px;
+  left: -100px;
+  animation-delay: 0s;
+}
+
+.circle-2 {
+  width: 200px;
+  height: 200px;
+  bottom: -50px;
+  right: 10%;
+  animation-delay: 5s;
+}
+
+.circle-3 {
+  width: 250px;
+  height: 250px;
+  top: 40%;
+  right: -80px;
+  animation-delay: 10s;
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0.3;
+  }
+  50% {
+    transform: translate(50px, 50px) scale(1.1);
+    opacity: 0.5;
+  }
+}
+
+/* ==================== LEFT SIDE (HERO SECTION) ==================== */
+.login-left {
+  position: relative;
+  width: 50%;
+  min-height: 100vh;
+
+  /* BACKGROUND FOTO */
+  background-image: linear-gradient(
+      rgba(10, 42, 102, 0.85),
+      rgba(10, 42, 102, 0.85)
+    ),
+    url("../images/Logo_Piagam.svg");
+
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 3rem;
+  color: #fff;
+}
+.hero-content {
+  z-index: 2;
+}
+
+.brand-logo-main svg {
+  width: 56px;
+  height: 56px;
+}
+
+.hero-title {
+  font-weight: 700;
+  margin-bottom: 1rem;
+}
+
+.hero-subtitle {
+  max-width: 420px;
+  opacity: 0.9;
+}
+.login-left {
+  animation: fadeInLeft 1s ease;
+}
+
+@keyframes fadeInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+@media (max-width: 900px) {
+  .login-left {
+    display: none;
+  }
+
+  .login-right {
+    width: 100%;
+  }
+}
+
+.login-left::before {
+  content: "";
+  position: absolute;
+  top: -40%;
+  right: -20%;
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(
+    circle,
+    rgba(212, 175, 55, 0.2) 0%,
+    transparent 70%
+  );
+  animation: pulse 15s infinite ease-in-out;
+}
+
+.login-left::after {
+  content: "";
+  position: absolute;
+  bottom: -30%;
+  left: -15%;
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(
+    circle,
+    rgba(232, 238, 251, 0.1) 0%,
+    transparent 70%
+  );
+  animation: pulse 20s infinite ease-in-out reverse;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0.8;
+  }
+}
+
+.hero-content {
+  position: relative;
+  z-index: 2;
+  animation: fadeInUp 0.8s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.logo-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 4rem;
+  animation: slideInLeft 0.6s ease-out;
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.brand-logo-main {
+  color: var(--gold-600); /* background svg */
+}
+.brand-logo-main:hover {
+  transform: scale(1.05) rotate(5deg);
+}
+
+.brand-name {
+  font-weight: 700 !important;
+  color: var(--white) !important;
+  letter-spacing: -0.5px;
+}
+
+.hero-text {
+  margin-bottom: 3rem;
+}
+
+.hero-title {
+  font-size: 3.5rem !important;
+  font-weight: 800 !important;
+  color: var(--white) !important;
+  margin-bottom: 1.5rem !important;
+  line-height: 1.1 !important;
+  letter-spacing: -1px;
+  animation: fadeInUp 0.8s ease-out 0.2s both;
+}
+
+.hero-subtitle {
+  font-size: 1.1rem !important;
+  color: rgba(255, 255, 255, 0.85) !important;
+  font-weight: 400 !important;
+  line-height: 1.6 !important;
+  max-width: 500px;
+  animation: fadeInUp 0.8s ease-out 0.4s both;
+}
+
+.feature-cards {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  animation: fadeInUp 0.8s ease-out 0.6s both;
+}
+
+.feature-card {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 1rem 1.5rem;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  transition: all 0.3s ease;
+  animation: slideInUp 0.6s ease-out both;
+}
+
+.feature-card:nth-child(1) {
+  animation-delay: 0.7s;
+}
+.feature-card:nth-child(2) {
+  animation-delay: 0.8s;
+}
+.feature-card:nth-child(3) {
+  animation-delay: 0.9s;
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.feature-card:hover {
+  background: rgba(255, 255, 255, 0.15);
+  transform: translateY(-3px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.feature-icon {
+  font-size: 1.5rem;
+}
+
+.feature-text {
+  color: var(--white) !important;
+  font-weight: 500 !important;
+  font-size: 0.9rem !important;
+}
+
+.footer-info {
+  position: relative;
+  z-index: 2;
+  animation: fadeIn 1s ease-out 1s both;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.copyright {
+  color: rgba(255, 255, 255, 0.7) !important;
+  font-size: 0.85rem !important;
+}
+
+/* ==================== RIGHT SIDE (FORM SECTION) ==================== */
+
+/* DESKTOP DEFAULT */
+.login-right {
+  width: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  background: var(--white);
+  position: relative;
+}
+
+@media (max-width: 968px) {
+  .login-right {
+    width: 100%;
+  }
+}
+
+/* ================= MOBILE BACKGROUND LOGIN RIGHT ================= */
+@media (max-width: 968px) {
+  .login-right::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 45%;
+    background: linear-gradient(
+      180deg,
+      var(--blue-900) 0%,
+      var(--blue-700) 100%
+    );
+    z-index: 0;
+  }
+
+  .login-right > * {
+    position: relative;
+    z-index: 1;
+  }
+}
+
+.form-card {
+  width: 100%;
+  padding: 3rem;
+  border-radius: 24px !important;
+  background: var(--white) !important;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.08) !important;
+  animation: fadeInRight 0.8s ease-out;
+}
+
+@keyframes fadeInRight {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.form-header {
+  margin-bottom: 2.5rem;
+  animation: fadeInUp 0.6s ease-out 0.2s both;
+}
+
+.form-title {
+  font-size: 2.5rem !important;
+  font-weight: 700 !important;
+  color: var(--gray-900) !important;
+  margin-bottom: 0.5rem !important;
+  letter-spacing: -0.5px;
+}
+
+.form-subtitle {
+  color: var(--gray-600) !important;
+  font-size: 1rem !important;
+  font-weight: 400 !important;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* ==================== FORM INPUTS ==================== */
+
+.input-group {
+  animation: fadeInUp 0.6s ease-out both;
+}
+
+.input-group:nth-child(1) {
+  animation-delay: 0.3s;
+}
+.input-group:nth-child(2) {
+  animation-delay: 0.4s;
+}
+
+/* ===== INPUT ROOT ===== */
+.custom-input .MuiOutlinedInput-root {
+  border-radius: 12px !important;
+  background: var(--gray-100);
+  transition: all 0.3s ease;
+}
+
+/* ===== BORDER ===== */
+.custom-input .MuiOutlinedInput-notchedOutline {
+  border: 2px solid transparent;
+  transition: all 0.3s ease;
+}
+
+/* ===== HOVER ===== */
+.custom-input .MuiOutlinedInput-root:hover {
+  background: var(--white);
+}
+
+.custom-input .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline {
+  border-color: var(--blue-100);
+}
+
+/* ===== FOCUS ===== */
+.custom-input .MuiOutlinedInput-root.Mui-focused {
+  background: var(--white);
+  box-shadow: 0 0 0 4px rgba(30, 77, 183, 0.1);
+}
+
+.custom-input
+  .MuiOutlinedInput-root.Mui-focused
+  .MuiOutlinedInput-notchedOutline {
+  border-color: var(--blue-700);
+}
+
+/* ===== INPUT TEXT ===== */
+.custom-input .MuiOutlinedInput-input {
+  color: var(--gray-900);
+}
+
+/* ===== PLACEHOLDER ===== */
+.custom-input .MuiOutlinedInput-input::placeholder {
+  color: var(--gray-600);
+  opacity: 1;
+}
+
+/* ===== LABEL ===== */
+.custom-input .MuiInputLabel-root {
+  color: var(--gray-600);
+  font-weight: 500;
+}
+
+.custom-input .MuiInputLabel-root.Mui-focused {
+  color: var(--blue-700);
+  font-weight: 600;
+}
+
+/* ==================== FORM OPTIONS ==================== */
+.form-options {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  animation: fadeInUp 0.6s ease-out 0.5s both;
+}
+
+.remember-label .MuiTypography-root {
+  color: var(--gray-900);
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.custom-checkbox.MuiCheckbox-root {
+  color: var(--gray-600);
+}
+
+.custom-checkbox.MuiCheckbox-root.Mui-checked {
+  color: var(--blue-700);
+}
+
+.forgot-link {
+  color: var(--blue-700) !important;
+  text-decoration: none !important;
+  font-weight: 600 !important;
+  font-size: 0.9rem !important;
+  position: relative;
+  transition: color 0.3s ease;
+}
+
+.forgot-link::after {
+  content: "";
+  position: absolute;
+  width: 0;
+  height: 2px;
+  bottom: -2px;
+  left: 0;
+  background: var(--gold-600);
+  transition: width 0.3s ease;
+}
+
+.forgot-link:hover {
+  color: var(--blue-900) !important;
+}
+
+.forgot-link:hover::after {
+  width: 100%;
+}
+
+
+/* ==================== MOBILE HERO ==================== */
+.mobile-hero {
+  display: none;
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+/* BIAR FORM DI ATAS BACKGROUND */
+.mobile-login-right > .MuiContainer-root {
+  position: relative;
+  z-index: 1;
+}
+
+.mobile-hero-title {
+  font-size: 1.75rem !important;
+  font-weight: 800 !important;
+  color: var(--white) !important;
+  line-height: 1.2 !important;
+  margin-bottom: 0.5rem !important;
+}
+
+
+/* TAMPIL HANYA DI MOBILE */
+@media (max-width: 968px) {
+  .mobile-hero {
+    display: block;
+    animation: fadeInUp 0.6s ease-out;
+  }
+}
+
+/* ==================== SUBMIT BUTTON ==================== */
+.submit-btn {
+  padding: 1rem !important;
+  background: linear-gradient(
+    135deg,
+    var(--blue-900) 0%,
+    var(--blue-700) 100%
+  ) !important;
+  color: var(--white) !important;
+  border-radius: 12px !important;
+  font-size: 1rem !important;
+  font-weight: 600 !important;
+  text-transform: none !important;
+  box-shadow: 0 8px 24px rgba(10, 42, 102, 0.25) !important;
+  transition: all 0.3s ease !important;
+  position: relative;
+  overflow: hidden;
+  animation: fadeInUp 0.6s ease-out 0.6s both;
+}
+
+.submit-btn::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.2),
+    transparent
+  );
+  transition: left 0.5s ease;
+}
+
+.submit-btn:hover::before {
+  left: 100%;
+}
+
+.submit-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 32px rgba(10, 42, 102, 0.35) !important;
+}
+
+.submit-btn:active {
+  transform: translateY(0);
+}
+
+.arrow-icon {
+  animation: slideRight 0.3s ease-out;
+}
+
+@keyframes slideRight {
+  from {
+    transform: translateX(-10px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* ==================== DIVIDER ==================== */
+.custom-divider {
+  margin: 2rem 0 !important;
+  animation: fadeInUp 0.6s ease-out 0.7s both;
+}
+
+.divider-text {
+  color: var(--gray-600) !important;
+  font-size: 0.85rem !important;
+  padding: 0 1rem;
+}
+
+/* ==================== SOCIAL LOGIN ==================== */
+.social-login {
+  animation: fadeInUp 0.6s ease-out 0.8s both;
+}
+
+.social-btn {
+  padding: 0.875rem !important;
+  border-radius: 12px !important;
+  font-weight: 600 !important;
+  text-transform: none !important;
+  transition: all 0.3s ease !important;
+  border: 2px solid #e5e7eb !important;
+}
+
+.facebook-btn {
+  color: #1877f2 !important;
+}
+
+.facebook-btn:hover {
+  background: rgba(24, 119, 242, 0.1) !important;
+  border-color: #1877f2 !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(24, 119, 242, 0.2) !important;
+}
+
+.google-btn {
+  color: #ea4335 !important;
+}
+
+.google-btn:hover {
+  background: rgba(234, 67, 53, 0.1) !important;
+  border-color: #ea4335 !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(234, 67, 53, 0.2) !important;
+}
+
+/* ==================== SIGNUP TEXT ==================== */
+.signup-text {
+  margin-top: 1.5rem !important;
+  color: var(--gray-600) !important;
+  font-size: 0.9rem !important;
+  animation: fadeInUp 0.6s ease-out 0.9s both;
+}
+
+.signup-link {
+  color: var(--blue-700) !important;
+  text-decoration: none !important;
+  font-weight: 700 !important;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.signup-link::after {
+  content: "";
+  position: absolute;
+  width: 0;
+  height: 2px;
+  bottom: -2px;
+  left: 0;
+  background: var(--gold-600);
+  transition: width 0.3s ease;
+}
+
+.signup-link:hover {
+  color: var(--blue-900) !important;
+}
+
+.signup-link:hover::after {
+  width: 100%;
+}
+
+/* ==================== RESPONSIVE DESIGN ==================== */
+@media (max-width: 968px) {
+  .login-left {
+    display: none;
+  }
+
+  .login-right {
+    flex: 1;
+  }
+
+  .form-card {
+    padding: 2rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .login-right {
+    padding: 1rem;
+  }
+
+  .form-card {
+    padding: 2rem 1.5rem;
+    border-radius: 16px !important;
+  }
+
+  .form-title {
+    font-size: 2rem !important;
+  }
+
+  .hero-title {
+    font-size: 2.5rem !important;
+  }
+
+  .social-login {
+    flex-direction: column !important;
+  }
+
+  .feature-cards {
+    flex-direction: column;
+  }
+
+  .login-left {
+    padding: 2rem;
+  }
+}

@@ -1,0 +1,213 @@
+/* ===============================
+   DataTable Desktop - Clean Modern (fixed)
+   - frame table lebih rapih
+   - header/cell spacing enak
+   - empty state ga kaku
+   =============================== */
+
+.dt-wrap {
+  width: 100%;
+}
+
+/* ========= Subheader ========= */
+.dt-subheader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 0 14px;
+}
+
+/* ========= Search ========= */
+.dt-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 320px;
+  max-width: 55vw;
+  padding: 8px 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(17, 24, 39, 0.12);
+  background: #fff;
+}
+
+.dt-search-input {
+  width: 100%;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 14px;
+  font-weight: 650;
+  color: rgba(17, 24, 39, 0.9);
+}
+
+.dt-search-input::placeholder {
+  color: rgba(17, 24, 39, 0.45);
+  font-weight: 650;
+}
+
+.dt-clear {
+  width: 28px;
+  height: 28px;
+  border-radius: 10px;
+  border: 1px solid rgba(17, 24, 39, 0.10);
+  background: #fff;
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 1;
+  color: rgba(17, 24, 39, 0.65);
+  transition: transform 150ms ease, background 150ms ease;
+}
+
+.dt-clear:hover {
+  background: rgba(17, 24, 39, 0.04);
+}
+
+.dt-clear:active {
+  transform: scale(0.98);
+}
+
+/* ========= Actions ========= */
+.dt-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.dt-btn {
+  border-radius: 12px;
+  padding: 8px 12px;
+  border: 1px solid rgba(17, 24, 39, 0.14);
+  background: #fff;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 850;
+  transition: transform 150ms ease, background 150ms ease, border-color 150ms ease;
+  white-space: nowrap;
+}
+
+.dt-btn:active {
+  transform: scale(0.98);
+}
+
+.dt-btn-ghost:hover {
+  background: rgba(17, 24, 39, 0.04);
+}
+
+.dt-btn-primary {
+  border-color: rgba(13, 60, 148, 0.25);
+  background: rgba(13, 60, 148, 0.10);
+  color: rgba(13, 60, 148, 0.95);
+}
+
+.dt-btn-primary:hover {
+  background: rgba(13, 60, 148, 0.14);
+}
+
+/* ===============================
+   Table frame + RDT overrides
+   =============================== */
+
+/* kasih “frame” biar keliatan component beneran */
+.dt-table {
+  border: 1px solid rgba(17, 24, 39, 0.10);
+  border-radius: 14px;
+  overflow: hidden;
+  background: #fff;
+}
+
+/* header row */
+.dt-table .rdt_TableHeadRow {
+  background: rgba(15, 23, 42, 0.02) !important;
+  border-bottom: 1px solid rgba(17, 24, 39, 0.08) !important;
+  min-height: 44px;
+}
+
+/* header cells */
+.dt-table .rdt_TableCol {
+  font-weight: 900 !important;
+  font-size: 12px !important;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: rgba(17, 24, 39, 0.65) !important;
+  padding: 12px 12px !important;
+}
+
+/* body rows */
+.dt-table .rdt_TableRow {
+  border-bottom: 1px solid rgba(17, 24, 39, 0.06) !important;
+  min-height: 52px;
+}
+
+/* body cells */
+.dt-table .rdt_TableCell {
+  padding: 12px 12px !important;
+  font-size: 13px;
+  font-weight: 650;
+  color: rgba(17, 24, 39, 0.90);
+}
+
+/* hover subtle */
+.dt-table .rdt_TableRow:hover {
+  background: rgba(17, 24, 39, 0.03) !important;
+}
+
+/* pagination area (bawah) biar nyambung sama frame */
+.dt-table .rdt_Pagination {
+  border-top: 1px solid rgba(17, 24, 39, 0.08) !important;
+}
+
+/* ===============================
+   Empty state (lebih “niat” tapi tetep clean)
+   =============================== */
+.dt-empty {
+  padding: 28px 16px;
+  text-align: center;
+}
+
+.dt-empty-title {
+  font-size: 16px;
+  font-weight: 950;
+  color: rgba(17, 24, 39, 0.92);
+}
+
+.dt-empty-desc {
+  margin-top: 6px;
+  font-size: 13px;
+  font-weight: 650;
+  color: rgba(17, 24, 39, 0.62);
+}
+
+.dt-empty-cta {
+  margin-top: 14px;
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+/* small padding helper */
+.dt-bottom-pad {
+  height: 10px;
+}
+
+/* ===============================
+   Responsive
+   =============================== */
+@media (max-width: 820px) {
+  .dt-subheader {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .dt-search {
+    width: 100%;
+    max-width: none;
+  }
+
+  .dt-actions {
+    justify-content: flex-start;
+  }
+}
