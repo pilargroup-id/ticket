@@ -1,10 +1,20 @@
 import api from "./api";
+import mockAuth from "../utils/mockAuth";
 
 const authService = {
 
+  /**
+   * Login dengan support mock auth untuk development
+   */
   async login(username, password) {
     if (!username || !password) {
       throw new Error("Username dan password harus diisi");
+    }
+
+    // Check apakah mock auth enabled (untuk development)
+    if (import.meta.env.VITE_MOCK_AUTH === 'true') {
+      console.log('[AuthService] Using mock authentication');
+      return this.mockLogin(username, password);
     }
 
     try {
@@ -20,6 +30,31 @@ const authService = {
       return res;
     } catch (error) {
       const message = error?.response?.data?.message || error?.message || "Login gagal";
+      throw new Error(message);
+    }
+  },
+
+  /**
+   * Mock login untuk development (tanpa SSO)
+   */
+  async mockLogin(username, password) {
+    try {
+      const success = await mockAuth.injectMockAuth(username, password);
+      
+      if (!success) {
+        throw new Error("Username atau password salah");
+      }
+
+      // Return format yang sama dengan API response
+      const user = JSON.parse(localStorage.getItem('user'));
+      const token = localStorage.getItem('token');
+
+      return {
+        access_token: token,
+        user: user,
+      };
+    } catch (error) {
+      const message = error?.message || "Mock login gagal";
       throw new Error(message);
     }
   },
@@ -41,8 +76,13 @@ const authService = {
 
   logout() {
     this.clearStorage();
-    // Redirect to central auth (SSO) logout
-    const ssoLoginUrl = import.meta.env.VITE_SSO_LOGIN_URL || "https://pilargroup.id/login";
+    
+    if (import.meta.env.VITE_MOCK_AUTH === 'true') {
+      window.location.href = '/login';
+      return;
+    }
+    
+    const ssoLoginUrl = import.meta.env.VITE_SSO_LOGIN_URL || 'https://pilargroup.id/login';
     window.location.href = ssoLoginUrl;
   },
 

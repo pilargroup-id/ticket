@@ -86,4 +86,39 @@ public function approveUser($id)
             'message' => 'Logout successful',
         ], 200);
     }
+
+    public function devLogin(Request $request)
+    {
+        // Hanya aktif di environment local/development
+        if (app()->environment('production')) {
+            return response()->json(['message' => 'Not available'], 404);
+        }
+
+        $username = $request->input('username');
+        $password = $request->input('password');
+
+        // Validasi dari .env
+        if (
+            $username !== config('services.dev.mock_username') ||
+            $password !== config('services.dev.mock_password')
+        ) {
+            return response()->json(['message' => 'Invalid mock credentials'], 401);
+        }
+
+        // Cari user di DB berdasarkan username
+        $user = User::where('username', $username)->first();
+
+        if (!$user) {
+            return response()->json(['message' => 'User not found in database'], 404);
+        }
+
+        $token = $user->createToken('dev-mock')->plainTextToken;
+        $user->remember_token = $token;
+        $user->save();
+
+        return response()->json([
+            'access_token' => $token,
+            'user'         => new UsersResource($user),
+        ]);
+    }
 }

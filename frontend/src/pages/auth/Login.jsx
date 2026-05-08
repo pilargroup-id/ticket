@@ -1,8 +1,8 @@
-// src/pages/Auth/Login.jsx
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import authService from "../../services/AuthService";
 import api from "../../services/api";
+import mockAuth from "../../utils/mockAuth";
 
 import {
   Box, TextField, Button, Typography, IconButton,
@@ -13,6 +13,7 @@ import {
 import {
   Visibility, VisibilityOff,
   Login as LoginIcon, ArrowForward,
+  DeveloperMode,
 } from "@mui/icons-material";
 
 import "../../styles/Login.css";
@@ -25,9 +26,10 @@ const LoginPage = () => {
   const [isHovered, setIsHovered]       = useState(false)
   const [error, setError]               = useState("")
   const [loading, setLoading]           = useState(false)
-  const [ssoLoading, setSsoLoading]     = useState(false) // ← tambah
+  const [ssoLoading, setSsoLoading]     = useState(false)
 
   const navigate = useNavigate()
+  const isMockAuthEnabled = mockAuth.isMockAuthEnabled()
 
   // Login biasa — tidak diubah
   const handleSubmit = async (e) => {
@@ -120,6 +122,19 @@ const LoginPage = () => {
                 {error}
               </Alert>
             )}
+
+            {/* ─── Mock Auth Helper (Development Only) ─────── */}
+            {isMockAuthEnabled && (
+              <Alert severity="info" sx={{ mb: 2, borderRadius: 2 }} icon={<DeveloperMode />}>
+                <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                  🔧 Development Mode - Mock Authentication Enabled
+                </Typography>
+                <Typography variant="caption" sx={{ display: 'block' }}>
+                  Credentials diambil dari .env.local
+                </Typography>
+              </Alert>
+            )}
+            {/* ────────────────────────────────────────────── */}
 
             <Box component="form" onSubmit={handleSubmit} className="login-form">
               <Box className="input-group">

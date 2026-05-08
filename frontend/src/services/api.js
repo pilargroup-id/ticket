@@ -43,12 +43,16 @@ api.interceptors.response.use(
 
     return response.data ?? response;
   },
-  (error) => {
+(error) => {
     if (error.response?.status === 401) {
       localStorage.removeItem("token");
       localStorage.removeItem("user");
       
-      // Redirect to central auth (SSO) instead of local login
+      // Kalau mock mode, jangan redirect ke SSO
+      if (import.meta.env.VITE_MOCK_AUTH === 'true') {
+        return Promise.reject(error);
+      }
+
       const ssoLoginUrl = import.meta.env.VITE_SSO_LOGIN_URL || "https://pilargroup.id/login";
       const redirectUrl = `${ssoLoginUrl}?redirect=${encodeURIComponent(window.location.href)}`;
       window.location.href = redirectUrl;

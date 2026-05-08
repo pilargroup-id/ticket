@@ -26,7 +26,12 @@ use App\Http\Controllers\Api\InternalSyncController;
     'url'    => request()->fullUrl(),
     'method' => request()->method(),
     'query'  => request()->query(),
-]);
+    ]);
+    
+
+if (app()->environment('local')) {
+    Route::post('/dev/login', [AuthController::class, 'devLogin']);
+}
 
 Route::post('/register', [AuthController::class, 'register'])->name('api.register');
 Route::post('/login', [AuthController::class, 'login']);

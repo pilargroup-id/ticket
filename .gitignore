@@ -16,6 +16,7 @@ Thumbs.db
 # Backend (Laravel)
 # ===================
 backend/.env
+backend/.env.local
 backend/.env.backup
 backend/.env.production
 backend/.env.*.local
@@ -45,7 +46,9 @@ backend/*.log
 frontend/node_modules/
 frontend/dist/
 frontend/dist-ssr/
+frontend/.env.local
 frontend/*.local
+frontend/*.development
 frontend/npm-debug.log*
 frontend/yarn-debug.log*
 frontend/yarn-error.log*

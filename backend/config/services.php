@@ -45,5 +45,9 @@ return [
     'internal' => [
         'secret' => env('INTERNAL_SYNC_SECRET'),
     ],
+    'dev' => [
+        'mock_username' => env('DEV_MOCK_USERNAME'),
+        'mock_password' => env('DEV_MOCK_PASSWORD'),
+    ],
 
 ];

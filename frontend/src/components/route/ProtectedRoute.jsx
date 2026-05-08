@@ -1,44 +1,50 @@
 import { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import authService from '../../services/AuthService';
+import mockAuth from '../../utils/mockAuth';
 import { useSessionGuard } from '../utils/useSessionGuard';
 
 const ProtectedRoute = ({ children, requiredRole }) => {
   useSessionGuard();
 
-  const [redirecting, setRedirecting] = useState(false);
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    if (!authService.isAuthenticated() && !redirecting) {
-      setRedirecting(true);
+      if (authService.isAuthenticated()) {
+        console.log('[ProtectedRoute] Already authenticated');
+        setReady(true);
+        return;
+      }
 
-      // Hit sso-url dulu untuk generate state
-      fetch(`${import.meta.env.VITE_API_URL}/auth/sso-url`)
-        .then(r => r.json())
-        .then(data => {
-          console.log('[ProtectedRoute] sso-url response:', data)
-          if (data.url) {
-            window.location.href = data.url;
-          } else {
-            window.location.href = import.meta.env.VITE_SSO_LOGIN_URL || 'https://pilargroup.id/login';
-          }
-        })
-        .catch(() => {
-          window.location.href = import.meta.env.VITE_SSO_LOGIN_URL || 'https://pilargroup.id/login';
+      if (mockAuth.isMockAuthEnabled()) {
+        console.log('[ProtectedRoute] Mock auth enabled, injecting...');
+        mockAuth.autoInjectMockAuth().then((success) => {
+          console.log('[ProtectedRoute] Inject result:', success);
+          console.log('[ProtectedRoute] Token after inject:', localStorage.getItem('token'));
+          setReady(true);
         });
-    }
+        return;
+      }
+
+    // SSO flow (production)
+    fetch(`${import.meta.env.VITE_API_URL}/auth/sso-url`)
+      .then(r => r.json())
+      .then(data => {
+        if (data.url) window.location.href = data.url;
+        else window.location.href = 'https://pilargroup.id/login';
+      })
+      .catch(() => {
+        window.location.href = 'https://pilargroup.id/login';
+      });
   }, []);
 
-  if (!authService.isAuthenticated()) {
-    return null; // tunggu redirect
-  }
+  if (!ready) return null; // tunggu inject selesai
 
   const user = authService.getUser();
   const role = user?.role;
+
   if (requiredRole && role !== requiredRole) {
-    if (role === 'admin') {
-      return <Navigate to="/ticket-monitoring" replace />;
-    }
+    if (role === 'admin') return <Navigate to="/ticket-monitoring" replace />;
     return <Navigate to="/my-ticket" replace />;
   }
 
