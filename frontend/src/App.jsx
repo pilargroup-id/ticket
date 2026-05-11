@@ -21,6 +21,7 @@ import PieChartPreview from './components/chart/PieChart.jsx'
 import { Edit03, Trash03, Users01 } from './components/template/TemplateIcons.jsx'
 import MyTickets from './pages/my-tickets/MyTickets.jsx'
 import TeamPerformence from './pages/reports/team-performence/TeamPerformence.jsx'
+import { consumeSsoSuccessParams, getStoredUser } from './services/auth.js'
 
 function getCurrentPath() {
   if (typeof window === 'undefined') {
@@ -392,16 +393,31 @@ function App() {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [lastUpdated, setLastUpdated] = useState(() => new Date())
+  const [sessionUser, setSessionUser] = useState(() => getStoredUser())
   const [tableUsers, setTableUsers] = useState(userRows)
   const [usersPage, setUsersPage] = useState(1)
   const [usersPageSize, setUsersPageSize] = useState(DEFAULT_USERS_PAGE_SIZE)
   const [activeActionDialog, setActiveActionDialog] = useState(null)
   const [selectedUser, setSelectedUser] = useState(null)
+
   useEffect(() => {
     const handleRouteChange = () => {
-      setActivePath(getCurrentPath())
+      const currentPath = getCurrentPath()
+
+      if (currentPath === '/sso-success') {
+        const session = consumeSsoSuccessParams()
+
+        setSessionUser(session?.user ?? getStoredUser())
+        window.history.replaceState({}, '', '/MyTickets')
+        setActivePath('/MyTickets')
+        return
+      }
+
+      setSessionUser(getStoredUser())
+      setActivePath(currentPath)
     }
 
+    handleRouteChange()
     window.addEventListener('popstate', handleRouteChange)
 
     return () => {
@@ -569,8 +585,8 @@ function App() {
         collapsed={sidebarCollapsed}
         mobileOpen={mobileSidebarOpen}
         activePath={activePath}
-        userName="Al Fatih"
-        userRole="Frontend Developer"
+        userName={sessionUser?.name ?? 'Al Fatih'}
+        userRole={sessionUser?.job_position ?? sessionUser?.role ?? 'Frontend Developer'}
         onToggleCollapse={() => setSidebarCollapsed((currentValue) => !currentValue)}
         onCloseMobile={() => setMobileSidebarOpen(false)}
       />

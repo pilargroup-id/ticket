@@ -6,188 +6,15 @@ export const EMPTY_DATE_RANGE = {
   startDate: '',
   endDate: '',
 }
+export const INITIAL_TICKET_ROWS = []
 
-const INDONESIAN_MONTHS = {
-  januari: 0,
-  februari: 1,
-  maret: 2,
-  april: 3,
-  mei: 4,
-  juni: 5,
-  juli: 6,
-  agustus: 7,
-  september: 8,
-  oktober: 9,
-  november: 10,
-  desember: 11,
-}
-
-function createTimelineItem(status, title, detail, timestamp) {
-  return {
-    status,
-    title,
-    detail,
-    timestamp,
+function normalizeText(value) {
+  if (value === undefined || value === null) {
+    return ''
   }
-}
 
-export const INITIAL_TICKET_ROWS = [
-  {
-    id: 'LGL-001',
-    category: 'Contract',
-    requestor: 'Nadia Putri',
-    issue: 'Permintaan revisi klausul terminasi pada vendor agreement regional.',
-    requestDate: '05 Mei 2026',
-    status: 'Waiting',
-    supportName: 'Alya Pratama',
-    supportRole: 'Head of Legal',
-    solution: 'Review redline dan finalisasi wording terminasi yang lebih aman.',
-    timeline: [
-      createTimelineItem(
-        'Created',
-        'Ticket dibuat',
-        'Permintaan revisi klausul terminasi berhasil dikirim oleh Nadia Putri.',
-        '2026-05-05T08:15:00+07:00',
-      ),
-      createTimelineItem(
-        'Assigned',
-        'PIC legal ditentukan',
-        'Ticket diteruskan ke Alya Pratama untuk penanganan awal.',
-        '2026-05-05T09:00:00+07:00',
-      ),
-      createTimelineItem(
-        'Waiting',
-        'Menunggu review legal',
-        'Dokumen vendor agreement sedang antre untuk pemeriksaan awal.',
-        '2026-05-05T11:20:00+07:00',
-      ),
-    ],
-  },
-  {
-    id: 'LGL-002',
-    category: 'Compliance',
-    requestor: 'Rizky Ananta',
-    issue: 'Permohonan validasi dokumen due diligence untuk onboarding partner baru.',
-    requestDate: '04 Mei 2026',
-    status: 'In Progress',
-    supportName: 'Bima Saputra',
-    supportRole: 'Senior Legal Counsel',
-    solution: 'Checklist compliance sedang diverifikasi bersama tim procurement.',
-    timeline: [
-      createTimelineItem(
-        'Created',
-        'Ticket dibuat',
-        'Dokumen due diligence dikirim untuk proses validasi awal.',
-        '2026-05-04T08:40:00+07:00',
-      ),
-      createTimelineItem(
-        'Assigned',
-        'Ticket diterima legal',
-        'Bima Saputra menerima ticket dan menyiapkan checklist verifikasi.',
-        '2026-05-04T09:15:00+07:00',
-      ),
-      createTimelineItem(
-        'In Progress',
-        'Verifikasi berjalan',
-        'Checklist compliance sedang dicocokkan dengan dokumen procurement.',
-        '2026-05-04T13:30:00+07:00',
-      ),
-    ],
-  },
-  {
-    id: 'LGL-003',
-    category: 'Litigation',
-    requestor: 'Maya Lestari',
-    issue: 'Permintaan analisis risiko atas somasi dari mitra distribusi.',
-    requestDate: '03 Mei 2026',
-    status: 'Feedback',
-    supportName: 'Dio Mahendra',
-    supportRole: 'Litigation Specialist',
-    solution: 'Menunggu kronologi tambahan dan dokumen pendukung dari business owner.',
-    timeline: [
-      createTimelineItem(
-        'Created',
-        'Ticket dibuat',
-        'Permintaan analisis risiko atas somasi masuk ke antrean litigation.',
-        '2026-05-03T10:05:00+07:00',
-      ),
-      createTimelineItem(
-        'In Progress',
-        'Analisis awal dimulai',
-        'Tim legal memeriksa dokumen somasi dan menilai potensi eksposur sengketa.',
-        '2026-05-03T11:10:00+07:00',
-      ),
-      createTimelineItem(
-        'Feedback',
-        'Butuh data tambahan',
-        'Business owner diminta melengkapi kronologi dan dokumen pendukung.',
-        '2026-05-03T15:45:00+07:00',
-      ),
-    ],
-  },
-  {
-    id: 'LGL-004',
-    category: 'Corporate',
-    requestor: 'Kevin Hartono',
-    issue: 'Perubahan struktur penandatanganan untuk addendum kerja sama operasional.',
-    requestDate: '02 Mei 2026',
-    status: 'Resolved',
-    supportName: 'Clara Wijaya',
-    supportRole: 'Corporate Legal Officer',
-    solution: 'Addendum final sudah disetujui dan siap ditandatangani para pihak.',
-    timeline: [
-      createTimelineItem(
-        'Created',
-        'Ticket dibuat',
-        'Permintaan perubahan struktur penandatanganan addendum berhasil dicatat.',
-        '2026-05-02T08:25:00+07:00',
-      ),
-      createTimelineItem(
-        'In Progress',
-        'Draft addendum direview',
-        'Tim corporate legal menyesuaikan klausul penandatanganan dan otorisasi pihak.',
-        '2026-05-02T10:00:00+07:00',
-      ),
-      createTimelineItem(
-        'Resolved',
-        'Addendum selesai',
-        'Dokumen final telah disetujui dan siap untuk proses penandatanganan.',
-        '2026-05-02T16:20:00+07:00',
-      ),
-    ],
-  },
-  {
-    id: 'LGL-005',
-    category: 'Advisory',
-    requestor: 'Tania Kusuma',
-    issue: 'Permintaan opini legal untuk skema promosi bersama pihak ketiga.',
-    requestDate: '01 Mei 2026',
-    status: 'In Progress',
-    supportName: 'Evelyn Santoso',
-    supportRole: 'Compliance Analyst',
-    solution: 'Draft legal opinion sedang dirapikan dengan fokus pada batas eksposur risiko.',
-    timeline: [
-      createTimelineItem(
-        'Created',
-        'Ticket dibuat',
-        'Permintaan opini legal untuk skema promosi bersama pihak ketiga telah diterima.',
-        '2026-05-01T09:10:00+07:00',
-      ),
-      createTimelineItem(
-        'Assigned',
-        'PIC advisory ditentukan',
-        'Evelyn Santoso mulai menelaah struktur promosi dan ruang lingkup kerja sama.',
-        '2026-05-01T09:40:00+07:00',
-      ),
-      createTimelineItem(
-        'In Progress',
-        'Legal opinion disusun',
-        'Draft opini sedang dirapikan dengan fokus pada pembatasan eksposur risiko.',
-        '2026-05-01T14:05:00+07:00',
-      ),
-    ],
-  },
-]
+  return String(value).trim()
+}
 
 export function getStatusVariant(status) {
   if (status === 'Waiting') {
@@ -213,16 +40,20 @@ function matchesSearch(ticket, searchQuery) {
   }
 
   return [
-    ticket.id,
-    ticket.category,
-    ticket.requestor,
-    ticket.issue,
-    ticket.requestDate,
-    ticket.status,
-    ticket.supportName,
-    ticket.supportRole,
-    ticket.solution,
-  ].some((value) => String(value).toLowerCase().includes(normalizedQuery))
+    ticket?.id,
+    ticket?.ticketCode,
+    ticket?.category,
+    ticket?.requestor,
+    ticket?.problem,
+    ticket?.issue,
+    ticket?.requestDate,
+    ticket?.status,
+    ticket?.priority,
+    ticket?.supportName,
+    ticket?.supportRole,
+    ticket?.solution,
+    ticket?.notes,
+  ].some((value) => normalizeText(value).toLowerCase().includes(normalizedQuery))
 }
 
 function matchesStatus(ticket, statusFilter) {
@@ -230,7 +61,7 @@ function matchesStatus(ticket, statusFilter) {
     return true
   }
 
-  return ticket.status === statusFilter
+  return ticket?.status === statusFilter
 }
 
 function parseInputDate(value) {
@@ -249,39 +80,25 @@ function parseInputDate(value) {
   return date
 }
 
-function parseTicketRequestDate(value) {
-  const [dayValue, monthLabel, yearValue] = String(value).trim().split(/\s+/)
-  const day = Number(dayValue)
-  const year = Number(yearValue)
-  const month = INDONESIAN_MONTHS[monthLabel?.toLowerCase()]
+function parseTicketDateValue(ticket) {
+  const rawValue =
+    ticket?.requestDateValue ||
+    ticket?.startDateValue ||
+    ticket?.lastUpdatedValue ||
+    ticket?.requestDate ||
+    null
 
-  if (!day || !year || month === undefined) {
+  if (!rawValue) {
     return null
   }
 
-  const date = new Date(year, month, day)
+  const parsedDate = new Date(rawValue)
 
-  if (date.getFullYear() !== year || date.getMonth() !== month || date.getDate() !== day) {
+  if (Number.isNaN(parsedDate.getTime())) {
     return null
   }
 
-  return date
-}
-
-function createFallbackTimelineTimestamp(value) {
-  const [dayValue, monthLabel, yearValue] = String(value).trim().split(/\s+/)
-  const day = Number(dayValue)
-  const year = Number(yearValue)
-  const month = INDONESIAN_MONTHS[monthLabel?.toLowerCase()]
-
-  if (!day || !year || month === undefined) {
-    return null
-  }
-
-  return `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(
-    2,
-    '0',
-  )}T09:00:00+07:00`
+  return parsedDate
 }
 
 function matchesDateRange(ticket, range) {
@@ -296,11 +113,14 @@ function matchesDateRange(ticket, range) {
     return true
   }
 
-  const ticketDate = parseTicketRequestDate(ticket.requestDate)
+  const ticketDate = parseTicketDateValue(ticket)
 
   if (!ticketDate) {
     return false
   }
+
+  startDate.setHours(0, 0, 0, 0)
+  endDate.setHours(23, 59, 59, 999)
 
   const ticketTime = ticketDate.getTime()
 
@@ -311,7 +131,9 @@ export function getFilteredTicketRows(
   ticketRows,
   { searchQuery = '', dateRange = EMPTY_DATE_RANGE, statusFilter = '' } = {},
 ) {
-  return ticketRows.filter(
+  const normalizedRows = Array.isArray(ticketRows) ? ticketRows : []
+
+  return normalizedRows.filter(
     (ticket) =>
       matchesSearch(ticket, searchQuery) &&
       matchesDateRange(ticket, dateRange) &&
@@ -356,6 +178,16 @@ export function getTicketPaginationSummary(firstItem, lastItem, totalItems) {
   return `${firstItem}-${lastItem} dari ${totalItems} tiket`
 }
 
+function createFallbackTimelineTimestamp(ticket) {
+  return (
+    ticket?.requestDateValue ||
+    ticket?.startDateValue ||
+    ticket?.endDateValue ||
+    ticket?.lastUpdatedValue ||
+    null
+  )
+}
+
 export function getTicketTimelineItems(ticket) {
   const timelineItems = Array.isArray(ticket?.timeline)
     ? ticket.timeline.filter(
@@ -373,9 +205,10 @@ export function getTicketTimelineItems(ticket) {
       title: 'Status ticket saat ini',
       detail:
         ticket?.solution ||
+        ticket?.problem ||
         ticket?.issue ||
         'Belum ada riwayat status yang tersedia untuk ticket ini.',
-      timestamp: createFallbackTimelineTimestamp(ticket?.requestDate),
+      timestamp: createFallbackTimelineTimestamp(ticket),
     },
   ]
 }
@@ -393,7 +226,15 @@ export function getPaginationItems(currentPage, totalPages) {
     return [1, 'start-ellipsis', totalPages - 3, totalPages - 2, totalPages - 1, totalPages]
   }
 
-  return [1, 'start-ellipsis', currentPage - 1, currentPage, currentPage + 1, 'end-ellipsis', totalPages]
+  return [
+    1,
+    'start-ellipsis',
+    currentPage - 1,
+    currentPage,
+    currentPage + 1,
+    'end-ellipsis',
+    totalPages,
+  ]
 }
 
 export function getTicketEmptyMessage(filters) {

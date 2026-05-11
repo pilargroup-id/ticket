@@ -25,22 +25,28 @@ import {
 
 const columns = [
   {
+    key: 'ticketCode',
+    header: 'Ticket Code',
+    accessor: 'ticketCode',
+    cellStyle: { whiteSpace: 'nowrap', width: '11%' },
+  },
+  {
     key: 'category',
     header: 'Category',
     accessor: 'category',
-    cellStyle: { whiteSpace: 'nowrap', width: '10%' },
+    cellStyle: { whiteSpace: 'nowrap', width: '12%' },
   },
   {
-    key: 'issue',
-    header: 'Masalah',
-    accessor: 'issue',
-    cellStyle: { minWidth: '280px' },
+    key: 'problem',
+    header: 'Problem',
+    accessor: 'problem',
+    cellStyle: { minWidth: '320px' },
   },
   {
     key: 'requestDate',
     header: 'Request Date',
     accessor: 'requestDate',
-    cellStyle: { whiteSpace: 'nowrap', width: '11%' },
+    cellStyle: { whiteSpace: 'nowrap', width: '12%' },
   },
   {
     key: 'status',
@@ -53,18 +59,17 @@ const columns = [
     ),
   },
   {
-    key: 'support',
-    header: 'Support',
-    cellStyle: { minWidth: '200px' },
-    render: (ticket) => (
-      <DataTableIdentity title={ticket.supportName} subtitle={ticket.supportRole} />
-    ),
+    key: 'priority',
+    header: 'Priority',
+    accessor: 'priority',
+    cellStyle: { whiteSpace: 'nowrap', width: '9%' },
   },
   {
-    key: 'solution',
-    header: 'Solution',
-    accessor: 'solution',
-    cellStyle: { minWidth: '260px' },
+    key: 'support',
+    header: 'Support',
+    cellStyle: { minWidth: '220px' },
+    render: (ticket) =>
+      ticket.supportName ? <DataTableIdentity title={ticket.supportName} /> : '-',
   },
 ]
 
@@ -74,6 +79,8 @@ function DataTableMT({
   dateRange = EMPTY_DATE_RANGE,
   statusFilter = '',
   ticketRows = INITIAL_TICKET_ROWS,
+  isLoading = false,
+  errorMessage = '',
   setTicketRows,
 }) {
   const [currentPage, setCurrentPage] = useState(1)
@@ -89,8 +96,8 @@ function DataTableMT({
     () => getTicketPageRows(filteredRows, currentPage, pageSize),
     [currentPage, filteredRows, pageSize],
   )
-  const selectedTicketName = selectedTicket?.id ?? 'ticket ini'
-  const dialogTicket = selectedTicket ? { name: selectedTicket.id } : null
+  const selectedTicketName = selectedTicket?.ticketCode ?? selectedTicket?.id ?? 'ticket ini'
+  const dialogTicket = selectedTicket ? { name: selectedTicketName } : null
 
   const openActionDialog = (dialogType, ticket) => {
     setSelectedTicket(ticket)
@@ -152,6 +159,39 @@ function DataTableMT({
     onSelect: (page) => setCurrentPage(page),
     onPageSizeChange: (nextPageSize) => setPageSize(nextPageSize),
   }
+  const emptyMessage = isLoading
+    ? 'Memuat data ticket...'
+    : errorMessage || getTicketEmptyMessage({ searchQuery, dateRange, statusFilter })
+
+  const getTicketDetailSections = (ticket) => [
+    {
+      title: 'Informasi Ticket',
+      fields: [
+        { label: 'Ticket Code', value: ticket.ticketCode },
+        { label: 'Requestor', value: ticket.requestor },
+        { label: 'Category', value: ticket.category },
+        { label: 'Request Date', value: ticket.requestDate },
+        { label: 'Status', value: ticket.status },
+        { label: 'Priority', value: ticket.priority },
+        { label: 'Support', value: ticket.supportName || '-' },
+        { label: 'Waiting Hour', value: ticket.waitingHour },
+        { label: 'Time Spent', value: ticket.timeSpent },
+        { label: 'Is Late', value: ticket.isLate },
+        { label: 'Start Date', value: ticket.startDate },
+        { label: 'End Date', value: ticket.endDate },
+        { label: 'Last Updated', value: ticket.lastUpdated },
+      ],
+    },
+    {
+      title: 'Deskripsi',
+      wide: true,
+      fields: [
+        { label: 'Problem', value: ticket.problem },
+        { label: 'Solution', value: ticket.solution },
+        { label: 'Notes', value: ticket.notes },
+      ],
+    },
+  ]
 
   return (
     <div className="mtickets-table-shell">
@@ -159,13 +199,14 @@ function DataTableMT({
         className="mtickets-table"
         rows={rows}
         columns={columns}
-        getRowId={(ticket) => ticket.id}
+        getRowId={(ticket) => ticket.id ?? ticket.ticketCode}
         tableLabel={tableLabel}
         detail={{
           columnLabel: 'Detail',
           buttonLabel: 'Detail',
-          eyebrow: 'Ticket ID',
-          title: (ticket) => ticket.id,
+          eyebrow: 'Ticket Code',
+          title: (ticket) => ticket.ticketCode,
+          sections: (ticket) => getTicketDetailSections(ticket),
           render: (ticket) => (
             <div className="mtickets-table__detail-actions">
               <p className="mtickets-table__detail-copy">
@@ -182,7 +223,7 @@ function DataTableMT({
           ),
         }}
         actions={tableActions}
-        emptyMessage={getTicketEmptyMessage({ searchQuery, dateRange, statusFilter })}
+        emptyMessage={emptyMessage}
         pagination={pagination}
       />
 
