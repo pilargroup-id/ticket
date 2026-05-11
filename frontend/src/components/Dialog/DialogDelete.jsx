@@ -8,6 +8,9 @@ function DialogDelete({
   eyebrow = 'Delete Data',
   title = 'Delete Data',
   user = null,
+  description,
+  secondaryDescription,
+  confirmLabel = 'Delete',
   onClose,
   onConfirm,
 }) {
@@ -66,10 +69,14 @@ function DialogDelete({
 
         <div className="dashboard-popup__body">
           <p className="dashboard-popup__text">
-            Apakah Anda yakin ingin menghapus <strong>{user?.name ?? 'item ini'}</strong>?
+            {description ?? (
+              <>
+                Apakah Anda yakin ingin menghapus <strong>{user?.name ?? 'item ini'}</strong>?
+              </>
+            )}
           </p>
           <p className="dashboard-popup__text">
-            Tindakan ini akan menghilangkan data dari tabel aktif.
+            {secondaryDescription ?? 'Tindakan ini akan menghilangkan data dari tabel aktif.'}
           </p>
         </div>
 
@@ -86,7 +93,7 @@ function DialogDelete({
             className="dashboard-popup__button dashboard-popup__button--danger"
             onClick={() => onConfirm?.(user)}
           >
-            Delete
+            {confirmLabel}
           </button>
         </div>
       </div>

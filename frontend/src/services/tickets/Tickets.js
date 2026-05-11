@@ -8,6 +8,16 @@ export const TICKET_STATUS_LABELS = {
   void: 'Void',
 }
 
+const TICKET_STATUS_QUERIES = {
+  waiting: 'waiting',
+  'in progress': 'in_progress',
+  in_progress: 'in_progress',
+  resolved: 'resolved',
+  feedback: 'feedback',
+  void: 'void',
+  all: 'all',
+}
+
 const TICKET_PRIORITY_LABELS = {
   low: 'Low',
   medium: 'Medium',
@@ -91,7 +101,7 @@ function createTicketTimeline(ticket) {
   const requestDate = ticket?.request_date || ticket?.created_at
   const startDate = ticket?.start_date
   const endDate = ticket?.end_date || ticket?.updated_at
-  const supportName = getFirstFilledText(ticket?.support?.name)
+  const supportName = getFirstFilledText(ticket?.support_name, ticket?.support?.name)
   const status = String(ticket?.status || '').trim().toLowerCase()
 
   if (requestDate) {
@@ -149,27 +159,35 @@ function createTicketTimeline(ticket) {
   return timeline
 }
 
-export function normalizeMyTicket(ticket = {}) {
+export function normalizeTicket(ticket = {}) {
   const requestDateValue = ticket?.request_date || ticket?.created_at || null
   const startDateValue = ticket?.start_date || null
   const endDateValue = ticket?.end_date || null
   const updatedAtValue = ticket?.updated_at || null
-  const requestorName = getFirstFilledText(ticket?.nama_pembuat, ticket?.user?.name)
-  const supportName = getFirstFilledText(ticket?.support?.name)
+  const userName = getFirstFilledText(ticket?.user_name, ticket?.user?.name)
+  const creatorName = getFirstFilledText(ticket?.nama_pembuat, userName)
+  const requestorName = creatorName || userName
+  const supportName = getFirstFilledText(ticket?.support_name, ticket?.support?.name)
   const categoryName = getFirstFilledText(ticket?.category_name, ticket?.category?.name)
   const ticketCode = getFirstFilledText(ticket?.ticket_code, ticket?.id)
   const rawStatus = String(ticket?.status || '').trim().toLowerCase()
+  const rawPriority = String(ticket?.priority || '').trim().toLowerCase()
 
   return {
     id: ticket?.id ?? ticketCode,
     ticketCode: ticketCode || '-',
+    userName: userName || '-',
+    creatorName: creatorName || '-',
+    namaPembuat: creatorName || '-',
     category: categoryName || '-',
     requestor: requestorName || '-',
     problem: getFirstFilledText(ticket?.problem) || '-',
     status: formatTicketStatus(rawStatus),
     rawStatus,
-    priority: formatTicketPriority(ticket?.priority),
-    supportName,
+    priority: formatTicketPriority(rawPriority),
+    rawPriority,
+    supportId: ticket?.support_id ?? ticket?.support?.id ?? null,
+    supportName: supportName || '-',
     solution: getFirstFilledText(ticket?.solution) || '-',
     notes: getFirstFilledText(ticket?.notes) || '-',
     requestDate: formatTicketDate(requestDateValue),
@@ -187,7 +205,18 @@ export function normalizeMyTicket(ticket = {}) {
   }
 }
 
-function buildMyTicketsQuery({
+export const normalizeMyTicket = normalizeTicket
+
+export function getTicketStatusQueryValue(status) {
+  const normalizedStatus = String(status || '')
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, '_')
+
+  return TICKET_STATUS_QUERIES[normalizedStatus] || TICKET_STATUS_QUERIES.all
+}
+
+function buildTicketsQuery({
   status = 'all',
   startDate,
   endDate,
@@ -203,14 +232,63 @@ function buildMyTicketsQuery({
   }
 }
 
-export async function getMyTickets(options = {}) {
-  const response = await api.get('/user/tickets', {
-    params: buildMyTicketsQuery(options),
+export async function getTickets(options = {}) {
+  const response = await api.get('/ticket/', {
+    params: buildTicketsQuery({
+      ...options,
+      status: getTicketStatusQueryValue(options?.status),
+    }),
   })
 
   return {
     message: response?.message ?? '',
-    data: Array.isArray(response?.data) ? response.data.map(normalizeMyTicket) : [],
+    data: Array.isArray(response?.data) ? response.data.map(normalizeTicket) : [],
+    meta: response?.meta ?? null,
+  }
+}
+
+function buildTicketReportQuery({ startDate, endDate } = {}) {
+  return {
+    start_date: startDate || undefined,
+    end_date: endDate || undefined,
+  }
+}
+
+export function normalizeTicketStatusCounts(report = {}) {
+  const rawStatusCounts = report?.data?.status ?? report?.status ?? report ?? {}
+
+  return {
+    Waiting: Number(rawStatusCounts.waiting) || 0,
+    'In Progress': Number(rawStatusCounts.in_progress) || 0,
+    Resolved: Number(rawStatusCounts.resolved) || 0,
+    Feedback: Number(rawStatusCounts.feedback) || 0,
+    Void: Number(rawStatusCounts.void) || 0,
+  }
+}
+
+export async function getTicketReport(options = {}) {
+  const response = await api.get('/user/reports/tickets', {
+    params: buildTicketReportQuery(options),
+  })
+
+  return {
+    message: response?.message ?? '',
+    data: response?.data ?? {},
+    statusCounts: normalizeTicketStatusCounts(response),
+  }
+}
+
+export async function getMyTickets(options = {}) {
+  const response = await api.get('/user/tickets', {
+    params: buildTicketsQuery({
+      ...options,
+      status: getTicketStatusQueryValue(options?.status),
+    }),
+  })
+
+  return {
+    message: response?.message ?? '',
+    data: Array.isArray(response?.data) ? response.data.map(normalizeTicket) : [],
     meta: response?.meta ?? null,
   }
 }
@@ -220,6 +298,11 @@ export default {
   formatTicketDateTime,
   formatTicketPriority,
   formatTicketStatus,
+  getTicketReport,
+  getTicketStatusQueryValue,
+  getTickets,
   getMyTickets,
   normalizeMyTicket,
+  normalizeTicket,
+  normalizeTicketStatusCounts,
 }

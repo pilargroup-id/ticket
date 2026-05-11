@@ -7,6 +7,10 @@ export {
   DataTableStatus,
 } from './DataTable.jsx'
 
+function resolveActionValue(value, row, index) {
+  return typeof value === 'function' ? value(row, index) : value
+}
+
 function DataTableAction({
   columns = [],
   actions = [],
@@ -27,7 +31,7 @@ function DataTableAction({
           render: (row, index) => (
             <div className="users-table__action-group">
               {actions.map((action) => {
-                if (action.hidden?.(row, index)) {
+                if (resolveActionValue(action.hidden, row, index)) {
                   return null
                 }
 
@@ -40,12 +44,14 @@ function DataTableAction({
                     variant="icon"
                     tone={action.variant === 'danger' ? 'danger' : 'default'}
                     type="button"
-                    disabled={action.disabled?.(row, index) ?? action.disabled}
+                    disabled={resolveActionValue(action.disabled, row, index)}
                     aria-label={buttonLabel}
                     title={buttonLabel}
                     onClick={(event) => {
                       event.stopPropagation()
-                      action.onClick?.(row, index, event)
+                      if (typeof action.onClick === 'function') {
+                        action.onClick(row, index, event)
+                      }
                     }}
                   >
                     {Icon ? <Icon size={16} aria-hidden="true" /> : buttonLabel}

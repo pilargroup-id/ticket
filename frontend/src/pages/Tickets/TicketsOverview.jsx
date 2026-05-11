@@ -1,27 +1,111 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 
 import ButtonRangeDate from '../../components/button/ButtonRangeDate.jsx'
 import { Ticket01 } from '../../components/template/TemplateIcons.jsx'
+import {
+  getTicketReport,
+  getTicketStatusQueryValue,
+  getTickets,
+} from '../../services/tickets/Tickets.js'
 import CardStatusTickets from './CardStatusTickets.jsx'
 import DataTableTickets, { INITIAL_TICKET_ROWS } from './DataTableTickets.jsx'
 import DialogCreateTicket from '../../components/dialog/DialogCreateTickets.jsx'
 
-function TicketsOverview({ activePage, searchQuery }) {
+function TicketsOverview({ activePage, searchQuery, onLoadingChange }) {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
   const [statusFilter, setStatusFilter] = useState('')
   const [ticketRows, setTicketRows] = useState(INITIAL_TICKET_ROWS)
+  const [statusCounts, setStatusCounts] = useState({})
+  const [isLoadingTickets, setIsLoadingTickets] = useState(true)
+  const [ticketsError, setTicketsError] = useState('')
+  const [ticketRefreshVersion, setTicketRefreshVersion] = useState(0)
   const [dateRange, setDateRange] = useState({
     startDate: '',
     endDate: '',
   })
-  const statusCounts = useMemo(
-    () =>
-      ticketRows.reduce((counts, ticket) => {
-        counts[ticket.status] = (counts[ticket.status] ?? 0) + 1
-        return counts
-      }, {}),
-    [ticketRows],
-  )
+
+  useEffect(() => {
+    let isMounted = true
+
+    async function loadTickets() {
+      setIsLoadingTickets(true)
+      setTicketsError('')
+
+      try {
+        const response = await getTickets({
+          status: getTicketStatusQueryValue(statusFilter),
+          startDate: dateRange.startDate,
+          endDate: dateRange.endDate,
+        })
+
+        if (!isMounted) {
+          return
+        }
+
+        setTicketRows(response.data)
+      } catch (error) {
+        if (!isMounted) {
+          return
+        }
+
+        setTicketRows([])
+        setTicketsError(error?.message || 'Gagal memuat data ticket.')
+      } finally {
+        if (isMounted) {
+          setIsLoadingTickets(false)
+        }
+      }
+    }
+
+    loadTickets()
+
+    return () => {
+      isMounted = false
+    }
+  }, [dateRange.endDate, dateRange.startDate, statusFilter, ticketRefreshVersion])
+
+  useEffect(() => {
+    let isMounted = true
+
+    async function loadTicketReport() {
+      try {
+        const response = await getTicketReport({
+          startDate: dateRange.startDate,
+          endDate: dateRange.endDate,
+        })
+
+        if (!isMounted) {
+          return
+        }
+
+        setStatusCounts(response.statusCounts)
+      } catch {
+        if (isMounted) {
+          setStatusCounts({})
+        }
+      }
+    }
+
+    loadTicketReport()
+
+    return () => {
+      isMounted = false
+    }
+  }, [dateRange.endDate, dateRange.startDate, ticketRefreshVersion])
+
+  const isPageLoading = isLoadingTickets && ticketRows.length === 0 && !ticketsError
+
+  useEffect(() => {
+    onLoadingChange?.(isPageLoading)
+
+    return () => {
+      onLoadingChange?.(false)
+    }
+  }, [isPageLoading, onLoadingChange])
+
+  if (isPageLoading) {
+    return null
+  }
 
   return (
     <>
@@ -63,6 +147,9 @@ function TicketsOverview({ activePage, searchQuery }) {
           searchQuery={searchQuery}
           statusFilter={statusFilter}
           ticketRows={ticketRows}
+          isLoading={isLoadingTickets}
+          errorMessage={ticketsError}
+          refreshVersion={ticketRefreshVersion}
           setTicketRows={setTicketRows}
           tableLabel={`${activePage?.title ?? 'Tickets Overview'} table`}
         />
@@ -70,7 +157,10 @@ function TicketsOverview({ activePage, searchQuery }) {
 
       <DialogCreateTicket
         isOpen={isCreateDialogOpen}
-        onClose={() => setIsCreateDialogOpen(false)}
+        onClose={() => {
+          setIsCreateDialogOpen(false)
+          setTicketRefreshVersion((currentVersion) => currentVersion + 1)
+        }}
       />
     </>
   )

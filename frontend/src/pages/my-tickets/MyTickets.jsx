@@ -8,7 +8,7 @@ import CardStatusMT from './CardStatusMT.jsx'
 import DataTableMT from './DataTableMT.jsx'
 import DialogCreateTicket from '../../components/dialog/DialogCreateMT.jsx'
 
-function MyTickets({ activePage, searchQuery }) {
+function MyTickets({ activePage, searchQuery, onLoadingChange }) {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
   const [statusFilter, setStatusFilter] = useState('')
   const [ticketRows, setTicketRows] = useState(INITIAL_TICKET_ROWS)
@@ -67,6 +67,20 @@ function MyTickets({ activePage, searchQuery }) {
 
   const handleTicketCreated = () => {
     setTicketRefreshVersion((currentVersion) => currentVersion + 1)
+  }
+
+  const isPageLoading = isLoadingTickets && ticketRows.length === 0 && !ticketsError
+
+  useEffect(() => {
+    onLoadingChange?.(isPageLoading)
+
+    return () => {
+      onLoadingChange?.(false)
+    }
+  }, [isPageLoading, onLoadingChange])
+
+  if (isPageLoading) {
+    return null
   }
 
   return (

@@ -42,6 +42,9 @@ function matchesSearch(ticket, searchQuery) {
   return [
     ticket?.id,
     ticket?.ticketCode,
+    ticket?.userName,
+    ticket?.creatorName,
+    ticket?.namaPembuat,
     ticket?.category,
     ticket?.requestor,
     ticket?.problem,
@@ -243,19 +246,39 @@ export function getTicketEmptyMessage(filters) {
     : 'Belum ada ticket untuk ditampilkan.'
 }
 
-export function getTicketTableActions({ onEdit, onDelete }) {
+export function getTicketTableActions({
+  onEdit,
+  onDelete,
+  editKey = 'edit',
+  editLabel = 'Edit',
+  editIcon = Edit03,
+  editVariant = 'default',
+  editDisabled = false,
+  editHidden = null,
+  deleteKey = 'delete',
+  deleteLabel = 'Delete',
+  deleteIcon = Trash03,
+  deleteVariant = 'danger',
+  deleteDisabled = false,
+  deleteHidden = null,
+} = {}) {
   return [
     {
-      key: 'edit',
-      label: 'Edit',
-      icon: Edit03,
+      key: editKey,
+      label: editLabel,
+      icon: editIcon,
+      variant: editVariant,
+      disabled: editDisabled,
+      hidden: editHidden,
       onClick: onEdit,
     },
     {
-      key: 'delete',
-      label: 'Delete',
-      icon: Trash03,
-      variant: 'danger',
+      key: deleteKey,
+      label: deleteLabel,
+      icon: deleteIcon,
+      variant: deleteVariant,
+      disabled: deleteDisabled,
+      hidden: deleteHidden,
       onClick: onDelete,
     },
   ]

@@ -8,6 +8,9 @@ function DialogEdit({
   eyebrow = 'Edit Data',
   title = 'Edit Data',
   user = null,
+  description,
+  secondaryDescription,
+  confirmLabel = 'Edit',
   onClose,
   onConfirm,
 }) {
@@ -68,9 +71,15 @@ function DialogEdit({
 
         <div className="dashboard-popup__body">
           <p className="dashboard-popup__text">
-            Data untuk <strong>{user?.name ?? 'item ini'}</strong> siap dibuka ke proses edit.
+            {description ?? (
+              <>
+                Data untuk <strong>{user?.name ?? 'item ini'}</strong> siap dibuka ke proses edit.
+              </>
+            )}
           </p>
-          {hasUserMeta ? (
+          {secondaryDescription ? (
+            <p className="dashboard-popup__text">{secondaryDescription}</p>
+          ) : hasUserMeta ? (
             <p className="dashboard-popup__text">
               Department: {user.department} | Role: {user.role}
             </p>
@@ -90,7 +99,7 @@ function DialogEdit({
             className="dashboard-popup__button dashboard-popup__button--primary"
             onClick={() => onConfirm?.(user)}
           >
-            Edit
+            {confirmLabel}
           </button>
         </div>
       </div>

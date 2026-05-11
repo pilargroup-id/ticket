@@ -114,6 +114,7 @@ select {
   height: 100dvh;
   min-height: 100vh;
   position: sticky;
+  isolation: isolate;
   top: 0;
   left: 0;
   align-self: start;
@@ -127,6 +128,19 @@ select {
   transition:
     width var(--layout-transition-duration) var(--layout-transition-easing),
     transform 0.3s ease;
+}
+
+.sidebar--loading::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: auto;
+  background: linear-gradient(180deg, rgba(4, 9, 20, 0.4) 0%, rgba(4, 9, 20, 0.58) 100%);
+}
+
+.sidebar--loading > * {
+  pointer-events: none;
 }
 
 .sidebar.collapsed {

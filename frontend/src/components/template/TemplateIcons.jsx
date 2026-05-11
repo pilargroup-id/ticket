@@ -130,6 +130,14 @@ export function Menu01(props) {
   )
 }
 
+export function Play(props) {
+  return (
+    <IconBase {...props}>
+      <path d="m8 6 10 6-10 6z" />
+    </IconBase>
+  )
+}
+
 export function RefreshCw05(props) {
   return (
     <IconBase {...props}>

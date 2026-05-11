@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 
 import BackgroundMain from './components/template/BackgroundMain.jsx'
+import DialogLoading from './components/dialog/DialogLoading.jsx'
 import DialogDelete from './components/dialog/DialogDelete.jsx'
 import DialogEdit from './components/dialog/DialogEdit.jsx'
 import Header from './components/template/Header.jsx'
@@ -31,6 +32,10 @@ function getCurrentPath() {
   }
 
   return window.location.pathname === '/' ? '/MyTickets' : window.location.pathname
+}
+
+function supportsPageLoadingBackdrop(path) {
+  return path === '/MyTickets' || path === '/TicketsOverview'
 }
 
 const pageDetails = {
@@ -393,6 +398,7 @@ function App() {
   const [activePath, setActivePath] = useState(getCurrentPath)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
+  const [isPageLoading, setIsPageLoading] = useState(() => supportsPageLoadingBackdrop(getCurrentPath()))
   const [searchQuery, setSearchQuery] = useState('')
   const [lastUpdated, setLastUpdated] = useState(() => new Date())
   const [sessionUser, setSessionUser] = useState(() => getStoredUser())
@@ -448,6 +454,10 @@ function App() {
       window.removeEventListener('popstate', handleRouteChange)
     }
   }, [])
+
+  useEffect(() => {
+    setIsPageLoading(supportsPageLoadingBackdrop(activePath))
+  }, [activePath])
 
   const activePage = pageDetails[activePath] ?? pageDetails['/MyTickets']
   const isUsersPage = activePath === '/users'
@@ -604,12 +614,32 @@ function App() {
   ]
     .filter(Boolean)
     .join(' ')
+  const pageLoadingCopy = {
+    '/MyTickets': {
+      eyebrow: 'Workspace',
+      detail: 'Sedang mengambil data ticket Anda dan menyiapkan tampilan halaman.',
+    },
+    '/TicketsOverview': {
+      eyebrow: 'Dashboard',
+      detail: 'Sedang mengambil data ticket dan menyiapkan ringkasan overview halaman.',
+    },
+  }
+  const activeLoadingCopy = pageLoadingCopy[activePath] ?? {
+    eyebrow: 'Dashboard',
+    detail: 'Sedang membuka halaman yang dipilih. Mohon tunggu sebentar.',
+  }
 
   if (isInitializing) {
     return (
-      <div className={shellClassName} style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', color: 'var(--text-primary)', zIndex: 9999, position: 'relative' }}>
+      <div className={shellClassName} style={{ position: 'relative' }}>
         <BackgroundMain />
-        <p>Memuat sesi pengguna...</p>
+        <DialogLoading
+          eyebrow="Session"
+          pageName={activePage?.title ?? 'Workspace'}
+          title="Opening Workspace"
+          loadingLabel={`Loading ${activePage?.title ?? 'workspace'}...`}
+          detail="Sedang menyiapkan sesi pengguna dan membuka halaman tujuan."
+        />
       </div>
     )
   }
@@ -621,6 +651,7 @@ function App() {
       <Sidebar
         collapsed={sidebarCollapsed}
         mobileOpen={mobileSidebarOpen}
+        isDimmed={isPageLoading}
         activePath={activePath}
         userName={sessionUser?.name ?? ''}
         userRole={sessionUser?.job_position ?? sessionUser?.role ?? ''}
@@ -683,9 +714,17 @@ function App() {
             )}
 
             {activePath === '/MyTickets' ? (
-              <MyTickets activePage={activePage} searchQuery={searchQuery} />
+              <MyTickets
+                activePage={activePage}
+                searchQuery={searchQuery}
+                onLoadingChange={setIsPageLoading}
+              />
             ) : isTicketsOverviewPage ? (
-              <TicketsOverview activePage={activePage} searchQuery={searchQuery} />
+              <TicketsOverview
+                activePage={activePage}
+                searchQuery={searchQuery}
+                onLoadingChange={setIsPageLoading}
+              />
             ) : isProjectsOverviewPage ? (
               <ProjectsOverview activePage={activePage} searchQuery={searchQuery} />
             ) : isTeamPerformancePage ? (
@@ -830,6 +869,14 @@ function App() {
           </div>
         </main>
       </div>
+
+      {isPageLoading ? (
+        <DialogLoading
+          eyebrow={activeLoadingCopy.eyebrow}
+          pageName={activePage?.title ?? 'Workspace'}
+          detail={activeLoadingCopy.detail}
+        />
+      ) : null}
 
       <DialogEdit
         isOpen={activeActionDialog === 'edit'}

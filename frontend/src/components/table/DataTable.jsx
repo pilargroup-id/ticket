@@ -32,6 +32,10 @@ function resolveTemplateValue(value, row, index) {
   return typeof value === 'function' ? value(row, index) : value
 }
 
+function resolveActionValue(value, row, index) {
+  return typeof value === 'function' ? value(row, index) : value
+}
+
 function normalizePageSizeOptions(options, pageSize) {
   const normalizedOptions = (Array.isArray(options) ? options : [])
     .map((option) => Number(option))
@@ -424,7 +428,7 @@ function DataTable({
                             {actions.length > 0 ? (
                               <div className="users-table__accordion-actions">
                                 {actions.map((action) => {
-                                  if (action.hidden?.(row, index)) {
+                                  if (resolveActionValue(action.hidden, row, index)) {
                                     return null
                                   }
 
@@ -436,10 +440,12 @@ function DataTable({
                                       variant="accordion"
                                       tone={action.variant === 'danger' ? 'danger' : 'default'}
                                       type="button"
-                                      disabled={action.disabled?.(row, index) ?? action.disabled}
+                                      disabled={resolveActionValue(action.disabled, row, index)}
                                       onClick={(event) => {
                                         event.stopPropagation()
-                                        action.onClick?.(row, index, event)
+                                        if (typeof action.onClick === 'function') {
+                                          action.onClick(row, index, event)
+                                        }
                                       }}
                                     >
                                       {Icon ? <Icon size={16} aria-hidden="true" /> : null}

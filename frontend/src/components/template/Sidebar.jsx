@@ -155,6 +155,7 @@ function SidebarNavItem({
 function Sidebar({
   collapsed = false,
   mobileOpen = false,
+  isDimmed = false,
   activePath = '/MyTickets',
   userName = '',
   userRole = '',
@@ -238,12 +239,13 @@ function Sidebar({
     'sidebar',
     collapsed ? 'collapsed' : '',
     mobileOpen ? 'mobile-open' : '',
+    isDimmed ? 'sidebar--loading' : '',
   ]
     .filter(Boolean)
     .join(' ')
 
   return (
-    <aside id="sidebar" className={sidebarClassName}>
+    <aside id="sidebar" className={sidebarClassName} aria-busy={isDimmed}>
       <button
         type="button"
         className="sidebar-toggle"
