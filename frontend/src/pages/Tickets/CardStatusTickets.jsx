@@ -1,78 +1,76 @@
-import { useState } from 'react';
-
-const CardStatusTicket = [
-    {
-        tittle: 'Waiting',
-        value: '5',
-    },
-    {
-        tittle: 'In Progress',
-        value: '12',
-    },
-    {
-        tittle: 'Resolved',
-        value: '8',
-    },
-    {
-        tittle: 'Feedback',
-        value: '3',
-    },
-    {
-        tittle: 'Void',
-        value: '1',
-    },
+const STATUS_CARD_TICKETS = [
+  {
+    title: 'Waiting',
+  },
+  {
+    title: 'In Progress',
+  },
+  {
+    title: 'Resolved',
+  },
+  {
+    title: 'Feedback',
+  },
+  {
+    title: 'Void',
+  },
 ]
 
 function getColorForStatus(status) {
-    switch (status) {
-        case 'Waiting':
-        return '#ffa500'
-        case 'In Progress':
-        return '#007bff'
-        case 'Resolved':
-        return '#28a745'
-        case 'Feedback':
-        return '#ffc107'
-        case 'Void':
-        return '#dc3545'
-        default:
-        return '#6c757d'
-    }
+  switch (status) {
+    case 'Waiting':
+      return '#f0ad4e'
+    case 'In Progress':
+      return '#0275d8'
+    case 'Resolved':
+      return '#5cb85c'
+    case 'Feedback':
+      return '#ffc107'
+    case 'Void':
+      return '#dc3545'
+    default:
+      return '#d1d5db'
+  }
 }
 
-function CardStatusTickets() {
-    const [activeCard, setActiveCard] = useState(CardStatusTicket[0]?.tittle ?? '')
+function CardStatusTickets({ activeStatus = '', onStatusChange, statusCounts = {} }) {
+  const handleCardClick = (status) => {
+    onStatusChange?.(activeStatus === status ? '' : status)
+  }
 
-    return (
-        <section className="dashboard-overview tickets-status-overview" aria-label="Ringkasan status Tickets">
-            {CardStatusTicket.map((cardTickets) => {
-                const isActive = activeCard === cardTickets.tittle
-                
-                return (
-                    <article
-                    className={'dashboard-card clickable tickets-status-card' + (isActive ? ' active' : '')}
-                    key={cardTickets.tittle}
-                    style={isActive ? { borderColor: getColorForStatus(cardTickets.tittle) } : undefined}
-                    onClick={() => setActiveCard(cardTickets.tittle)}
-                    >
+  return (
+    <section className="dashboard-overview mtickets-status-overview" aria-label="Ringkasan status Tickets">
+      {STATUS_CARD_TICKETS.map((card) => {
+        const isActive = activeStatus === card.title
+        const accentColor = getColorForStatus(card.title)
+        const cardValue = statusCounts[card.title] ?? 0
 
-                        <div className="card-accent-bar" style={{ backgroundColor : accentColor}}>
-                            <div className= "dashboard-card-content">
-                                <span
-                                className="status-indicator"
-                                style={{ backgroundColor: getColorForStatus(cardTickets.tittle) }}
-                                >
-                                </span>
-                            </div>
-                        </div>
-                        <span className="dashboard-card__label">{cardTickets.title}</span>
+        return (
+          <article
+            className={`dashboard-card clickable mtickets-status-card${isActive ? ' active' : ''}`}
+            key={card.title}
+            style={isActive ? { borderColor: accentColor } : undefined}
+            onClick={() => handleCardClick(card.title)}
+          >
+            <div className="card-accent-bar" style={{ backgroundColor: accentColor }} />
 
-                        <div className="dashboard-card__footer-text">
-                            {isActive ? 'Active Filter' : 'Click to filter'}
-                        </div>
-                    </article>
-                )
-            })}
-        </section>
-    )
+            <div className="dashboard-card__badge-row">
+              <div className="status-badge">
+                <span className="status-indicator" style={{ backgroundColor: accentColor }} />
+                <span className="dashboard-card__label">{card.title}</span>
+              </div>
+            </div>
+
+            <strong className="dashboard-card__value mtickets-status-card__value">{cardValue}</strong>
+
+            <div className="dashboard-card__footer-text">
+              {isActive ? 'Click again to reset' : 'Click to filter'}
+            </div>
+          </article>
+        )
+      })}
+    </section>
+  )
 }
+
+export default CardStatusTickets

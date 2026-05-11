@@ -31,7 +31,7 @@ export const primaryNavigationItems = [
     icon: Ticket01,
   },
   {
-    id: 'tickes-overview',
+    id: 'tickets-overview',
     label: 'Tickets Overview',
     href: '/TicketsOverview',
     icon: TrendingUp,

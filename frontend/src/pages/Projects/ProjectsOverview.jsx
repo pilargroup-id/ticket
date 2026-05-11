@@ -1,77 +1,87 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 
 import ButtonRangeDate from '../../components/button/ButtonRangeDate.jsx'
-import { Ticket01 } from '../../components/template/TemplateIcons.jsx'
-import { INITIAL_TICKET_ROWS } from '../../services/my-tickets/DataTableMT.js'
-import { getMyTickets } from '../../services/my-tickets/MyTickets.js'
-import CardStatusMT from './CardStatusMT.jsx'
-import DataTableMT from './DataTableMT.jsx'
-import DialogCreateTicket from '../../components/dialog/DialogCreateMT.jsx'
+import { Folder } from '../../components/template/TemplateIcons.jsx'
+import DialogCreateProjects from '../../components/dialog/DialogCreateProjects.jsx'
+import CardStatusProjects from './CardStatusProjects.jsx'
+import DataTableProjects from './DataTableProjects.jsx'
 
-function MyTickets({ activePage, searchQuery }) {
+const INITIAL_PROJECT_ROWS = [
+  {
+    id: 'PRJ-001',
+    ticketCode: 'PRJ-001',
+    category: 'Infrastructure',
+    requestor: 'IT Operations',
+    problem: 'Rollout self-service portal untuk request layanan internal.',
+    requestDate: '11 Mei 2026',
+    requestDateValue: '2026-05-11T09:00:00+07:00',
+    status: 'In Progress',
+    priority: 'High',
+    supportName: 'Alya Pratama',
+    solution: 'Discovery selesai dan backlog sprint pertama sudah disetujui.',
+  },
+  {
+    id: 'PRJ-002',
+    ticketCode: 'PRJ-002',
+    category: 'Security',
+    requestor: 'Information Security',
+    problem: 'Implementasi approval flow untuk privileged access lintas aplikasi.',
+    requestDate: '09 Mei 2026',
+    requestDateValue: '2026-05-09T10:30:00+07:00',
+    status: 'Waiting',
+    priority: 'High',
+    supportName: 'Bima Saputra',
+    solution: 'Menunggu final scope dan daftar sistem yang masuk fase pertama.',
+  },
+  {
+    id: 'PRJ-003',
+    ticketCode: 'PRJ-003',
+    category: 'Automation',
+    requestor: 'Finance',
+    problem: 'Otomasi notifikasi SLA untuk approval invoice dan eskalasi review.',
+    requestDate: '07 Mei 2026',
+    requestDateValue: '2026-05-07T14:00:00+07:00',
+    status: 'Resolved',
+    priority: 'Medium',
+    supportName: 'Clara Wijaya',
+    solution: 'Workflow notifikasi aktif di staging dan siap dipromosikan ke produksi.',
+  },
+  {
+    id: 'PRJ-004',
+    ticketCode: 'PRJ-004',
+    category: 'Integration',
+    requestor: 'HRIS Team',
+    problem: 'Sinkronisasi master user antara HRIS dan aplikasi ticketing.',
+    requestDate: '06 Mei 2026',
+    requestDateValue: '2026-05-06T13:15:00+07:00',
+    status: 'Feedback',
+    priority: 'Medium',
+    supportName: 'Dio Mahendra',
+    solution: 'Menunggu konfirmasi mapping field dari tim HRIS.',
+  },
+]
+
+function ProjectsOverview({ activePage, searchQuery }) {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
   const [statusFilter, setStatusFilter] = useState('')
-  const [ticketRows, setTicketRows] = useState(INITIAL_TICKET_ROWS)
-  const [isLoadingTickets, setIsLoadingTickets] = useState(true)
-  const [ticketsError, setTicketsError] = useState('')
-  const [ticketRefreshVersion, setTicketRefreshVersion] = useState(0)
+  const [projectRows, setProjectRows] = useState(INITIAL_PROJECT_ROWS)
   const [dateRange, setDateRange] = useState({
     startDate: '',
     endDate: '',
   })
 
-  useEffect(() => {
-    let isMounted = true
-
-    async function loadMyTickets() {
-      setIsLoadingTickets(true)
-      setTicketsError('')
-
-      try {
-        const response = await getMyTickets()
-
-        if (!isMounted) {
-          return
-        }
-
-        setTicketRows(response.data)
-      } catch (error) {
-        if (!isMounted) {
-          return
-        }
-
-        setTicketRows([])
-        setTicketsError(error?.message || 'Gagal memuat data ticket.')
-      } finally {
-        if (isMounted) {
-          setIsLoadingTickets(false)
-        }
-      }
-    }
-
-    loadMyTickets()
-
-    return () => {
-      isMounted = false
-    }
-  }, [ticketRefreshVersion])
-
   const statusCounts = useMemo(
     () =>
-      ticketRows.reduce((counts, ticket) => {
-        counts[ticket.status] = (counts[ticket.status] ?? 0) + 1
+      projectRows.reduce((counts, project) => {
+        counts[project.status] = (counts[project.status] ?? 0) + 1
         return counts
       }, {}),
-    [ticketRows],
+    [projectRows],
   )
-
-  const handleTicketCreated = () => {
-    setTicketRefreshVersion((currentVersion) => currentVersion + 1)
-  }
 
   return (
     <>
-      <CardStatusMT
+      <CardStatusProjects
         activeStatus={statusFilter}
         onStatusChange={setStatusFilter}
         statusCounts={statusCounts}
@@ -84,7 +94,7 @@ function MyTickets({ activePage, searchQuery }) {
         <div className="users-table-card__header mytickets-table-card__header">
           <div className="mytickets-table-card__title-group">
             <h1 className="dashboard-panel__title mytickets-table-card__title">
-              {activePage?.title ?? 'MyTickets'}
+              {activePage?.title ?? 'Projects Overview'}
             </h1>
           </div>
 
@@ -98,32 +108,30 @@ function MyTickets({ activePage, searchQuery }) {
               aria-haspopup="dialog"
               aria-expanded={isCreateDialogOpen}
             >
-              <Ticket01 size={18} aria-hidden="true" />
-              <span>Create Tickets</span>
+              <Folder size={18} aria-hidden="true" />
+              <span>Create Projects</span>
             </button>
           </div>
         </div>
 
-        <DataTableMT
+        <DataTableProjects
           dateRange={dateRange}
           searchQuery={searchQuery}
           statusFilter={statusFilter}
-          ticketRows={ticketRows}
-          isLoading={isLoadingTickets}
-          errorMessage={ticketsError}
-          refreshVersion={ticketRefreshVersion}
-          setTicketRows={setTicketRows}
-          tableLabel={`${activePage?.title ?? 'MyTickets'} table`}
+          ticketRows={projectRows}
+          setTicketRows={setProjectRows}
+          tableLabel={`${activePage?.title ?? 'Projects Overview'} table`}
         />
       </section>
 
-      <DialogCreateTicket
+      <DialogCreateProjects
         isOpen={isCreateDialogOpen}
         onClose={() => setIsCreateDialogOpen(false)}
-        onCreated={handleTicketCreated}
+        eyebrow="Create Project"
+        title="Create Projects"
       />
     </>
   )
 }
 
-export default MyTickets
+export default ProjectsOverview

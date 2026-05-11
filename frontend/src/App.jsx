@@ -19,6 +19,8 @@ import HorizontalBarChartPreview from './components/chart/HorizontalBarChart.jsx
 import LineChartPreview from './components/chart/LineChart.jsx'
 import PieChartPreview from './components/chart/PieChart.jsx'
 import { Edit03, Trash03, Users01 } from './components/template/TemplateIcons.jsx'
+import ProjectsOverview from './pages/Projects/ProjectsOverview.jsx'
+import TicketsOverview from './pages/Tickets/TicketsOverview.jsx'
 import MyTickets from './pages/my-tickets/MyTickets.jsx'
 import TeamPerformence from './pages/reports/team-performence/TeamPerformence.jsx'
 import { consumeSsoSuccessParams, getStoredUser, loginWithDevCredentials } from './services/auth.js'
@@ -453,6 +455,10 @@ function App() {
   const isTablePage = tablePagePaths.includes(activePath)
   const isChartPage = activePath === '/Chart'
   const isTeamPerformancePage = activePath === '/Reports/TeamPerformance'
+  const isTicketsOverviewPage = activePath === '/TicketsOverview'
+  const isProjectsOverviewPage = activePath === '/ProjectsOverview'
+  const isCustomOverviewPage = isTicketsOverviewPage || isProjectsOverviewPage
+  const isTicketWorkspacePage = activePath === '/MyTickets' || isCustomOverviewPage
   const tableEntityLabel = isUsersPage ? 'user' : 'data'
   const selectedUserName = selectedUser?.name ?? 'data ini'
 
@@ -655,12 +661,12 @@ function App() {
         />
 
         <main
-          className={`dashboard-main${activePath === '/MyTickets' ? ' dashboard-main--mytickets' : ''}`}
+          className={`dashboard-main${isTicketWorkspacePage ? ' dashboard-main--mytickets' : ''}`}
         >
           <div
-            className={`dashboard-content${activePath === '/MyTickets' ? ' dashboard-content--mytickets' : ''}`}
+            className={`dashboard-content${isTicketWorkspacePage ? ' dashboard-content--mytickets' : ''}`}
           >
-            {activePath !== '/MyTickets' && !isTeamPerformancePage && (
+            {activePath !== '/MyTickets' && !isTeamPerformancePage && !isCustomOverviewPage && (
               <section className="dashboard-overview" aria-label="Ringkasan dashboard">
                 {overviewCards.map((card) => (
                   <article className="dashboard-card" key={card.title}>
@@ -678,6 +684,10 @@ function App() {
 
             {activePath === '/MyTickets' ? (
               <MyTickets activePage={activePage} searchQuery={searchQuery} />
+            ) : isTicketsOverviewPage ? (
+              <TicketsOverview activePage={activePage} searchQuery={searchQuery} />
+            ) : isProjectsOverviewPage ? (
+              <ProjectsOverview activePage={activePage} searchQuery={searchQuery} />
             ) : isTeamPerformancePage ? (
               <TeamPerformence />
             ) : isTablePage ? (

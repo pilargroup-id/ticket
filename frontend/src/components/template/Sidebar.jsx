@@ -155,7 +155,7 @@ function SidebarNavItem({
 function Sidebar({
   collapsed = false,
   mobileOpen = false,
-  activePath = '/dashboard',
+  activePath = '/MyTickets',
   userName = '',
   userRole = '',
   primaryItems = primaryNavigationItems,
