@@ -14,6 +14,7 @@ function MyTickets({ activePage, searchQuery }) {
   const [ticketRows, setTicketRows] = useState(INITIAL_TICKET_ROWS)
   const [isLoadingTickets, setIsLoadingTickets] = useState(true)
   const [ticketsError, setTicketsError] = useState('')
+  const [ticketRefreshVersion, setTicketRefreshVersion] = useState(0)
   const [dateRange, setDateRange] = useState({
     startDate: '',
     endDate: '',
@@ -53,7 +54,7 @@ function MyTickets({ activePage, searchQuery }) {
     return () => {
       isMounted = false
     }
-  }, [])
+  }, [ticketRefreshVersion])
 
   const statusCounts = useMemo(
     () =>
@@ -63,6 +64,10 @@ function MyTickets({ activePage, searchQuery }) {
       }, {}),
     [ticketRows],
   )
+
+  const handleTicketCreated = () => {
+    setTicketRefreshVersion((currentVersion) => currentVersion + 1)
+  }
 
   return (
     <>
@@ -106,6 +111,7 @@ function MyTickets({ activePage, searchQuery }) {
           ticketRows={ticketRows}
           isLoading={isLoadingTickets}
           errorMessage={ticketsError}
+          refreshVersion={ticketRefreshVersion}
           setTicketRows={setTicketRows}
           tableLabel={`${activePage?.title ?? 'MyTickets'} table`}
         />
@@ -114,6 +120,7 @@ function MyTickets({ activePage, searchQuery }) {
       <DialogCreateTicket
         isOpen={isCreateDialogOpen}
         onClose={() => setIsCreateDialogOpen(false)}
+        onCreated={handleTicketCreated}
       />
     </>
   )

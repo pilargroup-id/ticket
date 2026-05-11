@@ -1,33 +1,68 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 
+import api from '../../services/api.js'
+import { getStoredUser } from '../../services/auth.js'
 import { FileText01, XClose } from '../template/TemplateIcons.jsx'
-
-const supportOptions = [
-  'Alya Pratama',
-  'Bima Saputra',
-  'Dio Mahendra',
-  'Clara Wijaya',
-  'Evelyn Santoso',
-]
-
-const priorityOptions = ['Low', 'Medium', 'High']
-
-const documentStatusOptions = ['Lengkap', 'Belum lengkap']
 
 function DialogCreateTicket({
   isOpen = false,
   eyebrow = 'Create Ticket',
   title = 'Create Tickets',
   onClose,
+  onCreated,
 }) {
+  const [categories, setCategories] = useState([])
+  const [categoryId, setCategoryId] = useState('')
+  const [problem, setProblem] = useState('')
+  const [selectedFile, setSelectedFile] = useState(null)
   const [selectedFileName, setSelectedFileName] = useState('')
   const [isDragActive, setIsDragActive] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [errorMessage, setErrorMessage] = useState('')
 
+  const authUser = getStoredUser()
+  const namaPembuat = authUser?.name ?? ''
+
+  // Fetch categories when dialog opens
   useEffect(() => {
     if (!isOpen) {
+      return
+    }
+
+    let cancelled = false
+
+    async function fetchCategories() {
+      try {
+        const response = await api.get('/user/category')
+        if (!cancelled) {
+          setCategories(response?.data ?? [])
+        }
+      } catch (err) {
+        console.error('Failed to fetch categories:', err)
+        if (!cancelled) {
+          setCategories([])
+        }
+      }
+    }
+
+    fetchCategories()
+
+    return () => {
+      cancelled = true
+    }
+  }, [isOpen])
+
+  // Reset form & handle Escape key
+  useEffect(() => {
+    if (!isOpen) {
+      setCategoryId('')
+      setProblem('')
+      setSelectedFile(null)
       setSelectedFileName('')
       setIsDragActive(false)
+      setIsSubmitting(false)
+      setErrorMessage('')
       return undefined
     }
 
@@ -44,9 +79,15 @@ function DialogCreateTicket({
     }
   }, [isOpen, onClose])
 
+  const handleFileSelect = useCallback((file) => {
+    if (file) {
+      setSelectedFile(file)
+      setSelectedFileName(file.name)
+    }
+  }, [])
+
   const handleFileChange = (event) => {
-    const file = event.target.files?.[0]
-    setSelectedFileName(file?.name ?? '')
+    handleFileSelect(event.target.files?.[0])
   }
 
   const handleDragOver = (event) => {
@@ -62,9 +103,49 @@ function DialogCreateTicket({
   const handleDrop = (event) => {
     event.preventDefault()
     setIsDragActive(false)
+    handleFileSelect(event.dataTransfer.files?.[0])
+  }
 
-    const file = event.dataTransfer.files?.[0]
-    setSelectedFileName(file?.name ?? '')
+  const handleSubmit = async () => {
+    setErrorMessage('')
+
+    if (!categoryId) {
+      setErrorMessage('Silakan pilih category terlebih dahulu.')
+      return
+    }
+
+    if (!problem.trim()) {
+      setErrorMessage('Silakan isi deskripsi masalah.')
+      return
+    }
+
+    setIsSubmitting(true)
+
+    try {
+      const formData = new FormData()
+      formData.append('category_id', categoryId)
+      formData.append('problem', problem.trim())
+
+      if (namaPembuat) {
+        formData.append('nama_pembuat', namaPembuat)
+      }
+
+      if (selectedFile) {
+        formData.append('image', selectedFile)
+      }
+
+      const response = await api.post('/user/ticket', formData)
+
+      onCreated?.(response)
+      onClose?.()
+    } catch (err) {
+      console.error('Failed to create ticket:', err)
+      setErrorMessage(
+        err?.data?.message || err?.message || 'Gagal membuat ticket. Silakan coba lagi.',
+      )
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   if (!isOpen) {
@@ -114,77 +195,32 @@ function DialogCreateTicket({
                     <select
                       id="ticket-category"
                       className="register-user-popup__select register-user-popup__select--arrow-offset"
-                      defaultValue=""
+                      value={categoryId}
+                      onChange={(e) => setCategoryId(e.target.value)}
                     >
                       <option value="" disabled>
                         Pilih category
                       </option>
-                      <option value="Contract">Contract</option>
-                      <option value="Compliance">Compliance</option>
-                      <option value="Litigation">Litigation</option>
-                      <option value="Corporate">Corporate</option>
-                      <option value="Advisory">Advisory</option>
-                    </select>
-                  </div>
-
-                  <div className="register-user-popup__field">
-                    <label className="register-user-popup__label" htmlFor="ticket-support-name">
-                      Support Name
-                    </label>
-                    <select
-                      id="ticket-support-name"
-                      className="register-user-popup__select register-user-popup__select--arrow-offset"
-                      defaultValue=""
-                    >
-                      <option value="" disabled>
-                        Pilih support name
-                      </option>
-                      {supportOptions.map((supportName) => (
-                        <option key={supportName} value={supportName}>
-                          {supportName}
+                      {categories.map((cat) => (
+                        <option key={cat.id} value={cat.id}>
+                          {cat.name}
                         </option>
                       ))}
                     </select>
                   </div>
 
                   <div className="register-user-popup__field">
-                    <label className="register-user-popup__label" htmlFor="ticket-priority">
-                      Priority
+                    <label className="register-user-popup__label" htmlFor="ticket-nama-pembuat">
+                      Nama Pembuat
                     </label>
-                    <select
-                      id="ticket-priority"
-                      className="register-user-popup__select register-user-popup__select--arrow-offset"
-                      defaultValue=""
-                    >
-                      <option value="" disabled>
-                        Pilih priority
-                      </option>
-                      {priorityOptions.map((priority) => (
-                        <option key={priority} value={priority}>
-                          {priority}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className="register-user-popup__field">
-                    <label className="register-user-popup__label" htmlFor="ticket-document-status">
-                      Status Document
-                    </label>
-                    <select
-                      id="ticket-document-status"
-                      className="register-user-popup__select register-user-popup__select--arrow-offset"
-                      defaultValue=""
-                    >
-                      <option value="" disabled>
-                        Pilih status document
-                      </option>
-                      {documentStatusOptions.map((documentStatus) => (
-                        <option key={documentStatus} value={documentStatus}>
-                          {documentStatus}
-                        </option>
-                      ))}
-                    </select>
+                    <input
+                      id="ticket-nama-pembuat"
+                      type="text"
+                      className="register-user-popup__input"
+                      value={namaPembuat}
+                      readOnly
+                      disabled
+                    />
                   </div>
 
                   <div className="register-user-popup__field register-user-popup__field--full">
@@ -194,7 +230,9 @@ function DialogCreateTicket({
                     <textarea
                       id="ticket-issue"
                       className="register-user-popup__input master-project-popup__textarea"
-                      placeholder="Jelaskan permasalahan atau kebutuhan legal yang ingin diajukan."
+                      placeholder="Jelaskan permasalahan atau kebutuhan yang ingin diajukan."
+                      value={problem}
+                      onChange={(e) => setProblem(e.target.value)}
                     />
                   </div>
                 </div>
@@ -237,6 +275,21 @@ function DialogCreateTicket({
               </label>
             </aside>
           </div>
+
+          {errorMessage && (
+            <p
+              style={{
+                color: '#ef4444',
+                fontSize: '0.85rem',
+                marginTop: '0.75rem',
+                padding: '0.5rem 0.75rem',
+                background: 'rgba(239, 68, 68, 0.08)',
+                borderRadius: '6px',
+              }}
+            >
+              {errorMessage}
+            </p>
+          )}
         </div>
 
         <div className="dashboard-popup__actions">
@@ -244,14 +297,17 @@ function DialogCreateTicket({
             type="button"
             className="dashboard-popup__button dashboard-popup__button--secondary"
             onClick={onClose}
+            disabled={isSubmitting}
           >
             Batal
           </button>
           <button
             type="button"
             className="dashboard-popup__button dashboard-popup__button--primary"
+            onClick={handleSubmit}
+            disabled={isSubmitting}
           >
-            Create
+            {isSubmitting ? 'Membuat...' : 'Create'}
           </button>
         </div>
       </div>

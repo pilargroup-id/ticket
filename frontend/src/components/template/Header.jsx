@@ -20,7 +20,7 @@ import {
 import '../../styles/template-style/TemplateComponents.css'
 
 function Header({
-  title = 'Ticketing Legal',
+  title = 'Ticketing IT',
   breadcrumb = [
     { label: 'All', href: '#' },
     { label: 'Finance', href: '#', active: true },

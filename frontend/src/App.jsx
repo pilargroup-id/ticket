@@ -21,7 +21,7 @@ import PieChartPreview from './components/chart/PieChart.jsx'
 import { Edit03, Trash03, Users01 } from './components/template/TemplateIcons.jsx'
 import MyTickets from './pages/my-tickets/MyTickets.jsx'
 import TeamPerformence from './pages/reports/team-performence/TeamPerformence.jsx'
-import { consumeSsoSuccessParams, getStoredUser } from './services/auth.js'
+import { consumeSsoSuccessParams, getStoredUser, loginWithDevCredentials } from './services/auth.js'
 
 function getCurrentPath() {
   if (typeof window === 'undefined') {
@@ -394,11 +394,33 @@ function App() {
   const [searchQuery, setSearchQuery] = useState('')
   const [lastUpdated, setLastUpdated] = useState(() => new Date())
   const [sessionUser, setSessionUser] = useState(() => getStoredUser())
+  const [isInitializing, setIsInitializing] = useState(true)
   const [tableUsers, setTableUsers] = useState(userRows)
   const [usersPage, setUsersPage] = useState(1)
   const [usersPageSize, setUsersPageSize] = useState(DEFAULT_USERS_PAGE_SIZE)
   const [activeActionDialog, setActiveActionDialog] = useState(null)
   const [selectedUser, setSelectedUser] = useState(null)
+
+  useEffect(() => {
+    async function initAuth() {
+      if (import.meta.env.DEV) {
+        try {
+          const username = import.meta.env.VITE_DEV_MOCK_USERNAME || 'bayu'
+          const password = import.meta.env.VITE_DEV_MOCK_PASSWORD || 'password123'
+          const result = await loginWithDevCredentials({ username, password })
+
+          if (result?.session?.user) {
+            setSessionUser(result.session.user)
+          }
+        } catch (error) {
+          console.error('Dev auto-login failed:', error)
+        }
+      }
+      setIsInitializing(false)
+    }
+
+    initAuth()
+  }, [])
 
   useEffect(() => {
     const handleRouteChange = () => {
@@ -577,6 +599,15 @@ function App() {
     .filter(Boolean)
     .join(' ')
 
+  if (isInitializing) {
+    return (
+      <div className={shellClassName} style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', color: 'var(--text-primary)', zIndex: 9999, position: 'relative' }}>
+        <BackgroundMain />
+        <p>Memuat sesi pengguna...</p>
+      </div>
+    )
+  }
+
   return (
     <div className={shellClassName}>
       <BackgroundMain />
@@ -585,8 +616,8 @@ function App() {
         collapsed={sidebarCollapsed}
         mobileOpen={mobileSidebarOpen}
         activePath={activePath}
-        userName={sessionUser?.name ?? 'Al Fatih'}
-        userRole={sessionUser?.job_position ?? sessionUser?.role ?? 'Frontend Developer'}
+        userName={sessionUser?.name ?? ''}
+        userRole={sessionUser?.job_position ?? sessionUser?.role ?? ''}
         onToggleCollapse={() => setSidebarCollapsed((currentValue) => !currentValue)}
         onCloseMobile={() => setMobileSidebarOpen(false)}
       />
@@ -600,11 +631,11 @@ function App() {
 
       <div className="dashboard-stage">
         <Header
-          title="Ticketing Legal"
+          title="Ticketing IT"
           showMenuButton
           onMenuToggle={() => setMobileSidebarOpen(true)}
           breadcrumb={[
-            { label: 'Ticketing Legal', href: '#' },
+            { label: 'Ticketing IT', href: '#' },
             { label: activePage.title, href: '#', active: true },
           ]}
           searchProps={{

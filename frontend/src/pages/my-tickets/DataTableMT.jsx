@@ -1,9 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 
-import CreateButton from '../../components/button/CreateButton.jsx'
 import DialogDelete from '../../components/dialog/DialogDelete.jsx'
 import DialogEdit from '../../components/dialog/DialogEdit.jsx'
-import DialogTimelineMT from '../../components/dialog/DialogTimelineMT.jsx'
+
 import DataTable, {
   DataTableIdentity,
   DataTableStatus,
@@ -19,7 +18,7 @@ import {
   getTicketEmptyMessage,
   getTicketPageRows,
   getTicketPaginationSummary,
-  getTicketTimelineItems,
+
   getTicketTableActions,
 } from '../../services/my-tickets/DataTableMT.js'
 
@@ -33,8 +32,8 @@ const columns = [
   {
     key: 'category',
     header: 'Category',
-    accessor: 'category',
     cellStyle: { whiteSpace: 'nowrap', width: '12%' },
+    render: (ticket) => ticket.category || '-',
   },
   {
     key: 'problem',
@@ -81,6 +80,7 @@ function DataTableMT({
   ticketRows = INITIAL_TICKET_ROWS,
   isLoading = false,
   errorMessage = '',
+  refreshVersion = 0,
   setTicketRows,
 }) {
   const [currentPage, setCurrentPage] = useState(1)
@@ -123,11 +123,6 @@ function DataTableMT({
     closeActionDialog()
   }
 
-  const handleTimelineOpen = (ticket) => {
-    setSelectedTicket(ticket)
-    setActiveActionDialog('timeline')
-  }
-
   const tableActions = getTicketTableActions({
     onEdit: (ticket) => openActionDialog('edit', ticket),
     onDelete: (ticket) => openActionDialog('delete', ticket),
@@ -135,7 +130,7 @@ function DataTableMT({
 
   useEffect(() => {
     setCurrentPage(1)
-  }, [dateRange.endDate, dateRange.startDate, pageSize, searchQuery, statusFilter])
+  }, [dateRange.endDate, dateRange.startDate, pageSize, refreshVersion, searchQuery, statusFilter])
 
   useEffect(() => {
     setCurrentPage((page) => Math.min(page, totalPages))
@@ -167,28 +162,16 @@ function DataTableMT({
     {
       title: 'Informasi Ticket',
       fields: [
-        { label: 'Ticket Code', value: ticket.ticketCode },
         { label: 'Requestor', value: ticket.requestor },
-        { label: 'Category', value: ticket.category },
-        { label: 'Request Date', value: ticket.requestDate },
-        { label: 'Status', value: ticket.status },
         { label: 'Priority', value: ticket.priority },
-        { label: 'Support', value: ticket.supportName || '-' },
-        { label: 'Waiting Hour', value: ticket.waitingHour },
-        { label: 'Time Spent', value: ticket.timeSpent },
-        { label: 'Is Late', value: ticket.isLate },
-        { label: 'Start Date', value: ticket.startDate },
-        { label: 'End Date', value: ticket.endDate },
-        { label: 'Last Updated', value: ticket.lastUpdated },
+        { label: 'Category', value: ticket.category || '-' },
       ],
     },
     {
-      title: 'Deskripsi',
-      wide: true,
+      title: 'Problem & Solution',
       fields: [
         { label: 'Problem', value: ticket.problem },
         { label: 'Solution', value: ticket.solution },
-        { label: 'Notes', value: ticket.notes },
       ],
     },
   ]
@@ -207,20 +190,6 @@ function DataTableMT({
           eyebrow: 'Ticket Code',
           title: (ticket) => ticket.ticketCode,
           sections: (ticket) => getTicketDetailSections(ticket),
-          render: (ticket) => (
-            <div className="mtickets-table__detail-actions">
-              <p className="mtickets-table__detail-copy">
-                Lihat riwayat perubahan status ticket beserta hari dan jam penanganannya.
-              </p>
-              <CreateButton
-                variant="accordion"
-                type="button"
-                onClick={() => handleTimelineOpen(ticket)}
-              >
-                Lihat Timeline
-              </CreateButton>
-            </div>
-          ),
         }}
         actions={tableActions}
         emptyMessage={emptyMessage}
@@ -243,14 +212,6 @@ function DataTableMT({
         user={dialogTicket}
         onClose={closeActionDialog}
         onConfirm={handleDeleteConfirm}
-      />
-
-      <DialogTimelineMT
-        isOpen={activeActionDialog === 'timeline'}
-        eyebrow="Timeline Ticket"
-        title={`Timeline ${selectedTicketName}`}
-        items={selectedTicket ? getTicketTimelineItems(selectedTicket) : []}
-        onClose={closeActionDialog}
       />
     </div>
   )
