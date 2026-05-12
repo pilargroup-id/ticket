@@ -277,9 +277,17 @@ export async function getProjects(options = {}) {
     params: buildProjectsQuery(options),
   })
 
+  const normalizedData = Array.isArray(response?.data) ? response.data.map(normalizeProject) : []
+
+  normalizedData.sort((a, b) => {
+    const idA = Number(a.id) || 0
+    const idB = Number(b.id) || 0
+    return idB - idA
+  })
+
   return {
     message: response?.message ?? '',
-    data: Array.isArray(response?.data) ? response.data.map(normalizeProject) : [],
+    data: normalizedData,
   }
 }
 

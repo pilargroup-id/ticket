@@ -1,29 +1,76 @@
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 
-import { FileText01, XClose } from '../template/TemplateIcons.jsx'
-
-const supportOptions = [
-  'Alya Pratama',
-  'Bima Saputra',
-  'Dio Mahendra',
-  'Clara Wijaya',
-  'Evelyn Santoso',
-]
+import api from '../../services/api.js'
+import { getStoredUser } from '../../services/auth.js'
+import { XClose } from '../template/TemplateIcons.jsx'
 
 function DialogCreateProjects({
   isOpen = false,
-  eyebrow = 'Create Ticket',
-  title = 'Create Tickets',
+  eyebrow = 'Create Projects',
+  title = 'Create Projects',
   onClose,
+  onCreated,
 }) {
-  const [selectedFileName, setSelectedFileName] = useState('')
-  const [isDragActive, setIsDragActive] = useState(false)
+  const authUser = getStoredUser()
+  const [users, setUsers] = useState([])
+  const [titleProject, setTitleProject] = useState('')
+  const [requestDate, setRequestDate] = useState(() => {
+    const now = new Date()
+    now.setMinutes(now.getMinutes() - now.getTimezoneOffset())
+    return now.toISOString().slice(0, 16)
+  })
+  const [requestorId, setRequestorId] = useState(authUser?.id ?? '')
+  const [startDate, setStartDate] = useState('')
+  const [endDate, setEndDate] = useState('')
+  const [priority, setPriority] = useState('Low')
+  const [description, setDescription] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [errorMessage, setErrorMessage] = useState('')
+  const [requestorSearch, setRequestorSearch] = useState('')
+  const [requestorOpen, setRequestorOpen] = useState(false)
+
+  useEffect(() => {
+    if (!isOpen) return
+
+    let cancelled = false
+    async function fetchUsers() {
+      try {
+        const response = await api.get('/user')
+        if (!cancelled) {
+          const list = response?.data?.data ?? response?.data ?? []
+          setUsers(list)
+          // Pre-fill search label if requestorId is already set
+          const preSelected = list.find((u) => String(u.id) === String(authUser?.id))
+          if (preSelected) setRequestorSearch(preSelected.name)
+        }
+      } catch (err) {
+        console.error('Failed to fetch users:', err)
+      }
+    }
+
+    fetchUsers()
+
+    return () => {
+      cancelled = true
+    }
+  }, [isOpen])
 
   useEffect(() => {
     if (!isOpen) {
-      setSelectedFileName('')
-      setIsDragActive(false)
+      setTitleProject('')
+      const now = new Date()
+      now.setMinutes(now.getMinutes() - now.getTimezoneOffset())
+      setRequestDate(now.toISOString().slice(0, 16))
+      setRequestorId(authUser?.id ?? '')
+      setStartDate('')
+      setEndDate('')
+      setPriority('Low')
+      setDescription('')
+      setIsSubmitting(false)
+      setErrorMessage('')
+      setRequestorSearch('')
+      setRequestorOpen(false)
       return undefined
     }
 
@@ -38,29 +85,53 @@ function DialogCreateProjects({
     return () => {
       window.removeEventListener('keydown', handleKeyDown)
     }
-  }, [isOpen, onClose])
+  }, [isOpen, onClose, authUser?.id])
 
-  const handleFileChange = (event) => {
-    const file = event.target.files?.[0]
-    setSelectedFileName(file?.name ?? '')
-  }
+  const handleSubmit = async () => {
+    setErrorMessage('')
 
-  const handleDragOver = (event) => {
-    event.preventDefault()
-    setIsDragActive(true)
-  }
+    if (!titleProject.trim()) {
+      setErrorMessage('Silakan isi Project Name.')
+      return
+    }
+    if (!requestorId) {
+      setErrorMessage('Silakan pilih Requestor.')
+      return
+    }
+    if (!startDate || !endDate) {
+      setErrorMessage('Silakan isi Start Plan dan End Planned.')
+      return
+    }
 
-  const handleDragLeave = (event) => {
-    event.preventDefault()
-    setIsDragActive(false)
-  }
+    setIsSubmitting(true)
 
-  const handleDrop = (event) => {
-    event.preventDefault()
-    setIsDragActive(false)
+    try {
+      const formatDateTime = (dt) => (dt ? dt.replace('T', ' ') + (dt.length === 16 ? ':00' : '') : '')
+      const payload = {
+        project_name: titleProject.trim(),
+        requestor_id: requestorId,
+        request_date: formatDateTime(requestDate),
+        start_date: formatDateTime(startDate),
+        end_date: formatDateTime(endDate),
+        priority: priority.toLowerCase(),
+        notes: description.trim(),
+        description: description.trim(),
+        status: 'waiting',
+        progress_percent: 0,
+      }
 
-    const file = event.dataTransfer.files?.[0]
-    setSelectedFileName(file?.name ?? '')
+      const response = await api.post('/project', payload)
+
+      onCreated?.(response)
+      onClose?.()
+    } catch (err) {
+      console.error('Failed to create project:', err)
+      setErrorMessage(
+        err?.data?.message || err?.response?.data?.message || err?.message || 'Gagal membuat project. Silakan coba lagi.',
+      )
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   if (!isOpen) {
@@ -99,104 +170,198 @@ function DialogCreateProjects({
         </div>
 
         <div className="dashboard-popup__body">
-          <p className="dashboard-popup__text">
-            Lengkapi data ticket baru sesuai struktur yang tampil pada tabel MyTickets.
-          </p>
+          <div className="register-user-popup__form">
+            <div
+              className="register-user-popup__grid"
+              style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}
+            >
+              {/* Row 1 */}
+              <div className="register-user-popup__field">
+                <label className="register-user-popup__label" htmlFor="project-title">
+                  Project Name
+                </label>
+                <input
+                  id="project-title"
+                  type="text"
+                  className="register-user-popup__input"
+                  placeholder="Masukkan nama project"
+                  value={titleProject}
+                  onChange={(e) => setTitleProject(e.target.value)}
+                />
+              </div>
 
-          <div className="register-user-popup__layout">
-            <div className="register-user-popup__main">
-              <div className="register-user-popup__form">
-                <div className="register-user-popup__grid">
-                  <div className="register-user-popup__field">
-                    <label className="register-user-popup__label" htmlFor="ticket-category">
-                      Category
-                    </label>
-                    <select
-                      id="ticket-category"
-                      className="register-user-popup__select"
-                      defaultValue=""
-                    >
-                      <option value="" disabled>
-                        Pilih category
-                      </option>
-                      <option value="Contract">Contract</option>
-                      <option value="Compliance">Compliance</option>
-                      <option value="Litigation">Litigation</option>
-                      <option value="Corporate">Corporate</option>
-                      <option value="Advisory">Advisory</option>
-                    </select>
-                  </div>
-
-                  <div className="register-user-popup__field">
-                    <label className="register-user-popup__label" htmlFor="ticket-support-name">
-                      Support Name
-                    </label>
-                    <select
-                      id="ticket-support-name"
-                      className="register-user-popup__select"
-                      defaultValue=""
-                    >
-                      <option value="" disabled>
-                        Pilih support name
-                      </option>
-                      {supportOptions.map((supportName) => (
-                        <option key={supportName} value={supportName}>
-                          {supportName}
-                        </option>
+              <div className="register-user-popup__field" style={{ position: 'relative' }}>
+                <label className="register-user-popup__label" htmlFor="project-requestor-search">
+                  Requestor
+                </label>
+                <input
+                  id="project-requestor-search"
+                  type="text"
+                  className="register-user-popup__input"
+                  placeholder="Cari requestor..."
+                  value={requestorSearch}
+                  autoComplete="off"
+                  onFocus={() => setRequestorOpen(true)}
+                  onBlur={() => setTimeout(() => setRequestorOpen(false), 150)}
+                  onChange={(e) => {
+                    setRequestorSearch(e.target.value)
+                    setRequestorId('')
+                    setRequestorOpen(true)
+                  }}
+                />
+                {requestorOpen && (
+                  <ul
+                    style={{
+                      position: 'absolute',
+                      top: '100%',
+                      left: 0,
+                      right: 0,
+                      zIndex: 9999,
+                      background: '#fff',
+                      border: '1px solid #e5e7eb',
+                      borderRadius: '6px',
+                      boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                      maxHeight: '180px',
+                      overflowY: 'auto',
+                      margin: '2px 0 0',
+                      padding: 0,
+                      listStyle: 'none',
+                    }}
+                  >
+                    {users
+                      .filter((u) =>
+                        u.name.toLowerCase().includes(requestorSearch.toLowerCase()),
+                      )
+                      .map((u) => (
+                        <li
+                          key={u.id}
+                          onMouseDown={() => {
+                            setRequestorId(u.id)
+                            setRequestorSearch(u.name)
+                            setRequestorOpen(false)
+                          }}
+                          style={{
+                            padding: '0.45rem 0.75rem',
+                            fontSize: '0.85rem',
+                            cursor: 'pointer',
+                            color: '#111827',
+                            background: u.id === requestorId ? '#f3f4f6' : 'transparent',
+                          }}
+                          onMouseEnter={(e) => (e.currentTarget.style.background = '#f3f4f6')}
+                          onMouseLeave={(e) =>
+                            (e.currentTarget.style.background =
+                              u.id === requestorId ? '#f3f4f6' : 'transparent')
+                          }
+                        >
+                          {u.name}
+                        </li>
                       ))}
-                    </select>
-                  </div>
+                    {users.filter((u) =>
+                      u.name.toLowerCase().includes(requestorSearch.toLowerCase()),
+                    ).length === 0 && (
+                      <li
+                        style={{
+                          padding: '0.45rem 0.75rem',
+                          fontSize: '0.85rem',
+                          color: '#9ca3af',
+                        }}
+                      >
+                        Tidak ada hasil
+                      </li>
+                    )}
+                  </ul>
+                )}
+              </div>
 
-                  <div className="register-user-popup__field register-user-popup__field--full">
-                    <label className="register-user-popup__label" htmlFor="ticket-issue">
-                      Masalah
-                    </label>
-                    <textarea
-                      id="ticket-issue"
-                      className="register-user-popup__input master-project-popup__textarea"
-                      placeholder="Jelaskan permasalahan atau kebutuhan legal yang ingin diajukan."
-                    />
-                  </div>
-                </div>
+              <div className="register-user-popup__field">
+                <label className="register-user-popup__label" htmlFor="project-priority">
+                  Priority
+                </label>
+                <select
+                  id="project-priority"
+                  className="register-user-popup__select register-user-popup__select--arrow-offset"
+                  value={priority}
+                  onChange={(e) => setPriority(e.target.value)}
+                >
+                  <option value="Low">Low</option>
+                  <option value="Medium">Medium</option>
+                  <option value="High">High</option>
+                </select>
+              </div>
+
+              {/* Row 2 */}
+              <div className="register-user-popup__field">
+                <label className="register-user-popup__label" htmlFor="project-request-date">
+                  Request Date
+                </label>
+                <input
+                  id="project-request-date"
+                  type="datetime-local"
+                  className="register-user-popup__input"
+                  value={requestDate}
+                  onChange={(e) => setRequestDate(e.target.value)}
+                />
+              </div>
+
+              <div className="register-user-popup__field">
+                <label className="register-user-popup__label" htmlFor="project-start-date">
+                  Start Plan
+                </label>
+                <input
+                  id="project-start-date"
+                  type="datetime-local"
+                  className="register-user-popup__input"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                />
+              </div>
+
+              <div className="register-user-popup__field">
+                <label className="register-user-popup__label" htmlFor="project-end-date">
+                  End Planned
+                </label>
+                <input
+                  id="project-end-date"
+                  type="datetime-local"
+                  className="register-user-popup__input"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                />
+              </div>
+
+              {/* Row 3 — full width */}
+              <div
+                className="register-user-popup__field"
+                style={{ gridColumn: '1 / -1' }}
+              >
+                <label className="register-user-popup__label" htmlFor="project-description">
+                  Description
+                </label>
+                <textarea
+                  id="project-description"
+                  className="register-user-popup__input master-project-popup__textarea"
+                  placeholder="Jelaskan deskripsi project"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                />
               </div>
             </div>
-
-            <aside className="register-user-popup__section mtickets-create-popup__upload-panel">
-              <div className="register-user-popup__section-header">
-                <p className="register-user-popup__label">Upload File</p>
-                <p className="register-user-popup__hint">
-                  Letakkan dokumen pendukung di area ini agar popup tetap ringkas.
-                </p>
-              </div>
-
-              <label
-                htmlFor="ticket-attachment"
-                className={`register-user-popup__upload mtickets-create-popup__upload${
-                  isDragActive ? ' is-drag-active' : ''
-                }`}
-                onDragOver={handleDragOver}
-                onDragLeave={handleDragLeave}
-                onDrop={handleDrop}
-              >
-                <input
-                  id="ticket-attachment"
-                  type="file"
-                  className="register-user-popup__upload-input"
-                  onChange={handleFileChange}
-                />
-                <span className="register-user-popup__upload-icon">
-                  <FileText01 size={20} />
-                </span>
-                <span className="register-user-popup__upload-title">Drag and drop file di sini</span>
-                <span className="register-user-popup__upload-meta">
-                  atau klik untuk memilih file dari perangkat Anda
-                </span>
-                <span className="register-user-popup__upload-file">
-                  {selectedFileName || 'Belum ada file yang dipilih'}
-                </span>
-              </label>
-            </aside>
           </div>
+
+          {errorMessage && (
+            <p
+              style={{
+                color: '#ef4444',
+                fontSize: '0.85rem',
+                marginTop: '0.75rem',
+                padding: '0.5rem 0.75rem',
+                background: 'rgba(239, 68, 68, 0.08)',
+                borderRadius: '6px',
+              }}
+            >
+              {errorMessage}
+            </p>
+          )}
         </div>
 
         <div className="dashboard-popup__actions">
@@ -204,14 +369,17 @@ function DialogCreateProjects({
             type="button"
             className="dashboard-popup__button dashboard-popup__button--secondary"
             onClick={onClose}
+            disabled={isSubmitting}
           >
             Batal
           </button>
           <button
             type="button"
             className="dashboard-popup__button dashboard-popup__button--primary"
+            onClick={handleSubmit}
+            disabled={isSubmitting}
           >
-            Create
+            {isSubmitting ? 'Membuat...' : 'Create Project'}
           </button>
         </div>
       </div>

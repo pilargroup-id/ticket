@@ -18,6 +18,9 @@ import {
   getStatusVariant,
 } from '../../services/projects/DataTableProjects.js'
 import { getProjectHistory } from '../../services/projects/Projects.js'
+import ButtonHoldPrj from '../../components/button/ButtonHoldPrj.jsx'
+import ButtonResolvePrj from '../../components/button/ButtonResolvePrj.jsx'
+import ButtonProgressPrj from '../../components/button/ButtonProgressPrj.jsx'
 
 const columns = [
   {

@@ -21,6 +21,7 @@ function ProjectsOverview({ activePage, searchQuery }) {
     startDate: '',
     endDate: '',
   })
+  const [refreshTrigger, setRefreshTrigger] = useState(0)
 
   useEffect(() => {
     let isMounted = true
@@ -59,7 +60,7 @@ function ProjectsOverview({ activePage, searchQuery }) {
     return () => {
       isMounted = false
     }
-  }, [dateRange.endDate, dateRange.startDate])
+  }, [dateRange.endDate, dateRange.startDate, refreshTrigger])
 
   const statusCounts = useMemo(
     () => normalizeProjectStatusCounts(projectRows),
@@ -115,6 +116,7 @@ function ProjectsOverview({ activePage, searchQuery }) {
       <DialogCreateProjects
         isOpen={isCreateDialogOpen}
         onClose={() => setIsCreateDialogOpen(false)}
+        onCreated={() => setRefreshTrigger(prev => prev + 1)}
         eyebrow="Create Project"
         title="Create Projects"
       />
