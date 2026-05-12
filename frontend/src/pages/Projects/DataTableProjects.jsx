@@ -21,6 +21,12 @@ import { getProjectHistory } from '../../services/projects/Projects.js'
 import ButtonHoldPrj from '../../components/button/ButtonHoldPrj.jsx'
 import ButtonResolvePrj from '../../components/button/ButtonResolvePrj.jsx'
 import ButtonProgressPrj from '../../components/button/ButtonProgressPrj.jsx'
+import DialogProgressPrj from '../../components/dialog/DialogProgressPrj.jsx'
+import DialogHoldPrj from '../../components/dialog/DialogHoldPrj.jsx'
+import DialogResolvePrj from '../../components/dialog/DialogResolvePrj.jsx'
+import PlayArrowIcon from '@mui/icons-material/PlayArrow'
+import PauseIcon from '@mui/icons-material/Pause'
+import CheckCircleOutlinedIcon from '@mui/icons-material/CheckCircleOutlined'
 
 const columns = [
   {
@@ -162,9 +168,31 @@ function DataTableProjects({
   projectRows = INITIAL_PROJECT_ROWS,
   isLoading = false,
   errorMessage = '',
+  onRefresh,
 }) {
   const [currentPage, setCurrentPage] = useState(1)
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE)
+
+  // State for dialogs
+  const [selectedProject, setSelectedProject] = useState(null)
+  const [isProgressOpen, setIsProgressOpen] = useState(false)
+  const [isHoldOpen, setIsHoldOpen] = useState(false)
+  const [isResolveOpen, setIsResolveOpen] = useState(false)
+
+  const handleOpenProgress = (project) => {
+    setSelectedProject(project)
+    setIsProgressOpen(true)
+  }
+
+  const handleOpenHold = (project) => {
+    setSelectedProject(project)
+    setIsHoldOpen(true)
+  }
+
+  const handleOpenResolve = (project) => {
+    setSelectedProject(project)
+    setIsResolveOpen(true)
+  }
 
   const filteredRows = useMemo(
     () => getFilteredProjectRows(projectRows, { searchQuery, dateRange, statusFilter }),
@@ -219,10 +247,59 @@ function DataTableProjects({
           eyebrow: 'Project',
           title: (project) => [project.projectCode, project.projectName].filter(Boolean).join(' - '),
           description: () => null,
+          headerActions: (project) => {
+            const { rawStatus } = project
+            const isWaiting = rawStatus === 'waiting'
+            const isHold = rawStatus === 'hold' || rawStatus === 'pending'
+            const isInProgress = ['start', 'progress', 'in_progress'].includes(rawStatus)
+            const isResolved = rawStatus === 'resolved'
+            const isVoid = rawStatus === 'void'
+
+            if (isResolved || isVoid) return null
+
+            return (
+              <div className="users-table__accordion-actions" style={{ gap: '0.5rem' }}>
+                {(isWaiting || isHold || isInProgress) && (
+                  <ButtonProgressPrj tone="warning" onClick={() => handleOpenProgress(project)}>
+                    <PlayArrowIcon fontSize="small" />
+                    {isWaiting ? ' Start' : isHold ? ' Continue' : ' Progress'}
+                  </ButtonProgressPrj>
+                )}
+                {isInProgress && (
+                  <ButtonHoldPrj tone="danger" onClick={() => handleOpenHold(project)}>
+                    <PauseIcon fontSize="small" /> Hold
+                  </ButtonHoldPrj>
+                )}
+                {isInProgress && (
+                  <ButtonResolvePrj tone="default" onClick={() => handleOpenResolve(project)}>
+                    <CheckCircleOutlinedIcon fontSize="small" /> Resolve
+                  </ButtonResolvePrj>
+                )}
+              </div>
+            )
+          },
           render: (project) => <ProjectHistoryPanel project={project} />,
         }}
         emptyMessage={emptyMessage}
         pagination={pagination}
+      />
+      <DialogProgressPrj
+        isOpen={isProgressOpen}
+        onClose={() => setIsProgressOpen(false)}
+        onSuccess={onRefresh}
+        project={selectedProject}
+      />
+      <DialogHoldPrj
+        isOpen={isHoldOpen}
+        onClose={() => setIsHoldOpen(false)}
+        onSuccess={onRefresh}
+        project={selectedProject}
+      />
+      <DialogResolvePrj
+        isOpen={isResolveOpen}
+        onClose={() => setIsResolveOpen(false)}
+        onSuccess={onRefresh}
+        project={selectedProject}
       />
     </div>
   )

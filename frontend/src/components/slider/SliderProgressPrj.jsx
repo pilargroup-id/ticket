@@ -1,9 +1,8 @@
-// PrettoSlider.jsx
 import * as React from "react";
 import Slider from "@mui/material/Slider";
 import { styled } from "@mui/material/styles";
 
-const PrettoSlider = styled(Slider)({
+const SliderProject = styled(Slider)({
   "--accent-teal": "#2a9d8f",
 
   color: "var(--accent-teal)",

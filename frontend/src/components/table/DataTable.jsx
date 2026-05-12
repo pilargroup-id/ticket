@@ -375,6 +375,7 @@ function DataTable({
                                   </p>
                                 ) : null}
                               </div>
+                              {typeof detail.headerActions === 'function' ? detail.headerActions(row, index) : null}
                             </div>
 
                             {typeof detail.render === 'function' ? detail.render(row, index) : null}

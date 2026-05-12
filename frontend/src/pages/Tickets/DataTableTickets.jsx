@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 
 import DialogDelete from '../../components/dialog/DialogDelete.jsx'
-import DialogEdit from '../../components/dialog/DialogEdit.jsx'
+import DialogExecutionTicket from '../../components/dialog/DialogExecutionTicket.jsx'
 import DataTableAction, { DataTableStatus } from '../../components/table/DataTableAction.jsx'
 import { Play, XClose } from '../../components/template/TemplateIcons.jsx'
 import {
@@ -101,12 +101,12 @@ function DataTableTickets({
     setSelectedTicket(null)
   }
 
-  const updateTicketStatus = (nextRawStatus, nextStatus) => {
-    if (selectedTicket?.id && typeof setTicketRows === 'function') {
+  const updateTicketStatus = (ticketId, updatedTicket) => {
+    if (ticketId && typeof setTicketRows === 'function') {
       setTicketRows((currentRows) =>
         currentRows.map((ticket) =>
-          ticket.id === selectedTicket.id
-            ? { ...ticket, rawStatus: nextRawStatus, status: nextStatus }
+          ticket.id === ticketId
+            ? { ...ticket, ...updatedTicket }
             : ticket,
         ),
       )
@@ -115,12 +115,25 @@ function DataTableTickets({
     closeActionDialog()
   }
 
-  const handleExecutionConfirm = () => {
-    updateTicketStatus('in_progress', 'In Progress')
+  const handleExecutionConfirm = (updatedData) => {
+    // If updatedData is provided (from the API response), use it to update the row
+    if (updatedData) {
+      updateTicketStatus(selectedTicket.id, {
+        ...updatedData,
+        // Map raw status to display status if needed, or assume the API returns what we need
+        status: updatedData.status === 'in_progress' ? 'In Progress' : 
+                updatedData.status === 'resolved' ? 'Resolved' : 
+                updatedData.status === 'waiting' ? 'Waiting' : 
+                updatedData.status === 'void' ? 'Void' : updatedData.status
+      })
+    } else {
+      // Fallback for manual updates if API didn't return data
+      updateTicketStatus(selectedTicket.id, { rawStatus: 'in_progress', status: 'In Progress' })
+    }
   }
 
   const handleVoidConfirm = () => {
-    updateTicketStatus('void', 'Void')
+    updateTicketStatus(selectedTicket.id, { rawStatus: 'void', status: 'Void' })
   }
 
   const tableActions = getTicketTableActions({
@@ -179,10 +192,11 @@ function DataTableTickets({
         pagination={pagination}
       />
 
-      <DialogEdit
+      <DialogExecutionTicket
         isOpen={activeActionDialog === 'execution'}
         eyebrow="Execution Ticket"
         title={`Execution ${selectedTicketName}`}
+        ticket={selectedTicket}
         description={
           <>
             Ticket <strong>{selectedTicketName}</strong> akan dipindahkan ke proses execution.

@@ -3267,6 +3267,17 @@ select {
   background: rgba(239, 68, 68, 0.14);
 }
 
+.users-table__accordion-button--warning {
+  border-color: rgba(233, 196, 106, 0.38);
+  background: rgba(233, 196, 106, 0.12);
+  color: #8a680f;
+}
+
+.users-table__accordion-button--warning:hover {
+  border-color: rgba(233, 196, 106, 0.54);
+  background: rgba(233, 196, 106, 0.18);
+}
+
 .users-table__accordion-button svg {
   flex-shrink: 0;
 }

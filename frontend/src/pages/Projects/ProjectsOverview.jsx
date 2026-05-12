@@ -109,6 +109,7 @@ function ProjectsOverview({ activePage, searchQuery }) {
           projectRows={projectRows}
           isLoading={isLoadingProjects}
           errorMessage={projectsError}
+          onRefresh={() => setRefreshTrigger((prev) => prev + 1)}
           tableLabel={`${activePage?.title ?? 'Projects Overview'} table`}
         />
       </section>

@@ -18,6 +18,7 @@ function ButtonProgressPrj({
   const buttonClassName = [
     buttonClassNames[variant] ?? buttonClassNames.accordion,
     variant === 'accordion' && tone === 'danger' ? 'users-table__accordion-button--danger' : '',
+    variant === 'accordion' && tone === 'warning' ? 'users-table__accordion-button--warning' : '',
     variant === 'icon' && tone === 'danger' ? 'users-table__icon-button--danger' : '',
     variant === 'pagination' && active ? 'users-table-pagination__button--active' : '',
     className,
