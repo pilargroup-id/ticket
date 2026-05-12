@@ -1,81 +1,68 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 import ButtonRangeDate from '../../components/button/ButtonRangeDate.jsx'
 import { Folder } from '../../components/template/TemplateIcons.jsx'
 import DialogCreateProjects from '../../components/dialog/DialogCreateProjects.jsx'
+import { INITIAL_PROJECT_ROWS } from '../../services/projects/DataTableProjects.js'
+import {
+  getProjects,
+  normalizeProjectStatusCounts,
+} from '../../services/projects/Projects.js'
 import CardStatusProjects from './CardStatusProjects.jsx'
 import DataTableProjects from './DataTableProjects.jsx'
-
-const INITIAL_PROJECT_ROWS = [
-  {
-    id: 'PRJ-001',
-    ticketCode: 'PRJ-001',
-    category: 'Infrastructure',
-    requestor: 'IT Operations',
-    problem: 'Rollout self-service portal untuk request layanan internal.',
-    requestDate: '11 Mei 2026',
-    requestDateValue: '2026-05-11T09:00:00+07:00',
-    status: 'In Progress',
-    priority: 'High',
-    supportName: 'Alya Pratama',
-    solution: 'Discovery selesai dan backlog sprint pertama sudah disetujui.',
-  },
-  {
-    id: 'PRJ-002',
-    ticketCode: 'PRJ-002',
-    category: 'Security',
-    requestor: 'Information Security',
-    problem: 'Implementasi approval flow untuk privileged access lintas aplikasi.',
-    requestDate: '09 Mei 2026',
-    requestDateValue: '2026-05-09T10:30:00+07:00',
-    status: 'Waiting',
-    priority: 'High',
-    supportName: 'Bima Saputra',
-    solution: 'Menunggu final scope dan daftar sistem yang masuk fase pertama.',
-  },
-  {
-    id: 'PRJ-003',
-    ticketCode: 'PRJ-003',
-    category: 'Automation',
-    requestor: 'Finance',
-    problem: 'Otomasi notifikasi SLA untuk approval invoice dan eskalasi review.',
-    requestDate: '07 Mei 2026',
-    requestDateValue: '2026-05-07T14:00:00+07:00',
-    status: 'Resolved',
-    priority: 'Medium',
-    supportName: 'Clara Wijaya',
-    solution: 'Workflow notifikasi aktif di staging dan siap dipromosikan ke produksi.',
-  },
-  {
-    id: 'PRJ-004',
-    ticketCode: 'PRJ-004',
-    category: 'Integration',
-    requestor: 'HRIS Team',
-    problem: 'Sinkronisasi master user antara HRIS dan aplikasi ticketing.',
-    requestDate: '06 Mei 2026',
-    requestDateValue: '2026-05-06T13:15:00+07:00',
-    status: 'Feedback',
-    priority: 'Medium',
-    supportName: 'Dio Mahendra',
-    solution: 'Menunggu konfirmasi mapping field dari tim HRIS.',
-  },
-]
 
 function ProjectsOverview({ activePage, searchQuery }) {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
   const [statusFilter, setStatusFilter] = useState('')
   const [projectRows, setProjectRows] = useState(INITIAL_PROJECT_ROWS)
+  const [isLoadingProjects, setIsLoadingProjects] = useState(true)
+  const [projectsError, setProjectsError] = useState('')
   const [dateRange, setDateRange] = useState({
     startDate: '',
     endDate: '',
   })
 
+  useEffect(() => {
+    let isMounted = true
+
+    async function loadProjects() {
+      setIsLoadingProjects(true)
+      setProjectsError('')
+
+      try {
+        const response = await getProjects({
+          startDate: dateRange.startDate,
+          endDate: dateRange.endDate,
+        })
+
+        if (!isMounted) {
+          return
+        }
+
+        setProjectRows(response.data)
+      } catch (error) {
+        if (!isMounted) {
+          return
+        }
+
+        setProjectRows([])
+        setProjectsError(error?.message || 'Gagal memuat data project.')
+      } finally {
+        if (isMounted) {
+          setIsLoadingProjects(false)
+        }
+      }
+    }
+
+    loadProjects()
+
+    return () => {
+      isMounted = false
+    }
+  }, [dateRange.endDate, dateRange.startDate])
+
   const statusCounts = useMemo(
-    () =>
-      projectRows.reduce((counts, project) => {
-        counts[project.status] = (counts[project.status] ?? 0) + 1
-        return counts
-      }, {}),
+    () => normalizeProjectStatusCounts(projectRows),
     [projectRows],
   )
 
@@ -118,8 +105,9 @@ function ProjectsOverview({ activePage, searchQuery }) {
           dateRange={dateRange}
           searchQuery={searchQuery}
           statusFilter={statusFilter}
-          ticketRows={projectRows}
-          setTicketRows={setProjectRows}
+          projectRows={projectRows}
+          isLoading={isLoadingProjects}
+          errorMessage={projectsError}
           tableLabel={`${activePage?.title ?? 'Projects Overview'} table`}
         />
       </section>

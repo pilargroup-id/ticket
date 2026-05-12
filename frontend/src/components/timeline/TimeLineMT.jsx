@@ -16,7 +16,7 @@ const TIMELINE_TIME_FORMATTER = new Intl.DateTimeFormat('id-ID', {
 })
 
 function getTimelineStatusVariant(status) {
-  if (status === 'Created' || status === 'Waiting') {
+  if (status === 'Created' || status === 'Waiting' || status === 'Pending') {
     return 'pending'
   }
 
@@ -65,13 +65,17 @@ function formatTimelineTime(value) {
   return `${TIMELINE_TIME_FORMATTER.format(parsedDate)} WIB`
 }
 
-export default function TimeLineMT({ items = [] }) {
+export default function TimeLineMT({
+  items = [],
+  emptyMessage = 'Belum ada riwayat status untuk ticket ini.',
+  ariaLabel = 'Timeline status ticket',
+}) {
   if (!Array.isArray(items) || items.length === 0) {
-    return <p className="mtickets-timeline__empty">Belum ada riwayat status untuk ticket ini.</p>
+    return <p className="mtickets-timeline__empty">{emptyMessage}</p>
   }
 
   return (
-    <div className="mtickets-timeline" role="list" aria-label="Timeline status ticket">
+    <div className="mtickets-timeline" role="list" aria-label={ariaLabel}>
       {items.map((item, index) => {
         const variant = getTimelineStatusVariant(item.status)
         const itemKey = item.id ?? `${item.status}-${item.timestamp ?? index}`

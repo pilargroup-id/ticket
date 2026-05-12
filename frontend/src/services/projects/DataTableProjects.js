@@ -1,12 +1,10 @@
-import { Edit03, Trash03 } from '../../components/template/TemplateIcons.jsx'
-
 export const PAGE_SIZE_OPTIONS = [5, 10, 15]
 export const DEFAULT_PAGE_SIZE = PAGE_SIZE_OPTIONS[0]
 export const EMPTY_DATE_RANGE = {
   startDate: '',
   endDate: '',
 }
-export const INITIAL_TICKET_ROWS = []
+export const INITIAL_PROJECT_ROWS = []
 
 function normalizeText(value) {
   if (value === undefined || value === null) {
@@ -17,7 +15,7 @@ function normalizeText(value) {
 }
 
 export function getStatusVariant(status) {
-  if (status === 'Waiting') {
+  if (status === 'Waiting' || status === 'Pending') {
     return 'pending'
   }
 
@@ -25,14 +23,14 @@ export function getStatusVariant(status) {
     return 'active'
   }
 
-  if (status === 'Feedback') {
-    return 'app'
+  if (status === 'Void') {
+    return 'inactive'
   }
 
-  return 'inactive'
+  return 'app'
 }
 
-function matchesSearch(ticket, searchQuery) {
+function matchesSearch(project, searchQuery) {
   const normalizedQuery = searchQuery.trim().toLowerCase()
 
   if (!normalizedQuery) {
@@ -40,28 +38,26 @@ function matchesSearch(ticket, searchQuery) {
   }
 
   return [
-    ticket?.id,
-    ticket?.ticketCode,
-    ticket?.category,
-    ticket?.requestor,
-    ticket?.problem,
-    ticket?.issue,
-    ticket?.requestDate,
-    ticket?.status,
-    ticket?.priority,
-    ticket?.supportName,
-    ticket?.supportRole,
-    ticket?.solution,
-    ticket?.notes,
+    project?.id,
+    project?.projectCode,
+    project?.projectName,
+    project?.requestor,
+    project?.priority,
+    project?.progress,
+    project?.status,
+    project?.requestDate,
+    project?.startDate,
+    project?.endDate,
+    project?.notes,
   ].some((value) => normalizeText(value).toLowerCase().includes(normalizedQuery))
 }
 
-function matchesStatus(ticket, statusFilter) {
+function matchesStatus(project, statusFilter) {
   if (!statusFilter) {
     return true
   }
 
-  return ticket?.status === statusFilter
+  return project?.status === statusFilter
 }
 
 function parseInputDate(value) {
@@ -80,12 +76,16 @@ function parseInputDate(value) {
   return date
 }
 
-function parseTicketDateValue(ticket) {
+function parseProjectDateValue(project) {
   const rawValue =
-    ticket?.requestDateValue ||
-    ticket?.startDateValue ||
-    ticket?.lastUpdatedValue ||
-    ticket?.requestDate ||
+    project?.requestDateValue ||
+    project?.startDateValue ||
+    project?.endDateValue ||
+    project?.actualStartDateValue ||
+    project?.actualEndDateValue ||
+    project?.effectiveEndDateValue ||
+    project?.lastUpdatedValue ||
+    project?.requestDate ||
     null
 
   if (!rawValue) {
@@ -101,7 +101,7 @@ function parseTicketDateValue(ticket) {
   return parsedDate
 }
 
-function matchesDateRange(ticket, range) {
+function matchesDateRange(project, range) {
   if (!range.startDate || !range.endDate) {
     return true
   }
@@ -113,35 +113,35 @@ function matchesDateRange(ticket, range) {
     return true
   }
 
-  const ticketDate = parseTicketDateValue(ticket)
+  const projectDate = parseProjectDateValue(project)
 
-  if (!ticketDate) {
+  if (!projectDate) {
     return false
   }
 
   startDate.setHours(0, 0, 0, 0)
   endDate.setHours(23, 59, 59, 999)
 
-  const ticketTime = ticketDate.getTime()
+  const projectTime = projectDate.getTime()
 
-  return ticketTime >= startDate.getTime() && ticketTime <= endDate.getTime()
+  return projectTime >= startDate.getTime() && projectTime <= endDate.getTime()
 }
 
-export function getFilteredTicketRows(
-  ticketRows,
+export function getFilteredProjectRows(
+  projectRows,
   { searchQuery = '', dateRange = EMPTY_DATE_RANGE, statusFilter = '' } = {},
 ) {
-  const normalizedRows = Array.isArray(ticketRows) ? ticketRows : []
+  const normalizedRows = Array.isArray(projectRows) ? projectRows : []
 
   return normalizedRows.filter(
-    (ticket) =>
-      matchesSearch(ticket, searchQuery) &&
-      matchesDateRange(ticket, dateRange) &&
-      matchesStatus(ticket, statusFilter),
+    (project) =>
+      matchesSearch(project, searchQuery) &&
+      matchesDateRange(project, dateRange) &&
+      matchesStatus(project, statusFilter),
   )
 }
 
-export function hasActiveTicketFilters({
+export function hasActiveProjectFilters({
   searchQuery = '',
   dateRange = EMPTY_DATE_RANGE,
   statusFilter = '',
@@ -152,7 +152,7 @@ export function hasActiveTicketFilters({
   return Boolean(searchQuery || hasActiveDateFilter || hasActiveStatusFilter)
 }
 
-export function getTicketPageRows(filteredRows, currentPage, pageSize) {
+export function getProjectPageRows(filteredRows, currentPage, pageSize) {
   const totalPages = Math.max(1, Math.ceil(filteredRows.length / pageSize))
   const safeCurrentPage = Math.min(currentPage, totalPages)
   const currentPageStart = (safeCurrentPage - 1) * pageSize
@@ -170,47 +170,12 @@ export function getTicketPageRows(filteredRows, currentPage, pageSize) {
   }
 }
 
-export function getTicketPaginationSummary(firstItem, lastItem, totalItems) {
+export function getProjectPaginationSummary(firstItem, lastItem, totalItems) {
   if (totalItems === 0) {
-    return '0 dari 0 tiket'
+    return '0 dari 0 project'
   }
 
-  return `${firstItem}-${lastItem} dari ${totalItems} tiket`
-}
-
-function createFallbackTimelineTimestamp(ticket) {
-  return (
-    ticket?.requestDateValue ||
-    ticket?.startDateValue ||
-    ticket?.endDateValue ||
-    ticket?.lastUpdatedValue ||
-    null
-  )
-}
-
-export function getTicketTimelineItems(ticket) {
-  const timelineItems = Array.isArray(ticket?.timeline)
-    ? ticket.timeline.filter(
-        (item) => item && (item.status || item.title || item.detail || item.timestamp),
-      )
-    : []
-
-  if (timelineItems.length > 0) {
-    return timelineItems
-  }
-
-  return [
-    {
-      status: ticket?.status ?? 'Waiting',
-      title: 'Status ticket saat ini',
-      detail:
-        ticket?.solution ||
-        ticket?.problem ||
-        ticket?.issue ||
-        'Belum ada riwayat status yang tersedia untuk ticket ini.',
-      timestamp: createFallbackTimelineTimestamp(ticket),
-    },
-  ]
+  return `${firstItem}-${lastItem} dari ${totalItems} project`
 }
 
 export function getPaginationItems(currentPage, totalPages) {
@@ -237,26 +202,8 @@ export function getPaginationItems(currentPage, totalPages) {
   ]
 }
 
-export function getTicketEmptyMessage(filters) {
-  return hasActiveTicketFilters(filters)
-    ? 'Tidak ada ticket yang sesuai dengan filter yang dipilih.'
-    : 'Belum ada ticket untuk ditampilkan.'
-}
-
-export function getTicketTableActions({ onEdit, onDelete }) {
-  return [
-    {
-      key: 'edit',
-      label: 'Edit',
-      icon: Edit03,
-      onClick: onEdit,
-    },
-    {
-      key: 'delete',
-      label: 'Delete',
-      icon: Trash03,
-      variant: 'danger',
-      onClick: onDelete,
-    },
-  ]
+export function getProjectEmptyMessage(filters) {
+  return hasActiveProjectFilters(filters)
+    ? 'Tidak ada project yang sesuai dengan filter yang dipilih.'
+    : 'Belum ada project untuk ditampilkan.'
 }

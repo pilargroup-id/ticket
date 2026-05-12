@@ -1,61 +1,45 @@
 import { useEffect, useMemo, useState } from 'react'
 
-import DialogDelete from '../../components/dialog/DialogDelete.jsx'
-import DialogEdit from '../../components/dialog/DialogEdit.jsx'
-
 import DataTable, {
   DataTableIdentity,
   DataTableStatus,
 } from '../../components/table/DataTable.jsx'
+import TimeLineMT from '../../components/timeline/TimeLineMT.jsx'
 import {
   DEFAULT_PAGE_SIZE,
   EMPTY_DATE_RANGE,
-  INITIAL_TICKET_ROWS,
+  INITIAL_PROJECT_ROWS,
   PAGE_SIZE_OPTIONS,
-  getFilteredTicketRows,
+  getFilteredProjectRows,
   getPaginationItems,
+  getProjectEmptyMessage,
+  getProjectPageRows,
+  getProjectPaginationSummary,
   getStatusVariant,
-  getTicketEmptyMessage,
-  getTicketPageRows,
-  getTicketPaginationSummary,
-
-  getTicketTableActions,
-} from '../../services/my-tickets/DataTableMT.js'
+} from '../../services/projects/DataTableProjects.js'
+import { getProjectHistory } from '../../services/projects/Projects.js'
 
 const columns = [
   {
-    key: 'ticketCode',
-    header: 'Ticket Code',
-    accessor: 'ticketCode',
+    key: 'projectCode',
+    header: 'Project',
+    accessor: 'projectCode',
     cellStyle: { whiteSpace: 'nowrap', width: '11%' },
   },
   {
-    key: 'category',
-    header: 'Category',
-    cellStyle: { whiteSpace: 'nowrap', width: '12%' },
-    render: (ticket) => ticket.category || '-',
+    key: 'projectName',
+    header: 'Project',
+    accessor: 'projectName',
+    cellStyle: { minWidth: '260px' },
   },
   {
-    key: 'problem',
-    header: 'Problem',
-    accessor: 'problem',
-    cellStyle: { minWidth: '320px' },
-  },
-  {
-    key: 'requestDate',
-    header: 'Request Date',
-    accessor: 'requestDate',
-    cellStyle: { whiteSpace: 'nowrap', width: '12%' },
-  },
-  {
-    key: 'status',
-    header: 'Status',
-    cellStyle: { whiteSpace: 'nowrap', width: '10%' },
-    render: (ticket) => (
-      <DataTableStatus inline variant={getStatusVariant(ticket.status)}>
-        {ticket.status}
-      </DataTableStatus>
-    ),
+    key: 'requestor',
+    header: 'Requestor',
+    cellStyle: { minWidth: '220px' },
+    render: (project) =>
+      project.requestor && project.requestor !== '-'
+        ? <DataTableIdentity title={project.requestor} />
+        : '-',
   },
   {
     key: 'priority',
@@ -64,80 +48,169 @@ const columns = [
     cellStyle: { whiteSpace: 'nowrap', width: '9%' },
   },
   {
-    key: 'support',
-    header: 'Support',
-    cellStyle: { minWidth: '220px' },
-    render: (ticket) =>
-      ticket.supportName ? <DataTableIdentity title={ticket.supportName} /> : '-',
+    key: 'progress',
+    header: 'Progress',
+    accessor: 'progress',
+    cellStyle: { whiteSpace: 'nowrap', width: '9%' },
+  },
+  {
+    key: 'description',
+    header: 'Description',
+    accessor: 'description',
+    cellStyle: { whiteSpace: 'nowrap', width: '9%' },
+  },
+  {
+    key: 'status',
+    header: 'Status',
+    cellStyle: { whiteSpace: 'nowrap', width: '12%' },
+    render: (project) => (
+      <DataTableStatus inline variant={getStatusVariant(project.status)}>
+        {project.status}
+      </DataTableStatus>
+    ),
   },
 ]
 
-function DataTableMT({
+function ProjectHistoryPanel({ project }) {
+  const [historyItems, setHistoryItems] = useState([])
+  const [isLoadingHistory, setIsLoadingHistory] = useState(true)
+  const [historyError, setHistoryError] = useState('')
+
+  useEffect(() => {
+    let isMounted = true
+
+    async function loadProjectHistory() {
+      if (!project?.id) {
+        setHistoryItems([])
+        setHistoryError('')
+        setIsLoadingHistory(false)
+        return
+      }
+
+      setIsLoadingHistory(true)
+      setHistoryError('')
+
+      try {
+        const response = await getProjectHistory(project.id)
+
+        if (!isMounted) {
+          return
+        }
+
+        setHistoryItems(response.data)
+      } catch (error) {
+        if (!isMounted) {
+          return
+        }
+
+        setHistoryItems([])
+        setHistoryError(error?.message || 'Gagal memuat riwayat project.')
+      } finally {
+        if (isMounted) {
+          setIsLoadingHistory(false)
+        }
+      }
+    }
+
+    loadProjectHistory()
+
+    return () => {
+      isMounted = false
+    }
+  }, [project?.id])
+
+  return (
+    <section className="users-table__detail-section users-table__detail-section--wide">
+      <div className="users-table__detail-section-header">
+        <p className="users-table__detail-section-eyebrow">History</p>
+      </div>
+
+      <p className="mtickets-table__detail-copy">
+        Riwayat status project diambil dari endpoint history saat detail dibuka.
+      </p>
+
+      <div className="mtickets-table__detail-summary">
+        <div className="mtickets-table__detail-item">
+          <p className="mtickets-table__detail-label">Name</p>
+          <p className="mtickets-table__detail-value">{project.projectName}</p>
+        </div>
+
+        <div className="mtickets-table__detail-item">
+          <p className="mtickets-table__detail-label">Requestor</p>
+          <p className="mtickets-table__detail-value">{project.requestor}</p>
+        </div>
+
+        <div className="mtickets-table__detail-item">
+          <p className="mtickets-table__detail-label">Priority</p>
+          <p className="mtickets-table__detail-value">{project.priority}</p>
+        </div>
+
+        <div className="mtickets-table__detail-item">
+          <p className="mtickets-table__detail-label">Progress</p>
+          <p className="mtickets-table__detail-value">{project.progress}</p>
+        </div>
+
+        <div className="mtickets-table__detail-item">
+          <p className="mtickets-table__detail-label">Status</p>
+          <div className="mtickets-table__detail-value">
+            <DataTableStatus inline variant={getStatusVariant(project.status)}>
+              {project.status}
+            </DataTableStatus>
+          </div>
+        </div>
+
+        <div className="mtickets-table__detail-item">
+          <p className="mtickets-table__detail-label">Request Date</p>
+          <p className="mtickets-table__detail-value">{project.requestDate}</p>
+        </div>
+      </div>
+
+      {isLoadingHistory ? (
+        <p className="mtickets-timeline__empty">Memuat riwayat project...</p>
+      ) : historyError ? (
+        <p className="mtickets-timeline__empty">{historyError}</p>
+      ) : (
+        <TimeLineMT
+          items={historyItems}
+          emptyMessage="Belum ada riwayat status untuk project ini."
+          ariaLabel={`Timeline status ${project.projectCode}`}
+        />
+      )}
+    </section>
+  )
+}
+
+function DataTableProjects({
   searchQuery = '',
-  tableLabel = 'MyTickets table',
+  tableLabel = 'Projects table',
   dateRange = EMPTY_DATE_RANGE,
   statusFilter = '',
-  ticketRows = INITIAL_TICKET_ROWS,
+  projectRows = INITIAL_PROJECT_ROWS,
   isLoading = false,
   errorMessage = '',
-  refreshVersion = 0,
-  setTicketRows,
 }) {
   const [currentPage, setCurrentPage] = useState(1)
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE)
-  const [activeActionDialog, setActiveActionDialog] = useState(null)
-  const [selectedTicket, setSelectedTicket] = useState(null)
 
   const filteredRows = useMemo(
-    () => getFilteredTicketRows(ticketRows, { searchQuery, dateRange, statusFilter }),
-    [dateRange, searchQuery, statusFilter, ticketRows],
+    () => getFilteredProjectRows(projectRows, { searchQuery, dateRange, statusFilter }),
+    [dateRange, projectRows, searchQuery, statusFilter],
   )
   const { totalPages, safeCurrentPage, rows, firstItem, lastItem } = useMemo(
-    () => getTicketPageRows(filteredRows, currentPage, pageSize),
+    () => getProjectPageRows(filteredRows, currentPage, pageSize),
     [currentPage, filteredRows, pageSize],
   )
-  const selectedTicketName = selectedTicket?.ticketCode ?? selectedTicket?.id ?? 'ticket ini'
-  const dialogTicket = selectedTicket ? { name: selectedTicketName } : null
-
-  const openActionDialog = (dialogType, ticket) => {
-    setSelectedTicket(ticket)
-    setActiveActionDialog(dialogType)
-  }
-
-  const closeActionDialog = () => {
-    setActiveActionDialog(null)
-    setSelectedTicket(null)
-  }
-
-  const handleEditConfirm = () => {
-    closeActionDialog()
-  }
-
-  const handleDeleteConfirm = () => {
-    if (selectedTicket?.id && typeof setTicketRows === 'function') {
-      setTicketRows((currentRows) =>
-        currentRows.filter((ticket) => ticket.id !== selectedTicket.id),
-      )
-    }
-
-    closeActionDialog()
-  }
-
-  const tableActions = getTicketTableActions({
-    onEdit: (ticket) => openActionDialog('edit', ticket),
-    onDelete: (ticket) => openActionDialog('delete', ticket),
-  })
 
   useEffect(() => {
     setCurrentPage(1)
-  }, [dateRange.endDate, dateRange.startDate, pageSize, refreshVersion, searchQuery, statusFilter])
+  }, [dateRange.endDate, dateRange.startDate, pageSize, searchQuery, statusFilter])
 
   useEffect(() => {
     setCurrentPage((page) => Math.min(page, totalPages))
   }, [totalPages])
 
   const pagination = {
-    summary: getTicketPaginationSummary(firstItem, lastItem, filteredRows.length),
+    summary: getProjectPaginationSummary(firstItem, lastItem, filteredRows.length),
     currentPage: safeCurrentPage,
     totalPages,
     items: getPaginationItems(safeCurrentPage, totalPages),
@@ -147,34 +220,16 @@ function DataTableMT({
     pageSizeSuffix: 'baris',
     previousLabel: 'Sebelumnya',
     nextLabel: 'Berikutnya',
-    ariaLabel: 'MyTickets pagination',
-    pageSizeAriaLabel: 'Jumlah baris ticket per halaman',
+    ariaLabel: 'Projects pagination',
+    pageSizeAriaLabel: 'Jumlah baris project per halaman',
     onPrevious: () => setCurrentPage((page) => Math.max(1, page - 1)),
     onNext: () => setCurrentPage((page) => Math.min(totalPages, page + 1)),
     onSelect: (page) => setCurrentPage(page),
     onPageSizeChange: (nextPageSize) => setPageSize(nextPageSize),
   }
   const emptyMessage = isLoading
-    ? 'Memuat data ticket...'
-    : errorMessage || getTicketEmptyMessage({ searchQuery, dateRange, statusFilter })
-
-  const getTicketDetailSections = (ticket) => [
-    {
-      title: 'Informasi Ticket',
-      fields: [
-        { label: 'Requestor', value: ticket.requestor },
-        { label: 'Priority', value: ticket.priority },
-        { label: 'Category', value: ticket.category || '-' },
-      ],
-    },
-    {
-      title: 'Problem & Solution',
-      fields: [
-        { label: 'Problem', value: ticket.problem },
-        { label: 'Solution', value: ticket.solution },
-      ],
-    },
-  ]
+    ? 'Memuat data project...'
+    : errorMessage || getProjectEmptyMessage({ searchQuery, dateRange, statusFilter })
 
   return (
     <div className="mtickets-table-shell">
@@ -182,39 +237,21 @@ function DataTableMT({
         className="mtickets-table"
         rows={rows}
         columns={columns}
-        getRowId={(ticket) => ticket.id ?? ticket.ticketCode}
+        getRowId={(project) => project.id ?? project.projectCode}
         tableLabel={tableLabel}
         detail={{
-          columnLabel: 'Detail',
+          columnLabel: 'Actions',
           buttonLabel: 'Detail',
-          eyebrow: 'Ticket Code',
-          title: (ticket) => ticket.ticketCode,
-          sections: (ticket) => getTicketDetailSections(ticket),
+          eyebrow: 'Project',
+          title: (project) => project.projectCode,
+          description: (project) => project.projectName,
+          render: (project) => <ProjectHistoryPanel project={project} />,
         }}
-        actions={tableActions}
         emptyMessage={emptyMessage}
         pagination={pagination}
-      />
-
-      <DialogEdit
-        isOpen={activeActionDialog === 'edit'}
-        eyebrow="Edit Ticket"
-        title={`Edit ${selectedTicketName}`}
-        user={dialogTicket}
-        onClose={closeActionDialog}
-        onConfirm={handleEditConfirm}
-      />
-
-      <DialogDelete
-        isOpen={activeActionDialog === 'delete'}
-        eyebrow="Delete Ticket"
-        title={`Delete ${selectedTicketName}`}
-        user={dialogTicket}
-        onClose={closeActionDialog}
-        onConfirm={handleDeleteConfirm}
       />
     </div>
   )
 }
 
-export default DataTableMT
+export default DataTableProjects
