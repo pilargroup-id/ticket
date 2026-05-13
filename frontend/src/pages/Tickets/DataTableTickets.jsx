@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 
-import DialogDelete from '../../components/dialog/DialogDelete.jsx'
+import DialogVoidTickets from '../../components/dialog/DialogVoidTickets.jsx'
 import DialogExecutionTicket from '../../components/dialog/DialogExecutionTicket.jsx'
 import DataTableAction, { DataTableStatus } from '../../components/table/DataTableAction.jsx'
 import { Play, XClose } from '../../components/template/TemplateIcons.jsx'
@@ -23,19 +23,19 @@ export const INITIAL_TICKET_ROWS = DEFAULT_TICKET_ROWS
 const columns = [
   {
     key: 'userName',
-    header: 'user_name',
+    header: 'username',
     accessor: 'userName',
     cellStyle: { minWidth: '180px' },
   },
   {
     key: 'requestDate',
-    header: 'request_date',
+    header: 'request date',
     accessor: 'requestDate',
-    cellStyle: { whiteSpace: 'nowrap', width: '12%' },
+    cellStyle: { minWidth: '130x' },
   },
   {
     key: 'namaPembuat',
-    header: 'nama_pembuat',
+    header: 'nama pembuat',
     accessor: 'namaPembuat',
     cellStyle: { minWidth: '180px' },
   },
@@ -51,7 +51,7 @@ const columns = [
   },
   {
     key: 'supportName',
-    header: 'support_name',
+    header: 'support name',
     accessor: 'supportName',
     cellStyle: { minWidth: '180px' },
   },
@@ -73,6 +73,7 @@ function DataTableTickets({
   errorMessage = '',
   refreshVersion = 0,
   setTicketRows,
+  refreshData,
 }) {
   const [currentPage, setCurrentPage] = useState(1)
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE)
@@ -112,6 +113,8 @@ function DataTableTickets({
       )
     }
 
+    // Refresh global data to update counts etc
+    refreshData?.()
     closeActionDialog()
   }
 
@@ -121,10 +124,10 @@ function DataTableTickets({
       updateTicketStatus(selectedTicket.id, {
         ...updatedData,
         // Map raw status to display status if needed, or assume the API returns what we need
-        status: updatedData.status === 'in_progress' ? 'In Progress' : 
-                updatedData.status === 'resolved' ? 'Resolved' : 
-                updatedData.status === 'waiting' ? 'Waiting' : 
-                updatedData.status === 'void' ? 'Void' : updatedData.status
+        status: updatedData.status === 'in_progress' ? 'In Progress' :
+          updatedData.status === 'resolved' ? 'Resolved' :
+            updatedData.status === 'waiting' ? 'Waiting' :
+              updatedData.status === 'void' ? 'Void' : updatedData.status
       })
     } else {
       // Fallback for manual updates if API didn't return data
@@ -132,8 +135,15 @@ function DataTableTickets({
     }
   }
 
-  const handleVoidConfirm = () => {
-    updateTicketStatus(selectedTicket.id, { rawStatus: 'void', status: 'Void' })
+  const handleVoidConfirm = (updatedData) => {
+    if (updatedData) {
+      updateTicketStatus(selectedTicket.id, {
+        ...updatedData,
+        status: updatedData.status === 'void' ? 'Void' : updatedData.status
+      })
+    } else {
+      updateTicketStatus(selectedTicket.id, { rawStatus: 'void', status: 'Void' })
+    }
   }
 
   const tableActions = getTicketTableActions({
@@ -209,10 +219,11 @@ function DataTableTickets({
         onConfirm={handleExecutionConfirm}
       />
 
-      <DialogDelete
+      <DialogVoidTickets
         isOpen={activeActionDialog === 'void'}
         eyebrow="Void Ticket"
         title={`Void ${selectedTicketName}`}
+        ticket={selectedTicket}
         description={
           <>
             Apakah Anda yakin ingin mengubah <strong>{selectedTicketName}</strong> menjadi void?
@@ -220,7 +231,6 @@ function DataTableTickets({
         }
         secondaryDescription="Status ticket akan diperbarui menjadi Void pada tabel aktif."
         confirmLabel="Void"
-        user={dialogTicket}
         onClose={closeActionDialog}
         onConfirm={handleVoidConfirm}
       />

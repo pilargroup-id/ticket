@@ -418,4 +418,22 @@ class TicketController extends Controller
             'data'    => new TicketResource($ticket->fresh()->load(['user', 'support', 'category', 'assets'])),
         ], 200);
     }
+    public function voidTicket(Request $request, $id)
+    {
+        $ticket = Tickets::findOrFail($id);
+
+        if (empty($request->notes)) {
+            return response()->json(['message' => 'notes wajib untuk VOID'], 422);
+        }
+
+        $ticket->update([
+            'status' => 'void',
+            'notes'  => $request->notes,
+        ]);
+
+        return response()->json([
+            'message' => 'Ticket voided successfully',
+            'data'    => new TicketResource($ticket->fresh()->load(['user', 'support', 'category', 'assets'])),
+        ], 200);
+    }
 }

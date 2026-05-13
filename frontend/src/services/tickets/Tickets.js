@@ -267,7 +267,7 @@ export function normalizeTicketStatusCounts(report = {}) {
 }
 
 export async function getTicketReport(options = {}) {
-  const response = await api.get('/user/reports/tickets', {
+  const response = await api.get('/reports/ticket-all', {
     params: buildTicketReportQuery(options),
   })
 

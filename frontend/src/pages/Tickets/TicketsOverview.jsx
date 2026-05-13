@@ -93,7 +93,7 @@ function TicketsOverview({ activePage, searchQuery, onLoadingChange }) {
     }
   }, [dateRange.endDate, dateRange.startDate, ticketRefreshVersion])
 
-  const isPageLoading = isLoadingTickets && ticketRows.length === 0 && !ticketsError
+  const isPageLoading = isLoadingTickets
 
   useEffect(() => {
     onLoadingChange?.(isPageLoading)
@@ -103,7 +103,7 @@ function TicketsOverview({ activePage, searchQuery, onLoadingChange }) {
     }
   }, [isPageLoading, onLoadingChange])
 
-  if (isPageLoading) {
+  if (isPageLoading && ticketRows.length === 0) {
     return null
   }
 
@@ -151,6 +151,7 @@ function TicketsOverview({ activePage, searchQuery, onLoadingChange }) {
           errorMessage={ticketsError}
           refreshVersion={ticketRefreshVersion}
           setTicketRows={setTicketRows}
+          refreshData={() => setTicketRefreshVersion((v) => v + 1)}
           tableLabel={`${activePage?.title ?? 'Tickets Overview'} table`}
         />
       </section>

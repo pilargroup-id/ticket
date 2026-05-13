@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom'
 
 import { XClose } from '../template/TemplateIcons.jsx'
 import api from '../../services/api.js'
+import DialogLoading from './DialogLoading.jsx'
 
 function DialogExecutionTicket({
   isOpen = false,
@@ -129,6 +130,19 @@ function DialogExecutionTicket({
 
   if (!isOpen) return null
   if (typeof document === 'undefined') return null
+
+  if (isSubmitting) {
+    return createPortal(
+      <DialogLoading
+        isOpen={true}
+        eyebrow={eyebrow}
+        title={title}
+        loadingLabel="Sedang menyimpan..."
+        detail="Mohon tunggu sebentar, kami sedang memperbarui data ticket ini."
+      />,
+      document.body,
+    )
+  }
 
   return createPortal(
     <div className="dashboard-popup-overlay" role="presentation" onClick={onClose}>
