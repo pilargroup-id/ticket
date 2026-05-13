@@ -6,6 +6,7 @@ import DataTable, { DataTableIdentity, DataTableStatus } from '../../components/
 import { Play, XClose } from '../../components/template/TemplateIcons.jsx'
 import ButtonExecutionTickets from '../../components/button/ButtonExecutionTickets.jsx'
 import ButtonVoidTickets from '../../components/button/ButtonVoidTickets.jsx'
+import ButtonHistoryPrj from '../../components/button/ButtonHistoryPrj.jsx'
 import {
   DEFAULT_PAGE_SIZE,
   EMPTY_DATE_RANGE,

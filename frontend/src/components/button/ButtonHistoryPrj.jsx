@@ -1,0 +1,41 @@
+import HistoryIcon from '@mui/icons-material/History'
+
+const buttonClassNames = {
+  action: 'users-table-card__action',
+  detail: 'users-table__detail-button',
+  accordion: 'users-table__accordion-button',
+  icon: 'users-table__icon-button',
+  pagination: 'users-table-pagination__button',
+}
+
+function ButtonHistoryPrj({
+  children,
+  className = '',
+  variant = 'accordion',
+  tone = 'default',
+  active = false,
+  type = 'button',
+  ...buttonProps
+}) {
+  const buttonClassName = [
+    buttonClassNames[variant] ?? buttonClassNames.accordion,
+    variant === 'accordion' && tone === 'danger' ? 'users-table__accordion-button--danger' : '',
+    variant === 'accordion' && tone === 'warning' ? 'users-table__accordion-button--warning' : '',
+    variant === 'accordion' && tone === 'info' ? 'users-table__accordion-button--info' : '',
+    variant === 'icon' && tone === 'danger' ? 'users-table__icon-button--danger' : '',
+    variant === 'pagination' && active ? 'users-table-pagination__button--active' : '',
+    className,
+  ]
+    .filter(Boolean)
+    .join(' ')
+
+  return (
+    <button type={type} className={buttonClassName} {...buttonProps}>
+      <HistoryIcon fontSize="small" />
+      {children || ' History'}
+    </button>
+  )
+}
+
+export default ButtonHistoryPrj
+

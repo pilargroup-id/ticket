@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
+import { getCache, setCache } from '../../services/cache.js'
+import SkeletonLoading from '../../components/template/SkeletonLoading.jsx'
 
 import ButtonRangeDate from '../../components/button/ButtonRangeDate.jsx'
 import { Ticket01 } from '../../components/template/TemplateIcons.jsx'
@@ -13,8 +15,8 @@ function MyTickets({ activePage, searchQuery, onLoadingChange }) {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
   const [isValidationDialogOpen, setIsValidationDialogOpen] = useState(false)
   const [statusFilter, setStatusFilter] = useState('')
-  const [ticketRows, setTicketRows] = useState(INITIAL_TICKET_ROWS)
-  const [isLoadingTickets, setIsLoadingTickets] = useState(true)
+  const [ticketRows, setTicketRows] = useState(() => getCache('my-tickets') || INITIAL_TICKET_ROWS)
+  const [isLoadingTickets, setIsLoadingTickets] = useState(!getCache('my-tickets'))
   const [ticketsError, setTicketsError] = useState('')
   const [ticketRefreshVersion, setTicketRefreshVersion] = useState(0)
   const [dateRange, setDateRange] = useState({
@@ -37,6 +39,7 @@ function MyTickets({ activePage, searchQuery, onLoadingChange }) {
         }
 
         setTicketRows(response.data)
+        setCache('my-tickets', response.data)
       } catch (error) {
         if (!isMounted) {
           return
@@ -82,7 +85,7 @@ function MyTickets({ activePage, searchQuery, onLoadingChange }) {
   }, [isPageLoading, onLoadingChange])
 
   if (isPageLoading) {
-    return null
+    return <SkeletonLoading pageType="/MyTickets" />
   }
 
   return (
@@ -92,7 +95,6 @@ function MyTickets({ activePage, searchQuery, onLoadingChange }) {
         onStatusChange={setStatusFilter}
         statusCounts={statusCounts}
       />
-
 
       <section
         className="dashboard-panel users-table-card mytickets-table-card"

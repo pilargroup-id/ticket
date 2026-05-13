@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react'
+import { getCache, setCache } from '../../services/cache.js'
+import SkeletonLoading from '../../components/template/SkeletonLoading.jsx'
 
 import ButtonRangeDate from '../../components/button/ButtonRangeDate.jsx'
 import { Ticket01 } from '../../components/template/TemplateIcons.jsx'
@@ -14,9 +16,9 @@ import DialogCreateTicket from '../../components/dialog/DialogCreateTickets.jsx'
 function TicketsOverview({ activePage, searchQuery, onLoadingChange }) {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
   const [statusFilter, setStatusFilter] = useState('')
-  const [ticketRows, setTicketRows] = useState(INITIAL_TICKET_ROWS)
-  const [statusCounts, setStatusCounts] = useState({})
-  const [isLoadingTickets, setIsLoadingTickets] = useState(true)
+  const [ticketRows, setTicketRows] = useState(() => getCache('tickets-rows') || INITIAL_TICKET_ROWS)
+  const [statusCounts, setStatusCounts] = useState(() => getCache('tickets-report') || {})
+  const [isLoadingTickets, setIsLoadingTickets] = useState(!getCache('tickets-rows'))
   const [ticketsError, setTicketsError] = useState('')
   const [ticketRefreshVersion, setTicketRefreshVersion] = useState(0)
   const [dateRange, setDateRange] = useState({
@@ -43,6 +45,7 @@ function TicketsOverview({ activePage, searchQuery, onLoadingChange }) {
         }
 
         setTicketRows(response.data)
+        setCache('tickets-rows', response.data)
       } catch (error) {
         if (!isMounted) {
           return
@@ -79,6 +82,7 @@ function TicketsOverview({ activePage, searchQuery, onLoadingChange }) {
         }
 
         setStatusCounts(response.statusCounts)
+        setCache('tickets-report', response.statusCounts)
       } catch {
         if (isMounted) {
           setStatusCounts({})
@@ -104,7 +108,7 @@ function TicketsOverview({ activePage, searchQuery, onLoadingChange }) {
   }, [isPageLoading, onLoadingChange])
 
   if (isPageLoading) {
-    return null
+    return <SkeletonLoading pageType="/TicketsOverview" />
   }
 
   return (

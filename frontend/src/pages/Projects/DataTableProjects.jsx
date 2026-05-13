@@ -21,9 +21,11 @@ import { getProjectHistory } from '../../services/projects/Projects.js'
 import ButtonHoldPrj from '../../components/button/ButtonHoldPrj.jsx'
 import ButtonResolvePrj from '../../components/button/ButtonResolvePrj.jsx'
 import ButtonProgressPrj from '../../components/button/ButtonProgressPrj.jsx'
+import ButtonHistoryPrj from '../../components/button/ButtonHistoryPrj.jsx'
 import DialogProgressPrj from '../../components/dialog/DialogProgressPrj.jsx'
 import DialogHoldPrj from '../../components/dialog/DialogHoldPrj.jsx'
 import DialogResolvePrj from '../../components/dialog/DialogResolvePrj.jsx'
+import DialogHistoryPrj from '../../components/dialog/DialogHistoryPrj.jsx'
 import PlayArrowIcon from '@mui/icons-material/PlayArrow'
 import PauseIcon from '@mui/icons-material/Pause'
 import CheckCircleOutlinedIcon from '@mui/icons-material/CheckCircleOutlined'
@@ -86,79 +88,7 @@ const columns = [
   },
 ]
 
-function ProjectHistoryPanel({ project }) {
-  const [historyItems, setHistoryItems] = useState([])
-  const [isLoadingHistory, setIsLoadingHistory] = useState(true)
-  const [historyError, setHistoryError] = useState('')
-
-  useEffect(() => {
-    let isMounted = true
-
-    async function loadProjectHistory() {
-      if (!project?.id) {
-        setHistoryItems([])
-        setHistoryError('')
-        setIsLoadingHistory(false)
-        return
-      }
-
-      setIsLoadingHistory(true)
-      setHistoryError('')
-
-      try {
-        const response = await getProjectHistory(project.id)
-
-        if (!isMounted) {
-          return
-        }
-
-        const sortedData = [...(response.data || [])].sort((a, b) => {
-          const dateA = new Date(a.timestamp || a.created_at || a.createdAt || 0).getTime()
-          const dateB = new Date(b.timestamp || b.created_at || b.createdAt || 0).getTime()
-          return dateB - dateA
-        })
-
-        setHistoryItems(sortedData)
-      } catch (error) {
-        if (!isMounted) {
-          return
-        }
-
-        setHistoryItems([])
-        setHistoryError(error?.message || 'Gagal memuat riwayat project.')
-      } finally {
-        if (isMounted) {
-          setIsLoadingHistory(false)
-        }
-      }
-    }
-
-    loadProjectHistory()
-
-    return () => {
-      isMounted = false
-    }
-  }, [project?.id])
-
-  return (
-    <section className="users-table__detail-section users-table__detail-section--wide">
-      <div className="users-table__detail-section-header">
-        <p className="users-table__detail-section-eyebrow">History</p>
-      </div>
-      {isLoadingHistory ? (
-        <p className="mtickets-timeline__empty">Memuat riwayat project...</p>
-      ) : historyError ? (
-        <p className="mtickets-timeline__empty">{historyError}</p>
-      ) : (
-        <TimeLineMT
-          items={historyItems}
-          emptyMessage="Belum ada riwayat status untuk project ini."
-          ariaLabel={`Timeline status ${project.projectCode}`}
-        />
-      )}
-    </section>
-  )
-}
+// ProjectHistoryPanel removed as it's now in a dialog
 
 function DataTableProjects({
   searchQuery = '',
@@ -178,6 +108,12 @@ function DataTableProjects({
   const [isProgressOpen, setIsProgressOpen] = useState(false)
   const [isHoldOpen, setIsHoldOpen] = useState(false)
   const [isResolveOpen, setIsResolveOpen] = useState(false)
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false)
+
+  const handleOpenHistory = (project) => {
+    setSelectedProject(project)
+    setIsHistoryOpen(true)
+  }
 
   const handleOpenProgress = (project) => {
     setSelectedProject(project)
@@ -255,30 +191,44 @@ function DataTableProjects({
             const isResolved = rawStatus === 'resolved'
             const isVoid = rawStatus === 'void'
 
-            if (isResolved || isVoid) return null
-
             return (
               <div className="users-table__accordion-actions" style={{ gap: '0.5rem' }}>
-                {(isWaiting || isHold || isInProgress) && (
-                  <ButtonProgressPrj tone="warning" onClick={() => handleOpenProgress(project)}>
-                    <PlayArrowIcon fontSize="small" />
-                    {isWaiting ? ' Start' : isHold ? ' Continue' : ' Progress'}
-                  </ButtonProgressPrj>
-                )}
-                {isInProgress && (
-                  <ButtonHoldPrj tone="danger" onClick={() => handleOpenHold(project)}>
-                    <PauseIcon fontSize="small" /> Hold
-                  </ButtonHoldPrj>
-                )}
-                {isInProgress && (
-                  <ButtonResolvePrj tone="default" onClick={() => handleOpenResolve(project)}>
-                    <CheckCircleOutlinedIcon fontSize="small" /> Resolve
-                  </ButtonResolvePrj>
+                <ButtonHistoryPrj onClick={() => handleOpenHistory(project)}>
+                  History
+                </ButtonHistoryPrj>
+                {!isResolved && !isVoid && (
+                  <>
+                    {(isWaiting || isHold || isInProgress) && (
+                      <ButtonProgressPrj tone="warning" onClick={() => handleOpenProgress(project)}>
+                        <PlayArrowIcon fontSize="small" />
+                        {isWaiting ? ' Start' : isHold ? ' Continue' : ' Progress'}
+                      </ButtonProgressPrj>
+                    )}
+                    {isInProgress && (
+                      <ButtonHoldPrj tone="danger" onClick={() => handleOpenHold(project)}>
+                        <PauseIcon fontSize="small" /> Hold
+                      </ButtonHoldPrj>
+                    )}
+                    {isInProgress && (
+                      <ButtonResolvePrj tone="default" onClick={() => handleOpenResolve(project)}>
+                        <CheckCircleOutlinedIcon fontSize="small" /> Resolve
+                      </ButtonResolvePrj>
+                    )}
+                  </>
                 )}
               </div>
             )
           },
-          render: (project) => <ProjectHistoryPanel project={project} />,
+          render: (project) => (
+            <section className="users-table__detail-section users-table__detail-section--wide">
+              <div className="users-table__detail-section-header">
+                <p className="users-table__detail-section-eyebrow">Project Detail</p>
+              </div>
+              <div className="users-table__detail-content" style={{ padding: '0.5rem 0' }}>
+                <p style={{ color: 'var(--text)', opacity: 0.8 }}>{project.description || 'Tidak ada deskripsi.'}</p>
+              </div>
+            </section>
+          ),
         }}
         emptyMessage={emptyMessage}
         pagination={pagination}
@@ -299,6 +249,11 @@ function DataTableProjects({
         isOpen={isResolveOpen}
         onClose={() => setIsResolveOpen(false)}
         onSuccess={onRefresh}
+        project={selectedProject}
+      />
+      <DialogHistoryPrj
+        isOpen={isHistoryOpen}
+        onClose={() => setIsHistoryOpen(false)}
         project={selectedProject}
       />
     </div>

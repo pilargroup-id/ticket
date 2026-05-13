@@ -24,6 +24,7 @@ import ProjectsOverview from './pages/Projects/ProjectsOverview.jsx'
 import TicketsOverview from './pages/tickets/TicketsOverview.jsx'
 import MyTickets from './pages/my-tickets/MyTickets.jsx'
 import TeamPerformence from './pages/reports/team-performence/TeamPerformence.jsx'
+import SkeletonLoading from './components/template/SkeletonLoading.jsx'
 import { consumeSsoSuccessParams, getStoredUser, loginWithDevCredentials } from './services/auth.js'
 
 function getCurrentPath() {
@@ -420,7 +421,7 @@ function App() {
     setIsTransitioning(true)
     const timeout = setTimeout(() => {
       setIsTransitioning(false)
-    }, 800)
+    }, 0)
 
     return () => clearTimeout(timeout)
   }, [activePath])
@@ -645,20 +646,6 @@ function App() {
     detail: 'Sedang membuka halaman yang dipilih. Mohon tunggu sebentar.',
   }
 
-  if (isInitializing) {
-    return (
-      <div className={shellClassName} style={{ position: 'relative' }}>
-        <BackgroundMain />
-        <DialogLoading
-          eyebrow="Session"
-          pageName={activePage?.title ?? 'Workspace'}
-          title="Opening Workspace"
-          loadingLabel={`Loading ${activePage?.title ?? 'workspace'}...`}
-          detail="Sedang menyiapkan sesi pengguna dan membuka halaman tujuan."
-        />
-      </div>
-    )
-  }
 
   return (
     <div className={shellClassName}>
@@ -667,7 +654,7 @@ function App() {
       <Sidebar
         collapsed={sidebarCollapsed}
         mobileOpen={mobileSidebarOpen}
-        isDimmed={isPageLoading}
+        isDimmed={isPageLoading || isInitializing}
         activePath={activePath}
         userName={sessionUser?.name ?? ''}
         userRole={sessionUser?.job_position ?? sessionUser?.role ?? ''}
@@ -881,16 +868,24 @@ function App() {
                   </ul>
                 </aside>
               </section>
-            )}
+                )}
           </div>
         </main>
       </div>
 
-      {isPageLoading || isTransitioning ? (
+      {isPageLoading || isInitializing ? (
         <DialogLoading
-          eyebrow={activeLoadingCopy.eyebrow}
+          eyebrow={isInitializing ? 'Session' : activeLoadingCopy.eyebrow}
           pageName={activePage?.title ?? 'Workspace'}
-          detail={activeLoadingCopy.detail}
+          title={isInitializing ? 'Opening Workspace' : undefined}
+          loadingLabel={
+            isInitializing ? `Loading ${activePage?.title ?? 'workspace'}...` : undefined
+          }
+          detail={
+            isInitializing
+              ? 'Sedang menyiapkan sesi pengguna dan membuka halaman tujuan.'
+              : activeLoadingCopy.detail
+          }
         />
       ) : null}
 
