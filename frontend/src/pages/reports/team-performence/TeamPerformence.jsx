@@ -6,61 +6,9 @@ import GroupBarTimeSpendMT from '../../../components/chart/chart-team-performenc
 import YearDropdownTP from '../../../components/dropdown/filter/YearTeamPerformance.jsx'
 import ButtonExport from '../../../components/button/ButtonExport.jsx'
 import { FileText01 } from '../../../components/template/TemplateIcons.jsx'
+import SupportReports from '../../../services/reports/SupportReports.js'
 
-const monthLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'May']
-
-function createMonthlyPerformance(completedValues, pendingValues) {
-  return monthLabels.map((month, index) => ({
-    month,
-    year: 2026,
-    monthIndex: index + 1,
-    completed: completedValues[index] ?? 0,
-    pending: pendingValues[index] ?? 0,
-  }))
-}
-
-const teamMembers = [
-  {
-    id: 'nabila-putri',
-    name: 'Nabila Putri',
-    role: 'Legal Officer',
-    sla: '95%',
-    monthlyPerformance: createMonthlyPerformance(
-      [34, 36, 39, 44, 46],
-      [8, 7, 6, 7, 5],
-    ),
-  },
-  {
-    id: 'mira-kartika',
-    name: 'Mira Kartika',
-    role: 'Contract Analyst',
-    sla: '93%',
-    monthlyPerformance: createMonthlyPerformance(
-      [28, 30, 32, 35, 38],
-      [10, 9, 8, 8, 7],
-    ),
-  },
-  {
-    id: 'bagas-pratama',
-    name: 'Bagas Pratama',
-    role: 'Finance Reviewer',
-    sla: '91%',
-    monthlyPerformance: createMonthlyPerformance(
-      [22, 24, 27, 29, 31],
-      [12, 11, 10, 9, 9],
-    ),
-  },
-  {
-    id: 'sarah-wijaya',
-    name: 'Sarah Wijaya',
-    role: 'Procurement Lead',
-    sla: '94%',
-    monthlyPerformance: createMonthlyPerformance(
-      [26, 29, 31, 34, 36],
-      [9, 9, 8, 7, 7],
-    ),
-  },
-]
+// Removed dummy teamMembers data
 
 function parseDateValue(value) {
   const [year, month, day] = String(value).split('-').map(Number)
@@ -159,90 +107,95 @@ export default function TeamPerformence() {
   })
   const [selectedYear, setSelectedYear] = useState(currentYear)
 
-  const filteredMembers = useMemo(
-    () =>
-      teamMembers.map((member) => ({
-        ...member,
-        monthlyPerformance: filterMonthlyPerformance(member.monthlyPerformance, selectedRange),
-      })),
-    [selectedRange],
-  )
-  const membersWithData = useMemo(
-    () => filteredMembers.filter((member) => member.monthlyPerformance.length > 0),
-    [filteredMembers],
-  )
-  const availableYears = useMemo(() => getAvailableYears(membersWithData), [membersWithData])
-  const yearOptions = useMemo(
-    () =>
-      availableYears.map((year) => ({
-        value: String(year),
-        label: String(year),
-      })),
-    [availableYears],
-  )
-  const chartMembers = useMemo(
-    () => filterMembersByYear(membersWithData, selectedYear),
-    [membersWithData, selectedYear],
-  )
-  const totalCompleted = useMemo(
-    () =>
-      filteredMembers.reduce(
-        (total, member) => total + getPerformanceTotals(member.monthlyPerformance).completed,
-        0,
-      ),
-    [filteredMembers],
-  )
-  const totalPending = useMemo(
-    () =>
-      filteredMembers.reduce(
-        (total, member) => total + getPerformanceTotals(member.monthlyPerformance).pending,
-        0,
-      ),
-    [filteredMembers],
-  )
-  const topPerformer = useMemo(() => {
-    const membersWithTotals = filteredMembers.map((member) => ({
-      ...member,
-      totals: getPerformanceTotals(member.monthlyPerformance),
-    }))
-
-    if (membersWithTotals.every((member) => member.monthlyPerformance.length === 0)) {
-      return null
-    }
-
-    return membersWithTotals.sort((leftMember, rightMember) => {
-      return rightMember.totals.completed - leftMember.totals.completed
-    })[0]
-  }, [filteredMembers])
-  const lightestBacklog = useMemo(() => {
-    const membersWithTotals = filteredMembers.map((member) => ({
-      ...member,
-      totals: getPerformanceTotals(member.monthlyPerformance),
-    }))
-
-    if (membersWithTotals.every((member) => member.monthlyPerformance.length === 0)) {
-      return null
-    }
-
-    return membersWithTotals.sort((leftMember, rightMember) => {
-      return leftMember.totals.pending - rightMember.totals.pending
-    })[0]
-  }, [filteredMembers])
+  // Removed unused useMemo logic for dummy data
   const activeRangeLabel = useMemo(() => formatRangeLabel(selectedRange), [selectedRange])
 
+  const [monthlyTickets, setMonthlyTickets] = useState({ labels: [], series: [] })
+  const [monthlyTimeSpent, setMonthlyTimeSpent] = useState({ labels: [], series: [] })
+  const [loading, setLoading] = useState(false)
+
   useEffect(() => {
-    if (yearOptions.length === 0) {
-      return
+    async function fetchMonthlyData() {
+      setLoading(true)
+      try {
+        const year = new Date().getFullYear()
+        
+        // Fetch tickets per month
+        const ticketsRes = await SupportReports.getSupportTicketsPerMonth({
+          year,
+          startDate: selectedRange.startDate,
+          endDate: selectedRange.endDate,
+        })
+        
+        // Fetch time spent per month
+        const timeRes = await SupportReports.getSupportTimeSpentPerMonth({
+          year,
+          startDate: selectedRange.startDate,
+          endDate: selectedRange.endDate,
+        })
+
+        setMonthlyTickets(ticketsRes.chart)
+        setMonthlyTimeSpent(timeRes.chart)
+      } catch (error) {
+        console.error('Failed to fetch monthly report data:', error)
+      } finally {
+        setLoading(false)
+      }
     }
 
-    const selectedYearExists = yearOptions.some((option) => option.value === selectedYear)
+    fetchMonthlyData()
+  }, [selectedRange])
 
-    if (!selectedYearExists) {
-      const fallbackYear = yearOptions.find((option) => option.value === currentYear)?.value
+  const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
-      setSelectedYear(fallbackYear ?? yearOptions[0].value)
-    }
-  }, [currentYear, selectedYear, yearOptions])
+  const mappedMembersTickets = useMemo(() => {
+    if (!monthlyTickets.series) return []
+
+    // Determine current month index (1-based)
+    const now = new Date()
+    const currentMonthIndex = now.getMonth() + 1
+    const year = now.getFullYear()
+
+    return monthlyTickets.series.map((s) => ({
+      id: s.support_id,
+      name: s.support_name,
+      monthlyPerformance: monthlyTickets.labels
+        .filter((m) => m <= currentMonthIndex) // Only show up to current month
+        .map((m) => ({
+          month: monthNames[m - 1],
+          year: year,
+          monthIndex: m,
+          completed: s.data[m - 1] ?? 0,
+          pending: 0,
+        })),
+    }))
+  }, [monthlyTickets])
+
+  const mappedMembersTimeSpent = useMemo(() => {
+    if (!monthlyTimeSpent.series) return []
+
+    const now = new Date()
+    const currentMonthIndex = now.getMonth() + 1
+    const year = now.getFullYear()
+
+    return monthlyTimeSpent.series.map((s) => ({
+      id: s.support_id,
+      name: s.support_name,
+      monthlyPerformance: monthlyTimeSpent.labels
+        .filter((m) => m <= currentMonthIndex) // Only show up to current month
+        .map((m) => ({
+          month: monthNames[m - 1],
+          year: year,
+          monthIndex: m,
+          totalMinutes: s.data_minutes[m - 1] ?? 0,
+          totalTimeHuman: null, // Component will calculate if null, or we can leave it
+          completed: 0,
+          pending: 0,
+        })),
+    }))
+  }, [monthlyTimeSpent])
+
+  // Removed unused useEffect for yearOptions
 
   return (
     <section className="chart-page" aria-label="Team performance report">
@@ -275,26 +228,20 @@ export default function TeamPerformence() {
               <h2 className="dashboard-panel__title">Team Monthly Performance</h2>
             </div>
 
-            {yearOptions.length > 0 ? (
-              <YearDropdownTP
-                label="Tahun"
-                value={selectedYear}
-                options={yearOptions}
-                onChange={setSelectedYear}
-                className="chart-card__header-action"
-              />
-            ) : null}
+              {/* Removed YearDropdownTP as it is not needed for the summary view */}
           </div>
 
           <div className="chart-card__body">
-            {membersWithData.length > 0 ? (
+            {!loading && mappedMembersTickets.length > 0 ? (
               <GroupBarChartTP
-                members={chartMembers}
+                members={mappedMembersTickets}
                 emptyMessage={`Belum ada data monthly performance untuk tahun ${selectedYear}.`}
               />
+            ) : loading ? (
+              <p className="users-table-card__description">Loading data...</p>
             ) : (
               <p className="users-table-card__description">
-                Belum ada data monthly pada rentang tanggal ini.
+                Belum ada data pada rentang tanggal ini.
               </p>
             )}
           </div>
@@ -309,14 +256,16 @@ export default function TeamPerformence() {
           </div>
 
           <div className="chart-card__body">
-            {membersWithData.length > 0 ? (
+            {!loading && mappedMembersTimeSpent.length > 0 ? (
               <GroupBarTimeSpendMT
-                members={chartMembers}
+                members={mappedMembersTimeSpent}
                 emptyMessage={`Belum ada data monthly time spend untuk tahun ${selectedYear}.`}
               />
+            ) : loading ? (
+              <p className="users-table-card__description">Loading data...</p>
             ) : (
               <p className="users-table-card__description">
-                Belum ada data monthly pada rentang tanggal ini.
+                Belum ada data pada rentang tanggal ini.
               </p>
             )}
           </div>

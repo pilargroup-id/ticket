@@ -68,7 +68,8 @@ function formatDurationLabel(hoursValue = 0, minutesValue = 0) {
 
 function getPerformanceTotals(monthlyPerformance) {
   const totalMinutes = monthlyPerformance.reduce(
-    (sum, item) => sum + toTotalMinutes(item.completed ?? 0, item.pending ?? 0),
+    (sum, item) =>
+      sum + (item.totalMinutes ?? toTotalMinutes(item.completed ?? 0, item.pending ?? 0)),
     0,
   )
 
@@ -87,15 +88,18 @@ function buildChartModel(members, hiddenKeys) {
       dataKey: getSeriesDataKey(member.id ?? member.name ?? index),
       hoursKey: `${getSeriesDataKey(member.id ?? member.name ?? index)}_hours`,
       minutesKey: `${getSeriesDataKey(member.id ?? member.name ?? index)}_minutes`,
-      legendDescription: member.legendDescription
-        ?? `Total Waktu: ${formatDurationLabel(totals.hours, totals.minutes)}`,
+      legendDescription:
+        member.legendDescription ??
+        `Total Waktu: ${member.totalTimeHuman ?? formatDurationLabel(totals.hours, totals.minutes)}`,
     }
   })
   const rowsByMonthKey = new Map()
 
   normalizedMembers.forEach((member) => {
     member.monthlyPerformance?.forEach((item) => {
-      const duration = getDurationParts(toTotalMinutes(item.completed ?? 0, item.pending ?? 0))
+      const duration = getDurationParts(
+        item.totalMinutes ?? toTotalMinutes(item.completed ?? 0, item.pending ?? 0),
+      )
       const monthKey = `${item.year ?? 0}-${String(item.monthIndex ?? 0).padStart(2, '0')}`
       const currentRow = rowsByMonthKey.get(monthKey) ?? {
         month: item.month,
@@ -107,6 +111,7 @@ function buildChartModel(members, hiddenKeys) {
       currentRow[member.dataKey] = duration.decimalHours
       currentRow[member.hoursKey] = duration.hours
       currentRow[member.minutesKey] = duration.minutes
+      currentRow[`${member.dataKey}_human`] = item.totalTimeHuman
       rowsByMonthKey.set(monthKey, currentRow)
     })
   })
@@ -145,10 +150,12 @@ function buildChartModel(members, hiddenKeys) {
       label: member.name,
       color: member.color,
       valueFormatter: (value, context) => {
-        const row =
-          typeof context?.dataIndex === 'number' ? dataset[context.dataIndex] : null
+        const row = typeof context?.dataIndex === 'number' ? dataset[context.dataIndex] : null
 
         if (row) {
+          const humanValue = row[`${member.dataKey}_human`]
+          if (humanValue) return humanValue
+
           return formatDurationLabel(row[member.hoursKey], row[member.minutesKey])
         }
 
