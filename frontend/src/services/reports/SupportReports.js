@@ -54,8 +54,26 @@ export async function getSupportTimeSpentPerMonth(options = {}) {
   }
 }
 
+export async function getSupportTicketsDetail(supportId, options = {}) {
+  const { startDate, endDate, status = 'all' } = options
+  
+  const response = await api.get(`/reports/supports/${supportId}/tickets`, {
+    params: {
+      start_date: startDate || undefined,
+      end_date: endDate || undefined,
+      status: status,
+    },
+  })
+
+  return {
+    message: response?.message ?? '',
+    data: Array.isArray(response?.data) ? response.data : [],
+  }
+}
+
 export default {
   getSupportSummary,
   getSupportTicketsPerMonth,
   getSupportTimeSpentPerMonth,
+  getSupportTicketsDetail,
 }

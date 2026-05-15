@@ -24,6 +24,7 @@ import ProjectsOverview from './pages/Projects/ProjectsOverview.jsx'
 import TicketsOverview from './pages/tickets/TicketsOverview.jsx'
 import MyTickets from './pages/my-tickets/MyTickets.jsx'
 import TeamPerformence from './pages/reports/team-performence/TeamPerformence.jsx'
+import ExecutiveInsight from './pages/reports/executive-insight/ExecutiveInsight.jsx'
 import SkeletonLoading from './components/template/SkeletonLoading.jsx'
 import { consumeSsoSuccessParams, getStoredUser, loginWithDevCredentials } from './services/auth.js'
 
@@ -93,6 +94,12 @@ const pageDetails = {
     eyebrow: 'Reports',
     value: '4',
     detail: 'Performa bulanan setiap user lengkap dengan progress completed dan pending.',
+  },
+  '/Reports/ExecutiveInsights': {
+    title: 'Executive Insight',
+    eyebrow: 'Reports',
+    value: '1',
+    detail: 'Analisis data strategis dan tren performa untuk eksekutif.',
   },
   '/users': {
     title: 'Users',
@@ -482,6 +489,7 @@ function App() {
   const isTablePage = tablePagePaths.includes(activePath)
   const isChartPage = activePath === '/Chart'
   const isTeamPerformancePage = activePath === '/Reports/TeamPerformance'
+  const isExecutiveInsightPage = activePath === '/Reports/ExecutiveInsights'
   const isTicketsOverviewPage = activePath === '/TicketsOverview'
   const isProjectsOverviewPage = activePath === '/ProjectsOverview'
   const isCustomOverviewPage = isTicketsOverviewPage || isProjectsOverviewPage
@@ -700,7 +708,7 @@ function App() {
           <div
             className={`dashboard-content${isTicketWorkspacePage ? ' dashboard-content--mytickets' : ''}`}
           >
-            {activePath !== '/MyTickets' && !isTeamPerformancePage && !isCustomOverviewPage && (
+            {activePath !== '/MyTickets' && !isTeamPerformancePage && !isExecutiveInsightPage && !isCustomOverviewPage && (
               <section className="dashboard-overview" aria-label="Ringkasan dashboard">
                 {overviewCards.map((card) => (
                   <article className="dashboard-card" key={card.title}>
@@ -732,6 +740,8 @@ function App() {
               <ProjectsOverview activePage={activePage} searchQuery={searchQuery} />
             ) : isTeamPerformancePage ? (
               <TeamPerformence />
+            ) : isExecutiveInsightPage ? (
+              <ExecutiveInsight />
             ) : isTablePage ? (
               <section className="dashboard-panel users-table-card" aria-label={activePage.title}>
                 <div className="users-table-card__header">

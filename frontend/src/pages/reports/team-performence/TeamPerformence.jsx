@@ -7,6 +7,8 @@ import YearDropdownTP from '../../../components/dropdown/filter/YearTeamPerforma
 import ButtonExport from '../../../components/button/ButtonExport.jsx'
 import { FileText01 } from '../../../components/template/TemplateIcons.jsx'
 import SupportReports from '../../../services/reports/SupportReports.js'
+import SupportPerformence from './SupportPerformence.jsx'
+
 
 // Removed dummy teamMembers data
 
@@ -271,6 +273,7 @@ export default function TeamPerformence() {
           </div>
         </article>
       </div>
+      <SupportPerformence filters={selectedRange} />
     </section>
   )
 }
