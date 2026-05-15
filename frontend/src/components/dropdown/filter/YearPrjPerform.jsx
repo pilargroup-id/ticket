@@ -4,17 +4,20 @@ import MenuItem from '@mui/material/MenuItem';
 import FormControl from '@mui/material/FormControl';
 import Select from '@mui/material/Select';
 import InputAdornment from '@mui/material/InputAdornment';
-import { Filter } from '../../template/TemplateIcons.jsx';
+import { Calendar01 } from '../../template/TemplateIcons.jsx';
 
-export default function HeaderStatusPrjPerform({ value, onChange }) {
+export default function YearPrjPerform({ value, onChange }) {
   const id = React.useId();
 
   const handleChange = (event) => {
     onChange?.(event.target.value);
   };
 
+  const currentYear = new Date().getFullYear();
+  const years = Array.from({ length: 5 }, (_, i) => currentYear - 2 + i);
+
   return (
-    <FormControl sx={{ minWidth: 180 }} size="small">
+    <FormControl sx={{ minWidth: 140 }} size="small">
       <InputLabel 
         id={`${id}-label`}
         sx={{ 
@@ -26,32 +29,32 @@ export default function HeaderStatusPrjPerform({ value, onChange }) {
           '&.Mui-focused': { color: '#10b981' }
         }}
       >
-        Status
+        Tahun
       </InputLabel>
       <Select
         labelId={`${id}-label`}
         id={id}
         value={value ?? ''}
-        label="Status"
+        label="Tahun"
         onChange={handleChange}
         startAdornment={
           <InputAdornment position="start" sx={{ ml: 1, mr: 0.5 }}>
-            <Filter size={16} color="#94a3b8" />
+            <Calendar01 size={16} color="#94a3b8" />
           </InputAdornment>
         }
         sx={{
-          borderRadius: '999px', // Match range-date-button__trigger pill shape
+          borderRadius: '999px',
           backgroundColor: '#ffffff',
           fontSize: '0.875rem',
           fontWeight: 500,
           color: '#1e293b',
-          minHeight: '48px', // Match range-date-button__trigger
+          minHeight: '48px',
           transition: 'all 0.2s ease',
-          boxShadow: '0 10px 22px rgba(26, 42, 87, 0.08)', // Match range-date-button__trigger
+          boxShadow: '0 10px 22px rgba(26, 42, 87, 0.08)',
           '& .MuiOutlinedInput-notchedOutline': {
             borderColor: '#e2e8f0',
             borderWidth: '1px',
-            borderRadius: '999px', // Ensure outline is also pill-shaped
+            borderRadius: '999px',
           },
           '&:hover': {
             backgroundColor: '#f8fafc',
@@ -68,15 +71,13 @@ export default function HeaderStatusPrjPerform({ value, onChange }) {
             },
           },
           '& .MuiSelect-select': {
-            py: 1.5, // Increased padding to fill 48px height
-            pl: 1.5, // Space between icon and text
+            py: 1.5,
+            pl: 1.5,
             display: 'flex',
             alignItems: 'center',
             gap: 1,
           },
         }}
-
-
         MenuProps={{
           PaperProps: {
             sx: {
@@ -105,17 +106,12 @@ export default function HeaderStatusPrjPerform({ value, onChange }) {
           },
         }}
       >
-        <MenuItem value="all">
-          <em style={{ fontStyle: 'normal' }}>All Status</em>
-        </MenuItem>
-        <MenuItem value="waiting">Waiting</MenuItem>
-        <MenuItem value="pending">Pending</MenuItem>
-        <MenuItem value="in_progress">In Progress</MenuItem>
-        <MenuItem value="resolved">Resolved</MenuItem>
-        <MenuItem value="void">Void</MenuItem>
+        {years.map((year) => (
+          <MenuItem key={year} value={year.toString()}>
+            {year}
+          </MenuItem>
+        ))}
       </Select>
     </FormControl>
   );
 }
-
-

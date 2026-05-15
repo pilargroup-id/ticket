@@ -6,10 +6,14 @@ import { FileText01 } from '../../../components/template/TemplateIcons.jsx'
 import { EMPTY_DATE_RANGE } from '../../../services/my-tickets/DataTableMT.js'
 import { getDeveloperProjectSummary } from '../../../services/reports/DeveloperReports.js'
 import FilterStatus from '../../../components/dropdown/filter/HeaderStatusPrjPerform.jsx'
+import FilterYear from '../../../components/dropdown/filter/YearPrjPerform.jsx'
+import ExportPrjPerform from './ExportStatusPrjPerform.jsx'
 
 const ProjectPerformence = () => {
   const [rows, setRows] = useState([])
   const [selectedRange, setSelectedRange] = useState(EMPTY_DATE_RANGE)
+  const [year, setYear] = useState('2026')
+  const [status, setStatus] = useState('all')
   const [isLoading, setIsLoading] = useState(false)
 
   useEffect(() => {
@@ -19,6 +23,8 @@ const ProjectPerformence = () => {
         const response = await getDeveloperProjectSummary({
           startDate: selectedRange.startDate,
           endDate: selectedRange.endDate,
+          year: year,
+          status: status,
         })
         setRows(response.data)
       } catch (error) {
@@ -29,7 +35,7 @@ const ProjectPerformence = () => {
     }
 
     fetchData()
-  }, [selectedRange])
+  }, [selectedRange, status, year])
 
   return (
     <div className="chart-page">
@@ -44,6 +50,8 @@ const ProjectPerformence = () => {
           </div>
 
           <div className="users-table-card__actions">
+            <FilterYear value={year} onChange={setYear} />
+            <FilterStatus value={status} onChange={setStatus} />
             <ButtonRangeDate label="Periode" onChange={setSelectedRange} />
             <ButtonExport variant="action" aria-label="Export project performance report">
               <FileText01 size={18} aria-hidden="true" />
@@ -57,6 +65,7 @@ const ProjectPerformence = () => {
             rows={rows} 
             setRows={setRows} 
             dateRange={selectedRange}
+            status={status}
             isLoading={isLoading}
           />
         </div>
@@ -64,5 +73,6 @@ const ProjectPerformence = () => {
     </div>
   )
 }
+
 
 export default ProjectPerformence
