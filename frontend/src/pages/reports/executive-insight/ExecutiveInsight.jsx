@@ -77,12 +77,12 @@ export default function ExecutiveInsight() {
 
           {/* Tickets by Category Section - Below SLA */}
           <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '2.5rem' }}>
-            <div className="chart-card__header-copy" style={{ marginBottom: '1.5rem', textAlign: 'left' }}>
+            <div className="chart-card__header-copy" style={{ marginBottom: '1.5rem', textAlign: 'center' }}>
               <p className="dashboard-panel__eyebrow" style={{ color: 'var(--primary-color)', fontWeight: 600 }}>Volume Distribution</p>
               <h3 className="dashboard-panel__title" style={{ fontSize: '1.2rem' }}>Tickets by Category</h3>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'center', minHeight: '380px' }}>
-              <div style={{ width: '100%' }}>
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '380px' }}>
+              <div style={{ maxWidth: '600px', width: '100%' }}>
                 <DoughnutChartEiCategory filters={filters} />
               </div>
             </div>

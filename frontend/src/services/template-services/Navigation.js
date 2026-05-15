@@ -56,7 +56,7 @@ export const primaryNavigationItems = [
         href: '/Reports/TeamPerformance',
       },
       {
-        id : 'executive-insight',
+        id: 'executive-insight',
         label: 'Executive Insight',
         href: '/Reports/ExecutiveInsights',
       },

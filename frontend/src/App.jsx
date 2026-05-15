@@ -105,8 +105,8 @@ const pageDetails = {
   '/Reports/ProjectPerformance': {
     title: 'Project Performance',
     eyebrow: 'Reports',
-    value: '0',
-    detail: 'Analisis performa dan progres proyek yang sedang berjalan.',
+    value: '3',
+    detail: 'Monitoring performa pengerjaan ticket berdasarkan proyek dan kategori.',
   },
   '/users': {
     title: 'Users',
@@ -888,7 +888,7 @@ function App() {
                   </ul>
                 </aside>
               </section>
-                )}
+            )}
           </div>
         </main>
       </div>

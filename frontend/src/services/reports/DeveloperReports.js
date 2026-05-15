@@ -1,14 +1,12 @@
 import api from '../api.js'
 
 export async function getDeveloperProjectSummary(options = {}) {
-  const { startDate, endDate, year, status } = options
-  
+  const { startDate, endDate } = options
+
   const response = await api.get('/reports/developers/projects/summary', {
     params: {
       start_date: startDate || undefined,
       end_date: endDate || undefined,
-      year: year || undefined,
-      status: status === 'all' ? '' : status,
     },
   })
 

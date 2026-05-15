@@ -259,6 +259,7 @@ export function AlertCircle(props) {
     </IconBase>
   )
 }
+
 export function Filter(props) {
   return (
     <IconBase {...props}>
