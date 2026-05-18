@@ -245,7 +245,7 @@ function buildTicketsQuery({
 }
 
 export async function getTickets(options = {}) {
-  const response = await api.get('/ticket/', {
+  const response = await api.get('/ticket', {
     params: buildTicketsQuery({
       ...options,
       status: getTicketStatusQueryValue(options?.status),
