@@ -488,6 +488,10 @@ function App() {
         return
       }
 
+      if (window.location.pathname === '/') {
+        window.history.replaceState({}, '', '/MyTickets')
+      }
+
       setSessionUser(getStoredUser())
       setActivePath(currentPath)
     }
@@ -499,10 +503,6 @@ function App() {
       window.removeEventListener('popstate', handleRouteChange)
     }
   }, [])
-
-  useEffect(() => {
-    setIsPageLoading(supportsPageLoadingBackdrop(activePath))
-  }, [activePath])
 
   const activePage = pageDetails[activePath] ?? pageDetails['/MyTickets']
   const isUsersPage = activePath === '/users'

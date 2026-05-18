@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from 'react'
-import { getCache, setCache } from '../../services/cache.js'
 import SkeletonLoading from '../../components/template/SkeletonLoading.jsx'
 
 import ButtonRangeDate from '../../components/button/ButtonRangeDate.jsx'
@@ -17,8 +16,8 @@ function MyTickets({ activePage, searchQuery, onLoadingChange }) {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
   const [isValidationDialogOpen, setIsValidationDialogOpen] = useState(false)
   const [statusFilter, setStatusFilter] = useState('')
-  const [ticketRows, setTicketRows] = useState(() => getCache('my-tickets') || INITIAL_TICKET_ROWS)
-  const [isLoadingTickets, setIsLoadingTickets] = useState(!getCache('my-tickets'))
+  const [ticketRows, setTicketRows] = useState(INITIAL_TICKET_ROWS)
+  const [isLoadingTickets, setIsLoadingTickets] = useState(true)
   const [ticketsError, setTicketsError] = useState('')
   const [ticketRefreshVersion, setTicketRefreshVersion] = useState(0)
   const [dateRange, setDateRange] = useState({
@@ -48,7 +47,6 @@ function MyTickets({ activePage, searchQuery, onLoadingChange }) {
         }
 
         setTicketRows(response.data)
-        setCache('my-tickets', response.data)
       } catch (error) {
         if (!isMounted) {
           return
