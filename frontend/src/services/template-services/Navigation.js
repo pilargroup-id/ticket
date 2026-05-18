@@ -3,8 +3,6 @@ import {
   LayoutDashboard,
   LogOutLeft01,
   Ticket01,
-  Table01,
-  Chart01,
   Folder,
   TrendingUp,
 } from '../../components/template/TemplateIcons.jsx'
@@ -19,10 +17,8 @@ export const implementedNavigationPaths = [
   '/Reports/TeamPerformance',
   '/Reports/ExecutiveInsights',
   '/Reports/ProjectPerformance',
-  '/Table',
-  '/TableActions',
-  '/users',
-  '/Chart',
+  '/Master',
+  '/Master/Category',
 ]
 
 export const primaryNavigationItems = [
@@ -68,27 +64,16 @@ export const primaryNavigationItems = [
     ]
   },
   {
-    id: 'table',
-    label: 'Table',
-    icon: Table01,
+    id: 'master',
+    label: 'Master',
+    icon: LayoutDashboard,
     children: [
       {
-        id: 'table-data',
-        label: 'Data Table',
-        href: '/Table',
-      },
-      {
-        id: 'table-users',
-        label: 'Data Table Actions',
-        href: '/TableActions',
+        id: 'master-category',
+        label: 'Category',
+        href: '/Master/Category',
       },
     ],
-  },
-  {
-    id: 'chart',
-    label: 'Chart',
-    href: '/Chart',
-    icon: Chart01,
   }
 ]
 

@@ -174,9 +174,11 @@ const ProjectPerformence = () => {
 
       <DialogTimelinePrjPerf
         isOpen={isTimelineOpen}
+        developerId={selectedDeveloper?.developer_id}
+        year={year}
+        status={status}
         eyebrow="Developer Performance"
         title={`Timeline ${selectedDeveloper?.developer_name || ''}`}
-        items={selectedDeveloper?.timeline || []}
         onClose={() => setIsTimelineOpen(false)}
       />
     </div>

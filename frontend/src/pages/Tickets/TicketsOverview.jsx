@@ -11,7 +11,7 @@ import {
 } from '../../services/tickets/Tickets.js'
 import CardStatusTickets from './CardStatusTickets.jsx'
 import DataTableTickets, { INITIAL_TICKET_ROWS } from './DataTableTickets.jsx'
-import DialogCreateTicket from '../../components/dialog/DialogCreateTickets.jsx'
+import DialogCreateTicketAdmin from '../../components/dialog/DialogCreateTicketAdmin.jsx'
 
 function TicketsOverview({ activePage, searchQuery, onLoadingChange }) {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
@@ -160,10 +160,15 @@ function TicketsOverview({ activePage, searchQuery, onLoadingChange }) {
         />
       </section>
 
-      <DialogCreateTicket
+      <DialogCreateTicketAdmin
         isOpen={isCreateDialogOpen}
-        onClose={() => {
-          setIsCreateDialogOpen(false)
+        onClose={() => setIsCreateDialogOpen(false)}
+        onCreated={(response) => {
+          if (response?.data?.data) {
+            setTicketRows((prev) => [response.data.data, ...prev])
+          } else if (response?.data) {
+            setTicketRows((prev) => [response.data, ...prev])
+          }
           setTicketRefreshVersion((currentVersion) => currentVersion + 1)
         }}
       />

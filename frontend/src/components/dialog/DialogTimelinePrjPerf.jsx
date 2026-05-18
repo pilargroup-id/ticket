@@ -1,17 +1,84 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 
 import { XClose } from '../template/TemplateIcons.jsx'
 import TimeLineMT from '../timeline/TimeLineMT.jsx'
-import api from '../../services/api.js'
+import { getDeveloperProjects } from '../../services/reports/DeveloperReports.js'
 
-function DialogTimelineMT({
+function DialogTimelinePrjPerf({
   isOpen = false,
+  developerId = null,
+  year = '2026',
+  status = 'all',
   eyebrow = 'Dialog',
   title = 'Timeline',
-  items = [],
   onClose,
 }) {
+  const [items, setItems] = useState([])
+  const [isLoading, setIsLoading] = useState(false)
+
+  useEffect(() => {
+    if (!isOpen || !developerId) {
+      setItems([])
+      return
+    }
+
+    async function fetchTimeline() {
+      console.log('Fetching timeline for developerId:', developerId)
+      setIsLoading(true)
+      try {
+        const response = await getDeveloperProjects(developerId, { year, status })
+        console.log('API Response:', response)
+        // Flatten tasks from all projects into a single timeline
+        const timelineEntries = []
+        
+        response.data.forEach(prj => {
+          // Helper to normalize status for TimeLineMT (e.g., "resolved" -> "Resolved")
+          const formatStatus = (s) => {
+            if (!s) return 'Unknown'
+            return s.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
+          }
+
+          if (prj.tasks && prj.tasks.length > 0) {
+            prj.tasks.forEach(task => {
+              timelineEntries.push({
+                id: `task-${task.id}`,
+                status: formatStatus(task.status || prj.status),
+                timestamp: task.progress_date,
+                title: prj.project_name,
+                detail: task.description || `Progress: ${task.progress_percent}%`
+              })
+            })
+          } else {
+            // Fallback to project summary if no tasks
+            timelineEntries.push({
+              id: `prj-${prj.project_id}`,
+              status: formatStatus(prj.status),
+              timestamp: prj.last_progress_date || prj.end_date || prj.start_date,
+              title: prj.project_name,
+              detail: `Progress: ${prj.progress_percent}% - ${prj.tasks_count} Tasks (No detailed activity)`
+            })
+          }
+        })
+
+        // Sort by timestamp descending (newest first)
+        const sortedItems = timelineEntries.sort((a, b) => {
+          const dateA = new Date(a.timestamp)
+          const dateB = new Date(b.timestamp)
+          return dateB - dateA
+        })
+
+        setItems(sortedItems)
+      } catch (error) {
+        console.error('Failed to fetch developer projects:', error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchTimeline()
+  }, [isOpen, developerId, year, status])
+
   useEffect(() => {
     if (!isOpen) {
       return undefined
@@ -66,7 +133,10 @@ function DialogTimelineMT({
         </div>
 
         <div className="dashboard-popup__body mtickets-timeline-popup__body">
-          <TimeLineMT items={items} />
+          <TimeLineMT 
+            items={items} 
+            emptyMessage={isLoading ? 'Memuat data timeline...' : 'Belum ada data project untuk developer ini.'}
+          />
         </div>
       </div>
     </div>
@@ -75,4 +145,4 @@ function DialogTimelineMT({
   return createPortal(dialogNode, document.body)
 }
 
-export default DialogTimelineMT
+export default DialogTimelinePrjPerf

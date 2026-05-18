@@ -26,6 +26,7 @@ import MyTickets from './pages/my-tickets/MyTickets.jsx'
 import TeamPerformence from './pages/reports/team-performence/TeamPerformence.jsx'
 import ExecutiveInsight from './pages/reports/executive-insight/ExecutiveInsight.jsx'
 import ProjectPerformence from './pages/reports/project-performence/ProjectPerformence.jsx'
+import MasterCategory from './pages/master/category/MasterCategory.jsx'
 import SkeletonLoading from './components/template/SkeletonLoading.jsx'
 import { consumeSsoSuccessParams, getStoredUser, loginWithDevCredentials } from './services/auth.js'
 
@@ -107,6 +108,12 @@ const pageDetails = {
     eyebrow: 'Reports',
     value: '3',
     detail: 'Monitoring performa pengerjaan ticket berdasarkan proyek dan kategori.',
+  },
+  '/Master/Category': {
+    title: 'Master Category',
+    eyebrow: 'Master Data',
+    value: '0',
+    detail: 'Pengelolaan data kategori sistem.',
   },
   '/users': {
     title: 'Users',
@@ -498,6 +505,7 @@ function App() {
   const isTeamPerformancePage = activePath === '/Reports/TeamPerformance'
   const isExecutiveInsightPage = activePath === '/Reports/ExecutiveInsights'
   const isProjectPerformancePage = activePath === '/Reports/ProjectPerformance'
+  const isMasterCategoryPage = activePath === '/Master/Category'
   const isTicketsOverviewPage = activePath === '/TicketsOverview'
   const isProjectsOverviewPage = activePath === '/ProjectsOverview'
   const isCustomOverviewPage = isTicketsOverviewPage || isProjectsOverviewPage
@@ -716,7 +724,7 @@ function App() {
           <div
             className={`dashboard-content${isTicketWorkspacePage ? ' dashboard-content--mytickets' : ''}`}
           >
-            {activePath !== '/MyTickets' && !isTeamPerformancePage && !isExecutiveInsightPage && !isProjectPerformancePage && !isCustomOverviewPage && (
+            {activePath !== '/MyTickets' && !isTeamPerformancePage && !isExecutiveInsightPage && !isProjectPerformancePage && !isMasterCategoryPage && !isCustomOverviewPage && (
               <section className="dashboard-overview" aria-label="Ringkasan dashboard">
                 {overviewCards.map((card) => (
                   <article className="dashboard-card" key={card.title}>
@@ -752,6 +760,8 @@ function App() {
               <ExecutiveInsight />
             ) : isProjectPerformancePage ? (
               <ProjectPerformence />
+            ) : isMasterCategoryPage ? (
+              <MasterCategory />
             ) : isTablePage ? (
               <section className="dashboard-panel users-table-card" aria-label={activePage.title}>
                 <div className="users-table-card__header">
