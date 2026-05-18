@@ -58,6 +58,7 @@ function DialogCreateTicket({
   // Reset form & handle Escape key
   useEffect(() => {
     if (!isOpen) {
+      /* eslint-disable react-hooks/set-state-in-effect */
       setCategoryId('')
       setCategorySearch('')
       setCategoryOpen(false)
@@ -67,6 +68,7 @@ function DialogCreateTicket({
       setIsDragActive(false)
       setIsSubmitting(false)
       setErrorMessage('')
+      /* eslint-enable react-hooks/set-state-in-effect */
       return undefined
     }
 
@@ -235,19 +237,27 @@ function DialogCreateTicket({
               </div>
             </div>
 
-            <aside className="register-user-popup__section mtickets-create-popup__upload-panel">
-              <div className="register-user-popup__section-header">
+            <aside className="register-user-popup__section mtickets-create-popup__upload-panel" style={{ marginTop: '0' }}>
+              <div className="register-user-popup__section-header" style={{ marginBottom: '8px' }}>
                 <p className="register-user-popup__label">Upload File</p>
-                <p className="register-user-popup__hint">
-                  Letakkan dokumen pendukung di area ini agar popup tetap ringkas.
+                <p className="register-user-popup__hint" style={{ fontSize: '11px', margin: '2px 0 0 0' }}>
+                  Dokumen pendukung (opsional)
                 </p>
               </div>
 
-              <label
-                htmlFor="ticket-attachment"
-                className={`register-user-popup__upload mtickets-create-popup__upload${
-                  isDragActive ? ' is-drag-active' : ''
-                }`}
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px',
+                  padding: '10px 14px',
+                  backgroundColor: isDragActive ? '#eff6ff' : '#f8fafc',
+                  border: isDragActive ? '1px dashed #3b82f6' : '1px dashed #cbd5e1',
+                  borderRadius: '10px',
+                  cursor: 'pointer',
+                  position: 'relative',
+                  transition: 'all 0.2s ease',
+                }}
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
                 onDrop={handleDrop}
@@ -255,20 +265,65 @@ function DialogCreateTicket({
                 <input
                   id="ticket-attachment"
                   type="file"
-                  className="register-user-popup__upload-input"
+                  accept="image/*"
                   onChange={handleFileChange}
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    height: '100%',
+                    opacity: 0,
+                    cursor: 'pointer',
+                  }}
                 />
-                <span className="register-user-popup__upload-icon">
-                  <FileText01 size={20} />
-                </span>
-                <span className="register-user-popup__upload-title">Drag and drop file di sini</span>
-                <span className="register-user-popup__upload-meta">
-                  atau klik untuk memilih file dari perangkat Anda
-                </span>
-                <span className="register-user-popup__upload-file">
-                  {selectedFileName || 'Belum ada file yang dipilih'}
-                </span>
-              </label>
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: '36px',
+                  height: '36px',
+                  borderRadius: '8px',
+                  backgroundColor: '#eff6ff',
+                  color: '#3b82f6',
+                }}>
+                  <FileText01 size={18} />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
+                  <span style={{ fontSize: '13px', fontWeight: 600, color: '#334155', textOverflow: 'ellipsis', whiteSpace: 'nowrap', overflow: 'hidden' }}>
+                    {selectedFileName || 'Pilih / drag gambar di sini'}
+                  </span>
+                  <span style={{ fontSize: '11px', color: '#64748b' }}>
+                    {selectedFileName ? 'Klik untuk mengganti file' : 'Maksimal 5MB (Format: Gambar)'}
+                  </span>
+                </div>
+                {selectedFile && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setSelectedFile(null);
+                      setSelectedFileName('');
+                    }}
+                    style={{
+                      border: 'none',
+                      backgroundColor: 'transparent',
+                      color: '#ef4444',
+                      fontSize: '11px',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      padding: '4px 8px',
+                      borderRadius: '4px',
+                      zIndex: 10,
+                    }}
+                    onMouseOver={(e) => e.currentTarget.style.textDecoration = 'underline'}
+                    onMouseOut={(e) => e.currentTarget.style.textDecoration = 'none'}
+                  >
+                    Hapus
+                  </button>
+                )}
+              </div>
             </aside>
           </div>
 

@@ -103,7 +103,7 @@ function createTicketTimeline(ticket) {
   const requestDate = ticket?.request_date || ticket?.created_at
   const startDate = ticket?.start_date
   const endDate = ticket?.end_date || ticket?.updated_at
-  const supportName = getFirstFilledText(ticket?.support?.name)
+  const supportName = getFirstFilledText(ticket?.support_name, ticket?.support?.name)
   const status = String(ticket?.status || '').trim().toLowerCase()
 
   if (requestDate) {
@@ -166,8 +166,8 @@ export function normalizeMyTicket(ticket = {}) {
   const startDateValue = ticket?.start_date || null
   const endDateValue = ticket?.end_date || null
   const updatedAtValue = ticket?.updated_at || null
-  const requestorName = getFirstFilledText(ticket?.nama_pembuat, ticket?.user?.name)
-  const supportName = getFirstFilledText(ticket?.support?.name)
+  const requestorName = getFirstFilledText(ticket?.nama_pembuat, ticket?.user_name, ticket?.user?.name)
+  const supportName = getFirstFilledText(ticket?.support_name, ticket?.support?.name)
   const categoryName = getFirstFilledText(ticket?.category_name, ticket?.category?.name)
   const ticketCode = getFirstFilledText(ticket?.ticket_code, ticket?.id)
   const rawStatus = String(ticket?.status || '').trim().toLowerCase()

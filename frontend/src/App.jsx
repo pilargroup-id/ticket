@@ -727,6 +727,7 @@ function App() {
 
         <main
           className={`dashboard-main${isTicketWorkspacePage && !isMobile ? ' dashboard-main--mytickets' : ''}`}
+          style={isMobile && activePath === '/MyTickets' ? { paddingTop: '8px' } : {}}
         >
           <div
             className={`dashboard-content${isTicketWorkspacePage && !isMobile ? ' dashboard-content--mytickets' : ''}`}

@@ -3,7 +3,7 @@ import { getCache, setCache } from '../../services/cache.js'
 import SkeletonLoading from '../../components/template/SkeletonLoading.jsx'
 
 import ButtonRangeDate from '../../components/button/ButtonRangeDate.jsx'
-import { Ticket01 } from '../../components/template/TemplateIcons.jsx'
+import { Ticket01, ChevronDown } from '../../components/template/TemplateIcons.jsx'
 import { INITIAL_TICKET_ROWS } from '../../services/my-tickets/DataTableMT.js'
 import { getMyTickets } from '../../services/my-tickets/MyTickets.js'
 import CardStatusMT from './CardStatusMT.jsx'
@@ -99,13 +99,7 @@ function MyTickets({ activePage, searchQuery, onLoadingChange }) {
 
   return (
     <>
-      {isMobile ? (
-        <MobilePillStatus
-          activeStatus={statusFilter}
-          onStatusChange={setStatusFilter}
-          statusCounts={statusCounts}
-        />
-      ) : (
+      {!isMobile && (
         <CardStatusMT
           activeStatus={statusFilter}
           onStatusChange={setStatusFilter}
@@ -116,29 +110,30 @@ function MyTickets({ activePage, searchQuery, onLoadingChange }) {
       <section
         className="dashboard-panel users-table-card mytickets-table-card"
         aria-label="Aktivitas legal"
+        style={isMobile ? { backgroundColor: 'transparent', boxShadow: 'none', padding: '0', border: 'none' } : {}}
       >
-        <div className="users-table-card__header mytickets-table-card__header">
-          <div className="mytickets-table-card__title-group">
-            <h1 className="dashboard-panel__title mytickets-table-card__title">
-              {activePage?.title ?? 'MyTickets'}
+        <div className="users-table-card__header mytickets-table-card__header" style={isMobile ? { padding: '0', marginTop: '0', marginBottom: '2px', borderBottom: 'none', display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' } : {}}>
+          <div className="mytickets-table-card__title-group" style={isMobile ? { display: 'flex', alignItems: 'center' } : {}}>
+            <h1 className="dashboard-panel__title mytickets-table-card__title" style={isMobile ? { fontSize: '20px', color: '#0f172a', fontWeight: 700, margin: 0 } : {}}>
+              {activePage?.title ?? 'My Tickets'}
             </h1>
           </div>
+          {isMobile && (
+            <ButtonMobileMT 
+              onClickCreate={() => {
+                const hasPendingFeedback = ticketRows.some((ticket) => ticket.status === 'Resolved')
+                if (hasPendingFeedback) {
+                  setIsValidationDialogOpen(true)
+                } else {
+                  setIsCreateDialogOpen(true)
+                }
+              }} 
+            />
+          )}
 
-          <div className="users-table-card__actions">
-            {!isMobile && <ButtonRangeDate label="Request Date" onChange={setDateRange} />}
-
-            {isMobile ? (
-              <ButtonMobileMT 
-                onClickCreate={() => {
-                  const hasPendingFeedback = ticketRows.some((ticket) => ticket.status === 'Resolved')
-                  if (hasPendingFeedback) {
-                    setIsValidationDialogOpen(true)
-                  } else {
-                    setIsCreateDialogOpen(true)
-                  }
-                }} 
-              />
-            ) : (
+          {!isMobile && (
+            <div className="users-table-card__actions">
+              <ButtonRangeDate label="Request Date" onChange={setDateRange} />
               <button
                 type="button"
                 className="users-table-card__action"
@@ -156,9 +151,18 @@ function MyTickets({ activePage, searchQuery, onLoadingChange }) {
                 <Ticket01 size={18} aria-hidden="true" />
                 <span>Create Tickets</span>
               </button>
-            )}
-          </div>
+            </div>
+          )}
         </div>
+
+        {isMobile && (
+          <MobilePillStatus
+            activeStatus={statusFilter}
+            onStatusChange={setStatusFilter}
+            statusCounts={statusCounts}
+            style={{ padding: '6px 16px 8px' }}
+          />
+        )}
 
         <DataTableMT
           dateRange={dateRange}

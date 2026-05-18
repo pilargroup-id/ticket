@@ -169,6 +169,7 @@ function DialogCreateTicketAdmin({
   // Reset form & handle Escape key
   useEffect(() => {
     if (!isOpen) {
+      /* eslint-disable react-hooks/set-state-in-effect */
       setCategoryId('')
       setCategorySearch('')
       setCategoryOpen(false)
@@ -185,6 +186,7 @@ function DialogCreateTicketAdmin({
       setIsDragActive(false)
       setIsSubmitting(false)
       setErrorMessage('')
+      /* eslint-enable react-hooks/set-state-in-effect */
       return undefined
     }
 

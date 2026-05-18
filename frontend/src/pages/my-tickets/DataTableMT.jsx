@@ -179,7 +179,7 @@ function DataTableMT({
   return (
     <div className="mtickets-table-shell">
       {isMobile ? (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', padding: '16px 0', overflowY: 'auto', maxHeight: 'calc(100vh - 260px)', paddingBottom: '80px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', padding: '16px 0', overflowY: 'auto', maxHeight: 'calc(100vh - 260px)', paddingBottom: '80px' }}>
           {rows.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '32px', border: '1px dashed #ddd', borderRadius: '12px', backgroundColor: '#fafafa' }}>
               <div style={{ fontWeight: 'bold', marginBottom: '8px', color: '#333' }}>No data</div>
@@ -187,7 +187,12 @@ function DataTableMT({
             </div>
           ) : (
             rows.map((ticket) => (
-              <MobileCardMT key={ticket.id ?? ticket.ticketCode} ticket={ticket} />
+              <MobileCardMT
+                key={ticket.id ?? ticket.ticketCode}
+                ticket={ticket}
+                onEdit={() => openActionDialog('edit', ticket)}
+                onFeedback={() => openActionDialog('feedback', ticket)}
+              />
             ))
           )}
         </div>
