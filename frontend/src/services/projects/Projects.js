@@ -273,7 +273,7 @@ export function normalizeProjectStatusCounts(projects = []) {
 }
 
 export async function getProjects(options = {}) {
-  const response = await api.get('/project/', {
+  const response = await api.get('/project', {
     params: buildProjectsQuery(options),
   })
 
