@@ -39,6 +39,15 @@ backend/Homestead.json
 backend/Homestead.yaml
 backend/composer.lock
 backend/*.log
+# Ignore semua hasil build React di backend/public
+backend/public/*
+
+# Kecuali file-file Laravel
+!backend/public/.htaccess
+!backend/public/index.php
+!backend/public/robots.txt
+!backend/public/web.config
+!backend/public/.gitignore
 
 # ===================
 # Frontend (React + Vite)
