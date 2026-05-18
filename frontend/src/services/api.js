@@ -1,8 +1,16 @@
 const DEFAULT_API_BASE_URL = 'http://localhost:8001/api'
 const DEFAULT_TOKEN_KEY = 'access_token'
 
+function forceHttpsIfPageIsHttps(urlStr) {
+  if (typeof window !== 'undefined' && window.location.protocol === 'https:') {
+    return urlStr.replace(/^http:\/\//i, 'https://')
+  }
+  return urlStr
+}
+
 function normalizeBaseUrl(baseUrl) {
-  return String(baseUrl || DEFAULT_API_BASE_URL).replace(/\/+$/, '')
+  const normalized = String(baseUrl || DEFAULT_API_BASE_URL).replace(/\/+$/, '')
+  return forceHttpsIfPageIsHttps(normalized)
 }
 
 function isAbsoluteUrl(value) {
@@ -37,7 +45,7 @@ function buildRequestUrl(endpoint, baseUrl, params) {
 
   appendQueryParams(url, params)
 
-  return url.toString()
+  return forceHttpsIfPageIsHttps(url.toString())
 }
 
 function isBodySerializableAsJson(body) {
