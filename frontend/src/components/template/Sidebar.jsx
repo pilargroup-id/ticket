@@ -167,9 +167,12 @@ function Sidebar({
 }) {
   const [expandedGroups, setExpandedGroups] = useState({})
   const initials = getInitials(userName)
+  const filteredPrimaryItems = useMemo(() => {
+    return primaryItems.filter((item) => item.id === 'my-tickets' || item.label === 'My Tickets')
+  }, [primaryItems])
   const activeExpandedGroups = useMemo(
-    () => getInitiallyExpandedGroups([...primaryItems, ...secondaryItems], activePath),
-    [activePath, primaryItems, secondaryItems],
+    () => getInitiallyExpandedGroups([...filteredPrimaryItems, ...secondaryItems], activePath),
+    [activePath, filteredPrimaryItems, secondaryItems],
   )
   const visibleExpandedGroups = useMemo(
     () => ({
@@ -283,7 +286,7 @@ function Sidebar({
       </div>
 
       <nav className="sidebar-nav" aria-label="Main navigation">
-        {primaryItems.map((item) => (
+        {filteredPrimaryItems.map((item) => (
           <SidebarNavItem
             key={getItemKey(item)}
             item={item}

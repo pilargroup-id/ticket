@@ -458,8 +458,8 @@ function App() {
     async function initAuth() {
       if (import.meta.env.DEV) {
         try {
-          const username = import.meta.env.VITE_DEV_MOCK_USERNAME || 'bayu'
-          const password = import.meta.env.VITE_DEV_MOCK_PASSWORD || 'password123'
+          const username = import.meta.env.VITE_DEV_MOCK_USERNAME || import.meta.env.VITE_MOCK_USERNAME || 'bayu'
+          const password = import.meta.env.VITE_DEV_MOCK_PASSWORD || import.meta.env.VITE_MOCK_PASSWORD || 'password123'
           const result = await loginWithDevCredentials({ username, password })
 
           if (result?.session?.user) {
