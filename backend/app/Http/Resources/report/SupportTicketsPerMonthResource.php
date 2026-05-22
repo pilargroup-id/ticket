@@ -16,7 +16,7 @@ class SupportTicketsPerMonthResource extends JsonResource
     {
         return [
             'support_id'   => (int) $this->support_id,
-            'support_name' => $this->support?->name,
+            'support_name' => $this->support_name,
             'month'        => (int) $this->month,   // 1-12
             'count'        => (int) $this->count,
         ];

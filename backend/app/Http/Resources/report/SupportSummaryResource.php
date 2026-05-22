@@ -25,7 +25,7 @@ class SupportSummaryResource extends JsonResource
 
         return [
             'support_id'        => (int) $this->support_id,
-            'support_name'      => $this->support?->name,
+            'support_name' => $this->support_name,
 
             'total_tickets'     => $totalTickets,
             'resolved_tickets'  => (int) ($this->resolved_tickets ?? 0),

@@ -14,7 +14,8 @@ class ProjectUpdateRequest extends FormRequest
             'status' => ['required','in:waiting,in_progress,pending,resolved,void'],
 
             // in_progress
-            'developer_id'     => ['nullable','integer','exists:users,id'],
+            'developer_id'   => ['required', 'string', 'max:36'],
+            'developer_name' => ['required', 'string', 'max:255'],
             'progress_date'    => ['nullable'],
             'progress_percent' => ['nullable','integer','min:0','max:100'],
             'description'      => ['nullable','string'],

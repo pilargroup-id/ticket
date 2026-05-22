@@ -74,64 +74,36 @@ class TicketController extends Controller
     }
 
     private function buildTicketQuery(Request $request, bool $onlyMine = false)
-{
-    $status = $request->query('status');
-    $start  = $request->query('start_date');
-    $end    = $request->query('end_date');
+    {
+        $status  = $request->query('status');
+        $start   = $request->query('start_date');
+        $end     = $request->query('end_date');
+        $perPage = max(1, min((int) $request->query('per_page', 20), 200));
 
-    $perPage = (int) $request->query('per_page', 20);
-    $perPage = max(1, min($perPage, 200));
+        $q = Tickets::query()
+            ->select([
+                'id', 'ticket_code',
+                'user_id', 'support_id', 'support_name',
+                'category_id', 'assets_id',
+                'nama_pembuat', 'problem', 'status', 'priority',
+                'solution', 'image', 'notes',
+                'request_date', 'waiting_hour',
+                'start_date', 'end_date',
+                'time_spent', 'is_late',
+                'created_at', 'updated_at',
+            ])
+            ->with(['category:id,name', 'assets:id,assets_name', 'feedback']);
 
-    $with = [
-        'user:id,name',
-        'support:id,name',
-        'category:id,name',
-    ];
+        if ($onlyMine) {
+            $q->where('user_id', auth()->id());
+        }
 
-    if ($request->boolean('include_assets')) {
-        $with[] = 'assets:id,assets_name';
+        $q->when($start && $end, fn($qq) => $qq->betweenRequestDates($start, $end))
+        ->when($status && $status !== 'all', fn($qq) => $qq->byStatus($status))
+        ->latest();
+
+        return [$q, $perPage];
     }
-
-    $q = Tickets::query()
-        ->select([
-            'id',
-            'ticket_code',
-            'user_id',
-            'support_id',     // ✅ wajib biar support relasi kebaca
-            'category_id',
-            'assets_id',
-
-            'nama_pembuat',
-            'problem',
-            'status',
-            'priority',
-
-            'solution',       // ✅ FIX: sebelumnya ga ke-select
-            'image',          // ✅ FIX: biar image_url ga null
-
-            'notes',
-            'request_date',
-            'waiting_hour',
-            'start_date',
-            'end_date',
-            'time_spent',
-            'is_late',
-
-            'created_at',
-            'updated_at',     // ✅ FIX: biar updated_at ga null
-        ])
-        ->with($with);
-
-    if ($onlyMine) {
-        $q->where('user_id', auth()->id());
-    }
-
-    $q->when($start && $end, fn($qq) => $qq->betweenRequestDates($start, $end))
-      ->when($status && $status !== 'all', fn($qq) => $qq->byStatus($status))
-      ->latest();
-
-    return [$q, $perPage];
-}
 
 
     public function index(Request $request)
@@ -181,10 +153,8 @@ class TicketController extends Controller
     public function storeByAdmin(TicketStoreByAdminRequest $request)
     {
         $tz = $this->tz();
-
-        $dataTicket = $request->validated();
-        $dataTicket['created_by'] = 'admin';
-        $dataTicket['request_date'] = $dataTicket['request_date'] ?? now($tz);
+        $data = $request->validated();
+        $data['request_date'] = $data['request_date'] ?? now($tz);
 
         do {
             $lastTicket = Tickets::latest('id')->first();
@@ -192,23 +162,25 @@ class TicketController extends Controller
             $ticketCode = 'TCK-' . str_pad($nextNumber, 3, '0', STR_PAD_LEFT);
         } while (Tickets::where('ticket_code', $ticketCode)->exists());
 
-        $dataTicket['ticket_code'] = $ticketCode;
+        $data['ticket_code'] = $ticketCode;
+        $data['dept_id']   = $request->auth_dept_id;
+        $data['dept_name'] = $request->auth_dept_name;
 
         if ($request->hasFile('image')) {
-            $dataTicket['image'] = $request->file('image')->store('tickets', 'public');
+            $data['image'] = $request->file('image')->store('tickets', 'public');
         }
 
-        $ticket = Tickets::create($dataTicket);
+        $ticket = Tickets::create($data);
 
         return response()->json([
             'message' => 'Ticket created successfully by admin',
-            'data'    => new TicketResource($ticket->load(['user', 'support', 'category', 'assets'])),
+            'data'    => new TicketResource($ticket->load(['category', 'assets'])),
         ], 201);
     }
 
     public function storeByUser(TicketStoreByUserRequest $request)
     {
-        $tz = $this->tz();
+        $tz     = $this->tz();
         $userId = auth()->id();
 
         $hasPendingFeedback = Tickets::where('user_id', $userId)
@@ -221,90 +193,84 @@ class TicketController extends Controller
             ], 403);
         }
 
-        $dataTicket = $request->validated();
-        $dataTicket['created_by'] = 'user';
-        $dataTicket['user_id'] = $userId;
-        $dataTicket['request_date'] = $dataTicket['request_date'] ?? now($tz);
+        $data                 = $request->validated();
+        $data['user_id']      = $userId;
+        $data['dept_id']   = $request->auth_dept_id;
+        $data['dept_name'] = $request->auth_dept_name;
+        $data['request_date'] = $data['request_date'] ?? now($tz);
 
-        $lastTicket = Tickets::latest('id')->first();
-        $nextNumber = $lastTicket ? $lastTicket->id + 1 : 1;
-        $dataTicket['ticket_code'] = 'TCK-' . str_pad($nextNumber, 3, '0', STR_PAD_LEFT);
+        $lastTicket       = Tickets::latest('id')->first();
+        $nextNumber       = $lastTicket ? $lastTicket->id + 1 : 1;
+        $data['ticket_code'] = 'TCK-' . str_pad($nextNumber, 3, '0', STR_PAD_LEFT);
 
         if ($request->hasFile('image')) {
-    $file = $request->file('image');
+            $file = $request->file('image');
 
-    // ✅ kalau upload gagal, jangan lanjut store()
-    if (!$file || !$file->isValid()) {
-        return response()->json([
-            'message' => 'Upload file gagal / file tidak valid',
-            'error' => $file?->getErrorMessage(),
-            'code' => $file?->getError(),
-        ], 422);
-    }
+            if (!$file || !$file->isValid()) {
+                return response()->json([
+                    'message' => 'Upload file gagal / file tidak valid',
+                    'error'   => $file?->getErrorMessage(),
+                    'code'    => $file?->getError(),
+                ], 422);
+            }
 
-    // ✅ extra guard: kadang realpath kosong
-    if (!method_exists($file, 'getRealPath') || empty($file->getRealPath())) {
-        return response()->json([
-            'message' => 'Upload file tidak memiliki path (tmp). Cek konfigurasi PHP upload.',
-        ], 422);
-    }
+            if (!method_exists($file, 'getRealPath') || empty($file->getRealPath())) {
+                return response()->json([
+                    'message' => 'Upload file tidak memiliki path. Cek konfigurasi PHP upload.',
+                ], 422);
+            }
 
-    $dataTicket['image'] = $file->store('tickets', 'public');
-}
+            $data['image'] = $file->store('tickets', 'public');
+        }
 
-
-        $ticket = Tickets::create($dataTicket);
+        $ticket = Tickets::create($data);
 
         return response()->json([
             'message' => 'Ticket created successfully by user',
-            'data'    => new TicketResource($ticket->load(['user', 'support', 'category', 'assets'])),
+            'data'    => new TicketResource($ticket->load(['category', 'assets'])),
         ], 201);
     }
 
     public function updateByAdmin(TicketUpdateByAdminRequest $request, $id)
     {
         $ticket = Tickets::findOrFail($id);
-        $data = $request->validated();
-
+        $data   = $request->validated();
         $status = $data['status'] ?? null;
+
         if (!$status) return response()->json(['message' => 'status is required'], 422);
 
         $tz = $this->tz();
 
         if ($status === 'waiting') {
             $ticket->update(['status' => 'waiting']);
-
             return response()->json([
                 'message' => 'Ticket updated successfully by admin',
-                'data'    => new TicketResource($ticket->fresh()->load(['user', 'support', 'category', 'assets'])),
-            ], 200);
+                'data'    => new TicketResource($ticket->fresh()->load(['category', 'assets'])),
+            ]);
         }
 
         if ($status === 'void') {
             if (empty($data['notes'])) {
                 return response()->json(['message' => 'notes wajib untuk VOID'], 422);
             }
-
-            $ticket->update([
-                'status' => 'void',
-                'notes'  => $data['notes'],
-            ]);
-
+            $ticket->update(['status' => 'void', 'notes' => $data['notes']]);
             return response()->json([
                 'message' => 'Ticket updated successfully by admin',
-                'data'    => new TicketResource($ticket->fresh()->load(['user', 'support', 'category', 'assets'])),
-            ], 200);
+                'data'    => new TicketResource($ticket->fresh()->load(['category', 'assets'])),
+            ]);
         }
 
         if ($status === 'in_progress') {
-            if (empty($data['support_id'])) return response()->json(['message' => 'support_id wajib untuk Execution'], 422);
-            if (empty($data['priority']))   return response()->json(['message' => 'priority wajib untuk Execution'], 422);
+            if (empty($data['support_id']))   return response()->json(['message' => 'support_id wajib'], 422);
+            if (empty($data['support_name'])) return response()->json(['message' => 'support_name wajib'], 422);
+            if (empty($data['priority']))     return response()->json(['message' => 'priority wajib'], 422);
 
             $payload = [
-                'status'     => 'in_progress',
-                'support_id' => $data['support_id'],
-                'priority'   => $data['priority'],
-                'is_late'    => 0,
+                'status'       => 'in_progress',
+                'support_id'   => $data['support_id'],
+                'support_name' => $data['support_name'],
+                'priority'     => $data['priority'],
+                'is_late'      => 0,
             ];
 
             if (array_key_exists('assets_id', $data)) {
@@ -319,24 +285,22 @@ class TicketController extends Controller
                 $payload['start_date'] = Carbon::parse($ticket->start_date)->timezone($tz);
             }
 
-            $requestDateRaw = $ticket->getRawOriginal('request_date') ?: $ticket->getRawOriginal('created_at');
+            $requestDateRaw          = $ticket->getRawOriginal('request_date') ?: $ticket->getRawOriginal('created_at');
             $payload['waiting_hour'] = $this->calcWaitingHour($requestDateRaw, $payload['start_date']);
 
             $ticket->update($payload);
 
             return response()->json([
                 'message' => 'Ticket updated successfully by admin',
-                'data'    => new TicketResource($ticket->fresh()->load(['user', 'support', 'category', 'assets'])),
-            ], 200);
+                'data'    => new TicketResource($ticket->fresh()->load(['category', 'assets'])),
+            ]);
         }
 
         if ($status === 'resolved') {
-            if (empty($data['solution'])) {
-                return response()->json(['message' => 'solution wajib untuk resolved'], 422);
-            }
-
-            if (empty($data['support_id'])) return response()->json(['message' => 'support_id wajib untuk resolved'], 422);
-            if (empty($data['priority']))   return response()->json(['message' => 'priority wajib untuk resolved'], 422);
+            if (empty($data['solution']))     return response()->json(['message' => 'solution wajib'], 422);
+            if (empty($data['support_id']))   return response()->json(['message' => 'support_id wajib'], 422);
+            if (empty($data['support_name'])) return response()->json(['message' => 'support_name wajib'], 422);
+            if (empty($data['priority']))     return response()->json(['message' => 'priority wajib'], 422);
 
             if (!empty($data['start_date'])) {
                 $ticket->update(['start_date' => $this->parseInputDate($data['start_date'])]);
@@ -349,8 +313,7 @@ class TicketController extends Controller
             }
 
             $start = Carbon::parse($ticket->start_date)->timezone($tz);
-
-            $end = !empty($data['end_date']) ? $this->parseInputDate($data['end_date']) : now($tz);
+            $end   = !empty($data['end_date']) ? $this->parseInputDate($data['end_date']) : now($tz);
             if (!$end) $end = now($tz);
 
             if ($end->lt($start)) {
@@ -358,13 +321,12 @@ class TicketController extends Controller
             }
 
             $autoMinutes = $this->calcMinutes($start, $end);
-            $timeSpent = !empty($data['time_spent']) ? (int) $data['time_spent'] : $autoMinutes;
-            $timeSpent = max(1, $timeSpent);
-
-            $isLate = $timeSpent > 480 ? 1 : 0;
+            $timeSpent   = !empty($data['time_spent']) ? (int) $data['time_spent'] : $autoMinutes;
+            $timeSpent   = max(1, $timeSpent);
+            $isLate      = $timeSpent > 480 ? 1 : 0;
 
             $requestDateRaw = $ticket->getRawOriginal('request_date') ?: $ticket->getRawOriginal('created_at');
-            $waitingHour = $ticket->waiting_hour;
+            $waitingHour    = $ticket->waiting_hour;
             if ($waitingHour === null || (float) $waitingHour <= 0) {
                 $waitingHour = $this->calcWaitingHour($requestDateRaw, $ticket->start_date);
             }
@@ -372,6 +334,7 @@ class TicketController extends Controller
             $payload = [
                 'status'       => 'resolved',
                 'support_id'   => $data['support_id'],
+                'support_name' => $data['support_name'],
                 'priority'     => $data['priority'],
                 'end_date'     => $end,
                 'time_spent'   => $timeSpent,
@@ -380,20 +343,15 @@ class TicketController extends Controller
                 'waiting_hour' => $waitingHour,
             ];
 
-            if (array_key_exists('assets_id', $data)) {
-                $payload['assets_id'] = $data['assets_id'];
-            }
-
-            if (!empty($data['notes'])) {
-                $payload['notes'] = $data['notes'];
-            }
+            if (array_key_exists('assets_id', $data)) $payload['assets_id'] = $data['assets_id'];
+            if (!empty($data['notes']))                $payload['notes']     = $data['notes'];
 
             $ticket->update($payload);
 
             return response()->json([
                 'message' => 'Ticket updated successfully by admin',
-                'data'    => new TicketResource($ticket->fresh()->load(['user', 'support', 'category', 'assets'])),
-            ], 200);
+                'data'    => new TicketResource($ticket->fresh()->load(['category', 'assets'])),
+            ]);
         }
 
         return response()->json(['message' => 'status invalid'], 422);
@@ -426,14 +384,11 @@ class TicketController extends Controller
             return response()->json(['message' => 'notes wajib untuk VOID'], 422);
         }
 
-        $ticket->update([
-            'status' => 'void',
-            'notes'  => $request->notes,
-        ]);
+        $ticket->update(['status' => 'void', 'notes' => $request->notes]);
 
         return response()->json([
             'message' => 'Ticket voided successfully',
-            'data'    => new TicketResource($ticket->fresh()->load(['user', 'support', 'category', 'assets'])),
-        ], 200);
+            'data'    => new TicketResource($ticket->fresh()->load(['category', 'assets'])),
+        ]);
     }
 }

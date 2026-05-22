@@ -24,7 +24,7 @@ class SupportTimeSpentPerMonthResource extends JsonResource
 
         return [
             'support_id'          => (int) $this->support_id,
-            'support_name'        => $this->support?->name,
+            'support_name' => $this->support_name,
             'month'               => (int) $this->month,
             'total_minutes'       => $total,
             'total_time_human'    => $this->humanMinutes($total),

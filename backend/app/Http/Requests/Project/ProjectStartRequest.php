@@ -11,7 +11,8 @@ class ProjectStartRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'developer_id'     => ['required','integer','exists:users,id'],
+            'developer_id'   => ['required', 'string', 'max:36'],
+            'developer_name' => ['required', 'string', 'max:255'],
             'progress_date'    => ['nullable'], // datetime
             'progress_percent' => ['nullable','integer','min:0','max:100'],
             'description'      => ['nullable','string'],

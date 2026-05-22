@@ -23,10 +23,6 @@ class ProjectDetails extends Model
         return $this->belongsTo(ProjectHeaders::class, 'project_header_id');
     }
 
-    public function developer() {
-        return $this->belongsTo(User::class, 'developer_id');
-    }
-
     /**
      * ✅ Export/Preview query: row = detail/task
      * Filters:
@@ -42,8 +38,6 @@ class ProjectDetails extends Model
 
         $query = DB::table('project_details as d')
             ->join('project_headers as h', 'd.project_header_id', '=', 'h.id')
-            ->leftJoin('users as req', 'h.requestor_id', '=', 'req.id')
-            ->leftJoin('users as dev', 'd.developer_id', '=', 'dev.id')
             ->select([
                 'd.id as detail_id',
                 'd.project_header_id',
@@ -51,7 +45,6 @@ class ProjectDetails extends Model
                 'd.description as detail_description',
                 'd.status as detail_status',
                 'd.progress_percent as detail_progress_percent',
-
                 'h.project_code',
                 'h.project_name',
                 'h.status as header_status',
@@ -60,9 +53,8 @@ class ProjectDetails extends Model
                 'h.start_date',
                 'h.end_date',
                 'h.is_late',
-
-                DB::raw('COALESCE(req.name, "-") as requestor_name'),
-                DB::raw('COALESCE(dev.name, "-") as developer_name'),
+                DB::raw('COALESCE(h.requestor_name, "-") as requestor_name'),
+                DB::raw('COALESCE(d.developer_name, "-") as developer_name'),
             ])
             ->whereYear('d.progress_date', $year)
             ->orderByDesc('d.progress_date')

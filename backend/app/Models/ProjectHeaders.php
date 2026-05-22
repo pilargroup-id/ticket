@@ -48,11 +48,6 @@ class ProjectHeaders extends Model
         return $this->hasMany(ProjectDetails::class, 'project_header_id', 'id');
     }
 
-    public function requestor()
-    {
-        return $this->belongsTo(User::class, 'requestor_id');
-    }
-
     public function pendings()
     {
         return $this->hasMany(Pendings::class, 'project_header_id', 'id');
@@ -109,7 +104,6 @@ class ProjectHeaders extends Model
 
     $query = self::query()
         ->from('project_headers as ph')
-        ->leftJoin('users as req', 'req.id', '=', 'ph.requestor_id')
         ->select([
             'ph.id',
             'ph.project_code',
@@ -118,19 +112,16 @@ class ProjectHeaders extends Model
             'ph.priority',
             'ph.progress_percent',
             'ph.is_late',
-
             'ph.request_date',
             'ph.start_date',
             'ph.end_date',
             'ph.actual_start_date',
             'ph.actual_end_date',
             'ph.effective_end_date',
-
             'ph.total_pending_minutes',
             'ph.description',
             'ph.notes',
-
-            DB::raw('COALESCE(req.name, "-") as requestor_name'),
+            DB::raw('COALESCE(ph.requestor_name, "-") as requestor_name'),
         ])
         ->whereYear('ph.start_date', $year);
 
@@ -344,9 +335,8 @@ public static function developerProjectSummary(array $filters = [])
 
     $base = DB::table('project_details as pd')
         ->join('project_headers as ph', 'ph.id', '=', 'pd.project_header_id')
-        ->leftJoin('users as dev', 'dev.id', '=', 'pd.developer_id')
         ->whereNotNull('pd.developer_id')
-        ->whereYear('pd.progress_date', $year); // ✅ FIX: filter by detail activity date
+        ->whereYear('pd.progress_date', $year);
 
     if ($status && $status !== 'all') {
         $base->where('ph.status', $status);
@@ -362,19 +352,15 @@ public static function developerProjectSummary(array $filters = [])
     $rows = (clone $base)
         ->selectRaw('
             pd.developer_id as developer_id,
-            COALESCE(dev.name, "Unknown") as developer_name,
-
+            COALESCE(pd.developer_name, "Unknown") as developer_name,
             COUNT(pd.id) as total_tasks,
             COUNT(DISTINCT ph.id) as projects_count,
-
             ROUND(AVG(COALESCE(pd.progress_percent,0)), 2) as avg_progress_task,
-
-            -- ✅ FIX: hitung project distinct biar gak ke-multiply oleh jumlah tasks
             COUNT(DISTINCT CASE WHEN ph.status = "resolved" THEN ph.id END) as resolved_touch_count,
             COUNT(DISTINCT CASE WHEN ph.status = "resolved" AND ph.is_late = 1 THEN ph.id END) as late_touch_count,
             COUNT(DISTINCT CASE WHEN ph.status IN ("waiting","pending","in_progress") THEN ph.id END) as open_touch_count
         ')
-        ->groupBy('pd.developer_id', 'dev.name')
+        ->groupBy('pd.developer_id', 'pd.developer_name')
         ->orderByDesc('projects_count')
         ->get();
 
@@ -404,9 +390,8 @@ public static function developerProjectDetail(int $developerId, array $filters =
     // ✅ daftar project yang disentuh developer di tahun tsb (berdasarkan progress_date)
     $projQuery = DB::table('project_details as pd')
         ->join('project_headers as ph', 'ph.id', '=', 'pd.project_header_id')
-        ->leftJoin('users as req', 'req.id', '=', 'ph.requestor_id')
         ->where('pd.developer_id', $developerId)
-        ->whereYear('pd.progress_date', $year); // ✅ FIX
+        ->whereYear('pd.progress_date', $year);
 
     if ($status && $status !== 'all') {
         $projQuery->where('ph.status', $status);
@@ -430,23 +415,15 @@ public static function developerProjectDetail(int $developerId, array $filters =
             ph.is_late,
             ph.start_date,
             ph.end_date,
-            COALESCE(req.name, "-") as requestor_name,
-
+            COALESCE(ph.requestor_name, "-") as requestor_name,
             COUNT(pd.id) as tasks_count,
             ROUND(AVG(COALESCE(pd.progress_percent,0)), 2) as avg_task_progress,
             MAX(pd.progress_date) as last_progress_date
         ')
         ->groupBy(
-            'ph.id',
-            'ph.project_code',
-            'ph.project_name',
-            'ph.status',
-            'ph.priority',
-            'ph.progress_percent',
-            'ph.is_late',
-            'ph.start_date',
-            'ph.end_date',
-            'req.name'
+            'ph.id', 'ph.project_code', 'ph.project_name', 'ph.status',
+            'ph.priority', 'ph.progress_percent', 'ph.is_late',
+            'ph.start_date', 'ph.end_date', 'ph.requestor_name'
         )
         ->orderByDesc('last_progress_date')
         ->paginate($perPage);

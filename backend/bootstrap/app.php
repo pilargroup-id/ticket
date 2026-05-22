@@ -35,6 +35,7 @@ return Application::configure(basePath: $basePath)
         });
 
         $middleware->alias([
+            'auth.jwt'         => \App\Http\Middleware\JwtAuthMiddleware::class,
             'admin'            => \App\Http\Middleware\AdminMiddleware::class,
             'manager'          => \App\Http\Middleware\ManagerMiddleware::class,
             'internal.secret'  => \App\Http\Middleware\InternalSecretMiddleware::class,

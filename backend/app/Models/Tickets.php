@@ -41,15 +41,6 @@ class Tickets extends Model
     ];
 
     // ==================== RELATIONSHIPS ====================
-    public function user()
-    {
-        return $this->belongsTo(User::class, 'user_id');
-    }
-
-    public function support()
-    {
-        return $this->belongsTo(User::class, 'support_id');
-    }
 
     public function category()
     {
@@ -214,93 +205,88 @@ class Tickets extends Model
             ->pluck('total', 'category');
     }
 
-    public static function reportBySupport($start = null, $end = null)
-    {
-        $query = DB::table('tickets as t')
-            ->join('users as u', 't.support_id', '=', 'u.id')
-            ->select('t.*', 'u.name as support_name', 'u.id as support_id')
-            ->whereNotNull('t.support_id');
+public static function reportBySupport($start = null, $end = null)
+{
+    $query = DB::table('tickets as t')
+        ->select('t.*')
+        ->whereNotNull('t.support_id');
 
-        if ($start && $end) {
-            $query->whereBetween('t.request_date', [
-                Carbon::parse($start)->startOfDay(),
-                Carbon::parse($end)->endOfDay(),
-            ]);
+    if ($start && $end) {
+        $query->whereBetween('t.request_date', [
+            Carbon::parse($start)->startOfDay(),
+            Carbon::parse($end)->endOfDay(),
+        ]);
+    }
+
+    return $query->get()->groupBy('support_id');
+}
+
+public static function countByDeveloperPerMonth(int $year)
+{
+    $results = DB::table('tickets as t')
+        ->select(
+            't.support_id as developer_id',
+            't.support_name as developer_name',
+            DB::raw('MONTH(t.request_date) as month'),
+            DB::raw('COUNT(t.id) as total_tickets')
+        )
+        ->whereYear('t.request_date', $year)
+        ->where('t.status', 'resolved')
+        ->whereNotNull('t.support_id')
+        ->groupBy('t.support_id', 't.support_name', DB::raw('MONTH(t.request_date)'))
+        ->orderBy('t.support_name')
+        ->orderBy(DB::raw('MONTH(t.request_date)'))
+        ->get();
+
+    $developers = [];
+    foreach ($results as $row) {
+        $devKey = $row->developer_id;
+        if (!isset($developers[$devKey])) {
+            $developers[$devKey] = [
+                'developer_id'   => $row->developer_id,
+                'developer_name' => $row->developer_name,
+                'monthly_data'   => array_fill(1, 12, 0),
+            ];
         }
-
-        return $query->get()->groupBy('support_id');
+        $developers[$devKey]['monthly_data'][$row->month] = $row->total_tickets;
     }
 
-    public static function countByDeveloperPerMonth(int $year)
-    {
-        $results = DB::table('tickets as t')
-            ->join('users as u', 't.support_id', '=', 'u.id')
-            ->select(
-                'u.id as developer_id',
-                'u.name as developer_name',
-                DB::raw('MONTH(t.request_date) as month'),
-                DB::raw('COUNT(t.id) as total_tickets')
-            )
-            ->whereYear('t.request_date', $year)
-            ->where('t.status', 'resolved')
-            ->whereNotNull('t.support_id')
-            ->groupBy('u.id', 'u.name', DB::raw('MONTH(t.request_date)'))
-            ->orderBy('u.name')
-            ->orderBy(DB::raw('MONTH(t.request_date)'))
-            ->get();
+    return array_values($developers);
+}
 
-        $developers = [];
-        foreach ($results as $row) {
-            $devKey = $row->developer_id;
+public static function timeSpentByDeveloper(int $year)
+{
+    return DB::table('tickets as t')
+        ->select(
+            't.support_id as developer_id',
+            't.support_name as developer_name',
+            DB::raw('SUM(t.time_spent) as total_time_spent'),
+            DB::raw('COUNT(t.id) as total_tickets'),
+            DB::raw('ROUND(AVG(t.time_spent), 2) as avg_time_spent')
+        )
+        ->whereYear('t.request_date', $year)
+        ->where('t.status', 'resolved')
+        ->whereNotNull('t.support_id')
+        ->whereNotNull('t.time_spent')
+        ->groupBy('t.support_id', 't.support_name')
+        ->orderBy('total_time_spent', 'DESC')
+        ->get();
+}
 
-            if (!isset($developers[$devKey])) {
-                $developers[$devKey] = [
-                    'developer_id'   => $row->developer_id,
-                    'developer_name' => $row->developer_name,
-                    'monthly_data'   => array_fill(1, 12, 0)
-                ];
-            }
+public function scopeMyTicket($query)
+{
+    $userId = auth()->id();
 
-            $developers[$devKey]['monthly_data'][$row->month] = $row->total_tickets;
-        }
-
-        return array_values($developers);
-    }
-
-    public static function timeSpentByDeveloper(int $year)
-    {
-        return DB::table('tickets as t')
-            ->join('users as u', 't.support_id', '=', 'u.id')
-            ->select(
-                'u.id as developer_id',
-                'u.name as developer_name',
-                DB::raw('SUM(t.time_spent) as total_time_spent'),
-                DB::raw('COUNT(t.id) as total_tickets'),
-                DB::raw('ROUND(AVG(t.time_spent), 2) as avg_time_spent')
-            )
-            ->whereYear('t.request_date', $year)
-            ->where('t.status', 'resolved')
-            ->whereNotNull('t.support_id')
-            ->whereNotNull('t.time_spent')
-            ->groupBy('u.id', 'u.name')
-            ->orderBy('total_time_spent', 'DESC')
-            ->get();
-    }
-
-    public function scopeMyTicket($query)
-    {
-        $userId = auth()->id();
-
-        return $query
-            ->with(['category', 'user', 'support', 'assets'])
-            ->where('user_id', $userId)
-            ->orderByRaw("
-                CASE
-                    WHEN status = 'resolved' THEN 1
-                    WHEN status IN ('waiting', 'in_progress') THEN 2
-                    ELSE 3
-                END
-            ")
-            ->orderByDesc('request_date');
-    }
+    return $query
+        ->with(['category', 'assets', 'feedback'])
+        ->where('user_id', $userId)
+        ->orderByRaw("
+            CASE
+                WHEN status = 'resolved' THEN 1
+                WHEN status IN ('waiting', 'in_progress') THEN 2
+                ELSE 3
+            END
+        ")
+        ->orderByDesc('request_date');
+}
 }

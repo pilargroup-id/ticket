@@ -37,8 +37,6 @@ Route::post('/register', [AuthController::class, 'register'])->name('api.registe
 Route::post('/login', [AuthController::class, 'login']);
 Route::get('/department', [DepartmentController::class, 'index']);
 
-Route::get('/auth/sso-url', [SSOController::class, 'getSsoUrl']);
-Route::get('/auth/callback', [SSOController::class, 'callback']);
 
 Route::middleware('internal.secret')->group(function () {
     Route::post('/internal/sync-user', [InternalSyncController::class, 'syncUser']);
@@ -52,14 +50,13 @@ Route::middleware('internal.secret')->group(function () {
 | AUTHENTICATED (Sanctum)
 |--------------------------------------------------------------------------
 */
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware('auth.jwt')->group(function () {
 
     // ===========================
     // AUTH / PROFILE
     // ===========================
     Route::get('/profile', [UserController::class, 'me']);
     Route::post('/logout', [AuthController::class, 'logout']);
-    Route::get('/auth/pg-token', [SSOController::class, 'getPgToken']);
 
     // ===========================
     // USER SIDE

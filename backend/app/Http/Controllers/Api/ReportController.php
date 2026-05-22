@@ -33,12 +33,7 @@ class ReportController extends Controller
         $end    = $request->query('end_date');
 
         return Tickets::query()
-            ->with([
-                'user:id,name',
-                'support:id,name',
-                'category:id,name',
-                'assets:id,assets_name',
-            ])
+            ->with(['category:id,name', 'assets:id,assets_name'])
             ->when($start && $end, fn($q) => $q->betweenRequestDates($start, $end))
             ->when($status && $status !== 'all', fn($q) => $q->byStatus($status))
             ->latest();
@@ -107,70 +102,33 @@ class ReportController extends Controller
     {
         $year = (int) ($request->query('year') ?? now()->year);
 
-        // ✅ anti double: 1 ticket cuma dihitung 1x
-        $base = Tickets::query()
-            ->selectRaw('tickets.id as ticket_id')
-            ->selectRaw('tickets.user_id as user_id')
-            ->selectRaw('tickets.time_spent as time_spent')
-            ->selectRaw('MONTH(tickets.created_at) as month')
-            ->whereYear('tickets.created_at', $year)
-            ->whereIn('tickets.status', ['resolved', 'feedback']);
-
-        $rows = DB::query()
-            ->fromSub($base, 't')
-            ->selectRaw('users.department_id as department_id')
-            ->addSelect('departments.name as department_name')
-            ->selectRaw('t.month as month')
-            ->selectRaw('COALESCE(SUM(t.time_spent),0) as total_minutes')
-            ->join('users', 't.user_id', '=', 'users.id')
-            ->join('departments', 'users.department_id', '=', 'departments.id')
-            ->whereNotNull('users.department_id')
-            ->where('users.department_id', '>', 0)
-            ->groupBy('users.department_id', 'departments.name', 't.month')
-            ->orderBy('users.department_id')
-            ->orderBy('t.month')
+        $rows = Tickets::query()
+            ->selectRaw('dept_id, dept_name, MONTH(created_at) as month, COALESCE(SUM(time_spent),0) as total_minutes')
+            ->whereYear('created_at', $year)
+            ->whereIn('status', ['resolved', 'feedback'])
+            ->whereNotNull('dept_id')
+            ->groupBy('dept_id', 'dept_name', DB::raw('MONTH(created_at)'))
+            ->orderBy('dept_id')
+            ->orderBy(DB::raw('MONTH(created_at)'))
             ->get();
-
-        $items = $rows->map(function ($r) {
-            return [
-                'department_id'   => (int) $r->department_id,
-                'department_name' => $r->department_name,
-                'month'           => (int) $r->month,
-                'total_minutes'   => (int) $r->total_minutes,
-            ];
-        })->values();
 
         $labels = collect(range(1, 12))->values();
 
-        $series = collect($items)
-            ->groupBy('department_id')
-            ->map(function ($list) use ($labels) {
-                $first = $list->first();
-                $name = $first['department_name'] ?? 'Unknown';
-                $mapMonth = collect($list)->keyBy('month');
+        $series = $rows->groupBy('dept_id')->map(function ($list) use ($labels) {
+            $first    = $list->first();
+            $mapMonth = $list->keyBy('month');
 
-                $dataMinutes = $labels
-                    ->map(fn($m) => (int) ($mapMonth[$m]['total_minutes'] ?? 0))
-                    ->values();
-
-                return [
-                    'department_id'   => (int) ($first['department_id'] ?? 0),
-                    'department_name' => $name,
-                    'data_minutes'    => $dataMinutes,
-                ];
-            })
-            ->values();
+            return [
+                'department_id'   => (int) $first->dept_id,
+                'department_name' => $first->dept_name,
+                'data_minutes'    => $labels->map(fn($m) => (int) ($mapMonth[$m]->total_minutes ?? 0))->values(),
+            ];
+        })->values();
 
         return response()->json([
             'message' => 'Time spent per month by department fetched successfully',
-            'meta' => [
-                'year' => $year,
-            ],
-            'chart' => [
-                'labels' => $labels,
-                'series' => $series,
-            ],
-            'raw' => $items,
+            'meta'    => ['year' => $year],
+            'chart'   => ['labels' => $labels, 'series' => $series],
         ], 200);
     }
 
@@ -231,12 +189,7 @@ class ReportController extends Controller
         $perPage = (int) $request->query('per_page', 50);
 
         $q = Tickets::query()
-            ->with([
-                'user:id,name',
-                'support:id,name',
-                'category:id,name',
-                'assets:id,assets_name',
-            ])
+            ->with(['category:id,name', 'assets:id,assets_name'])
             ->whereBetween('created_at', ["$start 00:00:00", "$end 23:59:59"])
             ->when($status && $status !== 'all', fn($qq) => $qq->byStatus($status))
             ->latest();
@@ -277,9 +230,7 @@ class ReportController extends Controller
 
     $rows = Tickets::query()
         ->selectRaw('support_id, MONTH(created_at) as month, COUNT(*) as count')
-        ->with('support:id,name')
         ->whereNotNull('support_id')
-        ->where('support_id', '>', 0)
         ->whereBetween('created_at', ["$start 00:00:00", "$end 23:59:59"])
         ->groupBy('support_id', 'month')
         ->orderBy('support_id')
@@ -334,9 +285,7 @@ class ReportController extends Controller
 
     $rows = Tickets::query()
         ->selectRaw('support_id, MONTH(created_at) as month, COALESCE(SUM(time_spent),0) as total_minutes')
-        ->with('support:id,name')
         ->whereNotNull('support_id')
-        ->where('support_id', '>', 0)
         ->whereBetween('created_at', ["$start 00:00:00", "$end 23:59:59"])
         ->groupBy('support_id', 'month')
         ->orderBy('support_id')
@@ -394,9 +343,7 @@ class ReportController extends Controller
             COALESCE(SUM(time_spent),0) as total_minutes
             ')
 
-            ->with('support:id,name')
             ->whereNotNull('support_id')
-            ->where('support_id', '>', 0)
             ->whereBetween('created_at', ["$start 00:00:00", "$end 23:59:59"])
             ->when($status && $status !== 'all', fn($q) => $q->byStatus($status))
             ->groupBy('support_id')
@@ -422,12 +369,7 @@ class ReportController extends Controller
         $status = $request->query('status');
 
         $tickets = Tickets::query()
-            ->with([
-                'user:id,name',
-                'support:id,name',
-                'category:id,name',
-                'assets:id,assets_name',
-            ])
+            ->with(['category:id,name', 'assets:id,assets_name'])
             ->where('support_id', $supportId)
             ->whereBetween('created_at', ["$start 00:00:00", "$end 23:59:59"])
             ->when($status && $status !== 'all', fn($q) => $q->byStatus($status))
@@ -605,7 +547,7 @@ public function exportDataProject(Request $request)
         $q      = $request->query('q');
         $perPage = (int) $request->query('per_page', 50);
 
-        $data = ProjectHeaders::developerProjectDetail((int) $developerId, [
+        $data = ProjectHeaders::developerProjectDetail($developerId, [
             'year' => $year,
             'status' => $status,
             'q' => $q,

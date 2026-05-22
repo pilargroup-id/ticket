@@ -16,7 +16,8 @@ class ProjectStoreRequest extends FormRequest
 
             'project_name'      => ['required','string','max:255'],
             'request_date'      => ['required'], // FE kirim ISO; controller parse via casts
-            'requestor_id'      => ['required','integer','exists:users,id'],
+            'requestor_id'   => ['required', 'string', 'max:36'],
+            'requestor_name' => ['required', 'string', 'max:255'],
 
             'status'            => ['nullable','in:waiting,in_progress,pending,resolved,void'],
             'priority'          => ['required','in:low,medium,high'],

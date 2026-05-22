@@ -64,7 +64,18 @@ class UserController extends Controller
     {
         return response()->json([
             'message' => 'User profile fetched successfully',
-            'data'    => new UsersResource($request->user())
+            'data'    => [
+                'id'           => $request->auth_user_id,
+                'name'         => $request->auth_name,
+                'username'     => $request->auth_username,
+                'is_admin'     => $request->auth_is_admin,
+                'department_id'=> $request->auth_dept_id,
+                'department'   => $request->auth_dept_name,
+                'company_id'   => $request->auth_company_id,
+                'company'      => $request->auth_company,
+                'job_position' => $request->auth_job,
+                'apps'         => $request->auth_apps,
+            ]
         ], 200);
     }
 

@@ -49,7 +49,7 @@ class ProjectController extends Controller
         return Carbon::createFromFormat('Y-m-d H:i:s', $s, $tz);
     }
 
-    private function lastDeveloperId(ProjectHeaders $project): ?int
+    private function lastDeveloperId(ProjectHeaders $project): ?string
     {
         return $project->details()->latest('id')->value('developer_id');
     }
@@ -91,45 +91,41 @@ class ProjectController extends Controller
     {
         return response()->json([
             'message' => $message,
-            'data' => new ProjectResource(
-                $project->fresh()->load(['details.developer', 'requestor', 'pendings'])
-            ),
+            'data'    => new ProjectResource($project->fresh()->load(['details', 'pendings'])),
         ], $code);
     }
 
-  public function index(Request $request)
-{
-    $startDate = $request->query('start_date');
-    $endDate   = $request->query('end_date');
+    public function index(Request $request)
+    {
+        $startDate = $request->query('start_date');
+        $endDate   = $request->query('end_date');
 
-    $q = ProjectHeaders::with(['details.developer', 'requestor', 'pendings'])
-        ->orderByDesc('id');
+        $q = ProjectHeaders::with(['details', 'pendings'])->orderByDesc('id');
 
-    // ✅ Kalau dua-duanya ada → filter range
-    if ($startDate && $endDate) {
-        $q->whereBetween('request_date', [$startDate, $endDate]);
-    }
+        // ✅ Kalau dua-duanya ada → filter range
+        if ($startDate && $endDate) {
+            $q->whereBetween('request_date', [$startDate, $endDate]);
+        }
 
-    // ✅ Kalau salah satu doang ada → anggap invalid (opsional, biar gak ambigu)
-    if (($startDate && !$endDate) || (!$startDate && $endDate)) {
+        // ✅ Kalau salah satu doang ada → anggap invalid (opsional, biar gak ambigu)
+        if (($startDate && !$endDate) || (!$startDate && $endDate)) {
+            return response()->json([
+                'message' => 'Kalau mau filter tanggal, kirim start_date dan end_date sekaligus.'
+            ], 422);
+        }
+
+        $projects = $q->get();
+
         return response()->json([
-            'message' => 'Kalau mau filter tanggal, kirim start_date dan end_date sekaligus.'
-        ], 422);
+            'message' => 'Projects retrieved successfully',
+            'data'    => ProjectResource::collection($projects),
+        ], 200);
     }
-
-    $projects = $q->get();
-
-    return response()->json([
-        'message' => 'Projects retrieved successfully',
-        'data'    => ProjectResource::collection($projects),
-    ], 200);
-}
 
 
     public function history(Request $request, $id)
     {
-        $project = ProjectHeaders::with(['details.developer', 'requestor', 'pendings'])
-            ->findOrFail($id);
+        $project = ProjectHeaders::with(['details', 'pendings'])->findOrFail($id);
 
         // ambil details jadi history
         $history = $project->details
@@ -145,9 +141,7 @@ class ProjectController extends Controller
                     'progress_percent' => $d->progress_percent ?? null,
                     'description' => $d->description ?? $d->notes ?? null,
                     'pending_minutes' => $d->pending_minutes ?? null,
-
-                    // buat "by"
-                    'by_name' => optional($d->developer)->name,
+                    'by_name' => $d->developer_name,
                     'developer_id' => $d->developer_id,
                 ];
             });
@@ -166,14 +160,15 @@ class ProjectController extends Controller
             $project = ProjectHeaders::create(array_merge($data, [
                 'status' => $this->normalizeStatus($data['status'] ?? 'waiting'),
                 'progress_percent' => $data['progress_percent'] ?? 0,
+                'requestor_name'   => $data['requestor_name'] ?? null,
             ]));
-
+            $project->fresh()->load(['details', 'pendings']);
             $code = 'PRJ-' . str_pad((string)$project->id, 3, '0', STR_PAD_LEFT);
             $project->update(['project_code' => $code]);
 
             return response()->json([
                 'message' => 'Project created successfully',
-                'data'    => new ProjectResource($project->fresh()->load(['details.developer', 'requestor', 'pendings'])),
+                'data'    => new ProjectResource($project->fresh()->load(['details', 'requestor', 'pendings'])),
             ], 201);
         });
     }
@@ -183,7 +178,8 @@ class ProjectController extends Controller
         $project = ProjectHeaders::findOrFail($id);
 
         $data = $request->validate([
-            'developer_id'     => ['required', 'integer', 'exists:users,id'],
+            'developer_id'   => ['required', 'string', 'max:36'],
+            'developer_name' => ['required', 'string', 'max:255'],
             'progress_percent' => ['nullable', 'numeric', 'min:0', 'max:100'],
             'progress_date'    => ['nullable'],
             'description'      => ['nullable', 'string'],
@@ -211,7 +207,8 @@ class ProjectController extends Controller
                 'description'       => $data['description'] ?? null,
                 'status'            => 'in_progress',
                 'progress_percent'  => $project->progress_percent ?? 0,
-                'developer_id'      => (int)$data['developer_id'],
+                'developer_id'      => $data['developer_id'],
+    'developer_name'    => $data['developer_name'],
             ]);
 
             return $this->responseProject($project, 'Project started successfully');
@@ -223,7 +220,8 @@ class ProjectController extends Controller
         $project = ProjectHeaders::findOrFail($id);
 
         $data = $request->validate([
-            'developer_id'     => ['required', 'integer', 'exists:users,id'],
+            'developer_id'   => ['required', 'string', 'max:36'],
+            'developer_name' => ['required', 'string', 'max:255'],
             'progress_percent' => ['required', 'numeric', 'min:0', 'max:100'],
             'progress_date'    => ['nullable'],
             'description'      => ['nullable', 'string'],
@@ -243,7 +241,8 @@ class ProjectController extends Controller
                 'description'       => $data['description'] ?? null,
                 'status'            => 'in_progress',
                 'progress_percent'  => $project->progress_percent,
-                'developer_id'      => (int)$data['developer_id'],
+                'developer_id'      => $data['developer_id'],
+                'developer_name'    => $data['developer_name'],
             ]);
 
             return $this->responseProject($project, 'Project progress updated successfully');
@@ -275,7 +274,8 @@ class ProjectController extends Controller
             $project->status = 'pending';
             $project->save();
 
-            $devId = $this->lastDeveloperId($project);
+            $devId   = $this->lastDeveloperId($project);
+            $devName = $this->lastDeveloperName($project);
 
             ProjectDetails::create([
                 'project_header_id' => $project->id,
@@ -284,6 +284,7 @@ class ProjectController extends Controller
                 'status'            => 'pending',
                 'progress_percent'  => $project->progress_percent ?? 0,
                 'developer_id'      => $devId,
+                'developer_name'    => $devName,
             ]);
 
             return $this->responseProject($project, 'Project put on hold successfully');
@@ -296,7 +297,8 @@ class ProjectController extends Controller
 
         $data = $request->validate([
             'include_pending_minutes' => ['nullable', 'boolean'],
-            'developer_id'            => ['nullable', 'integer', 'exists:users,id'],
+            'developer_id'   => ['nullable', 'string', 'max:36'],
+            'developer_name' => ['nullable', 'string', 'max:255'],
             'description'             => ['nullable', 'string'],
         ]);
 
@@ -331,9 +333,13 @@ class ProjectController extends Controller
             $project->effective_end_date = $this->computeEffectiveEnd($project, $include);
             $project->save();
 
-            $devId = !empty($data['developer_id'])
-                ? (int)$data['developer_id']
+            $devId   = !empty($data['developer_id'])
+                ? $data['developer_id']
                 : $this->lastDeveloperId($project);
+
+            $devName = !empty($data['developer_name'])
+                ? $data['developer_name']
+                : $this->lastDeveloperName($project);
 
             ProjectDetails::create([
                 'project_header_id' => $project->id,
@@ -342,6 +348,7 @@ class ProjectController extends Controller
                 'status'            => 'in_progress',
                 'progress_percent'  => $project->progress_percent ?? 0,
                 'developer_id'      => $devId,
+                'developer_name'    => $devName,
             ]);
 
             return $this->responseProject($project, 'Project continued successfully');
@@ -364,7 +371,8 @@ class ProjectController extends Controller
             $project->notes  = $data['notes'];
             $project->save();
 
-            $devId = $this->lastDeveloperId($project);
+            $devId   = $this->lastDeveloperId($project);
+            $devName = $this->lastDeveloperName($project);
 
             ProjectDetails::create([
                 'project_header_id' => $project->id,
@@ -373,6 +381,7 @@ class ProjectController extends Controller
                 'status'            => 'void',
                 'progress_percent'  => $project->progress_percent ?? 0,
                 'developer_id'      => $devId,
+                'developer_name'    => $devName,
             ]);
 
             return $this->responseProject($project, 'Project voided successfully');
@@ -410,7 +419,8 @@ class ProjectController extends Controller
 
             $project->save();
 
-            $devId = $this->lastDeveloperId($project);
+            $devId   = $this->lastDeveloperId($project);
+        $devName = $this->lastDeveloperName($project);
 
             ProjectDetails::create([
                 'project_header_id' => $project->id,
@@ -419,6 +429,7 @@ class ProjectController extends Controller
                 'status'            => 'resolved',
                 'progress_percent'  => 100,
                 'developer_id'      => $devId,
+                'developer_name'    => $devName,
             ]);
 
             return $this->responseProject($project, 'Project resolved successfully');

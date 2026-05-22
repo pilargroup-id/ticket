@@ -12,7 +12,8 @@ class ProjectUnholdRequest extends FormRequest
     {
         return [
             'include_pending_minutes' => ['nullable','boolean'],
-            'developer_id'            => ['nullable','integer','exists:users,id'], // optional pindah dev
+            'developer_id'   => ['required', 'string', 'max:36'],
+            'developer_name' => ['required', 'string', 'max:255'],
             'description'             => ['nullable','string'],
         ];
     }
