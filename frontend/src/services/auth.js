@@ -72,10 +72,6 @@ export function clearStoredSession(userKey = DEFAULT_USER_KEY) {
   setStoredUser(null, userKey)
 }
 
-export async function getSsoUrl() {
-  return api.get('/auth/sso-url', { token: null })
-}
-
 export function startSsoLogin() {
   if (!isBrowser()) return
 
@@ -186,7 +182,6 @@ export default {
   getAuthErrorFromUrl,
   getPgToken,
   getProfile,
-  getSsoUrl,
   getStoredSession,
   getStoredUser,
   loginWithDevCredentials,
