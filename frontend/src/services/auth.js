@@ -76,34 +76,37 @@ export async function getSsoUrl() {
   return api.get('/auth/sso-url', { token: null })
 }
 
-export async function startSsoLogin() {
-  const response = await getSsoUrl()
+export function startSsoLogin() {
+  if (!isBrowser()) return
 
-  if (response?.url && isBrowser()) {
-    window.location.assign(response.url)
-  }
-
-  return response
+  const returnUrl = encodeURIComponent(window.location.origin)
+  window.location.assign(
+    `https://pilargroup.id/dashboard?return_url=${returnUrl}`
+  )
 }
-
-export function consumeSsoSuccessParams({
+export async function consumeSsoSuccessParams({
   search = isBrowser() ? window.location.search : '',
   clearQuery = true,
   userKey = DEFAULT_USER_KEY,
 } = {}) {
-  if (!search) {
-    return null
-  }
+  if (!search) return null
 
   const params = new URLSearchParams(search)
   const token = params.get('token')
 
-  if (!token) {
+  if (!token) return null
+
+  // Simpan token dulu
+  api.setToken(token)
+
+  // Fetch user dari /profile pakai token PG
+  try {
+    const user = await getProfile()
+    setStoredUser(user?.data ?? user, userKey)
+  } catch {
+    api.clearToken()
     return null
   }
-
-  const user = parseUserValue(params.get('user'))
-  const session = setStoredSession({ token, user }, userKey)
 
   if (clearQuery && isBrowser()) {
     const nextUrl = new URL(window.location.href)
@@ -111,7 +114,7 @@ export function consumeSsoSuccessParams({
     window.history.replaceState(window.history.state, '', nextUrl.toString())
   }
 
-  return session
+  return getStoredSession(userKey)
 }
 
 export function getAuthErrorFromUrl(search = isBrowser() ? window.location.search : '') {
