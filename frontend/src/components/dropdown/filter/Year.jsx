@@ -6,10 +6,10 @@ import Select, { SelectChangeEvent } from '@mui/material/Select';
 import Button from '@mui/material/Button';
 
 export default function ControlledOpenSelect() {
-  const [age, setAge] = React.useState<string | number>('');
+  const [age, setAge] = React.useState(String | Number);
   const [open, setOpen] = React.useState(false);
 
-  const handleChange = (event: SelectChangeEvent<typeof Year>) => {
+  const handleChange = (event) => {
     setAge(event.target.value);
   };
 

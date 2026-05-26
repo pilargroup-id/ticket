@@ -16,7 +16,7 @@ class TicketStoreByAdminRequest extends FormRequest
         return [
             'user_id'      => 'required|string|max:36',
             'support_id'   => 'required|string|max:36',
-            'support_name' => 'required|string|max:255',
+            'support_name' => 'nullable|string|max:255',
             'category_id'  => 'required|exists:categories,id',
             'assets_id'    => 'nullable|exists:assets,id',
             'nama_pembuat' => 'required|string|max:255',

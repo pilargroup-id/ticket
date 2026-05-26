@@ -15,8 +15,8 @@ class SupportTicketsPerMonthResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'support_id'   => (int) $this->support_id,
-            'support_name' => $this->support_name,
+            'support_id'   => (string) $this->support_id,
+            'support_name' => $this->support_name ?? $this->support?->name,
             'month'        => (int) $this->month,   // 1-12
             'count'        => (int) $this->count,
         ];

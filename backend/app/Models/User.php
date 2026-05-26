@@ -9,6 +9,9 @@ class User extends Authenticatable
 {
     use HasApiTokens;
 
+    public $incrementing = false;
+    protected $keyType = 'string';
+
     protected $fillable = [
         'name',
         'username',

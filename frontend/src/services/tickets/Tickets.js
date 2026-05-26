@@ -210,6 +210,7 @@ export function normalizeTicket(ticket = {}) {
     endDateValue,
     waitingHour: formatValueWithUnit(ticket?.waiting_hour, 'jam'),
     timeSpent: formatValueWithUnit(ticket?.time_spent, 'menit'),
+    time_spent: ticket?.time_spent,
     isLate: Number(ticket?.is_late) === 1 ? 'Ya' : 'Tidak',
     lastUpdated: formatTicketDateTime(updatedAtValue),
     lastUpdatedValue: updatedAtValue,

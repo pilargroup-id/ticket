@@ -107,9 +107,13 @@ function DialogCreateProjects({
 
     try {
       const formatDateTime = (dt) => (dt ? dt.replace('T', ' ') + (dt.length === 16 ? ':00' : '') : '')
+      const requestor = users.find((u) => String(u.id) === String(requestorId))
+      const requestorName = requestor?.name || requestorSearch || ''
+
       const payload = {
         project_name: titleProject.trim(),
         requestor_id: requestorId,
+        requestor_name: requestorName,
         request_date: formatDateTime(requestDate),
         start_date: formatDateTime(startDate),
         end_date: formatDateTime(endDate),

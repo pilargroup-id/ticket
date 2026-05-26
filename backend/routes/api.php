@@ -26,6 +26,7 @@ use App\Http\Controllers\Api\InternalSyncController;
     'url'    => request()->fullUrl(),
     'method' => request()->method(),
     'query'  => request()->query(),
+    'body'   => request()->all(),
     ]);
     
 

@@ -59,7 +59,7 @@ class ReportController extends Controller
     {
         $start  = $request->query('start_date');
         $end    = $request->query('end_date');
-        $userId = auth()->id();
+        $userId = \App\Helpers\AuthHelper::userId($request);
 
         $data = [
             'status' => Tickets::statusCountUser($userId, $start, $end),
@@ -229,7 +229,8 @@ class ReportController extends Controller
     }
 
     $rows = Tickets::query()
-        ->selectRaw('support_id, MONTH(created_at) as month, COUNT(*) as count')
+        ->selectRaw('support_id, MAX(support_name) as support_name, MONTH(created_at) as month, COUNT(*) as count')
+        ->with('support:id,name')
         ->whereNotNull('support_id')
         ->whereBetween('created_at', ["$start 00:00:00", "$end 23:59:59"])
         ->groupBy('support_id', 'month')
@@ -249,7 +250,7 @@ class ReportController extends Controller
             $data = $labels->map(fn($m) => (int)($mapMonth[$m]['count'] ?? 0))->values();
 
             return [
-                'support_id'   => (int) $list->first()['support_id'],
+                'support_id'   => (string) $list->first()['support_id'],
                 'support_name' => $name,
                 'data'         => $data,
             ];
@@ -284,7 +285,8 @@ class ReportController extends Controller
     }
 
     $rows = Tickets::query()
-        ->selectRaw('support_id, MONTH(created_at) as month, COALESCE(SUM(time_spent),0) as total_minutes')
+        ->selectRaw('support_id, MAX(support_name) as support_name, MONTH(created_at) as month, COALESCE(SUM(time_spent),0) as total_minutes')
+        ->with('support:id,name')
         ->whereNotNull('support_id')
         ->whereBetween('created_at', ["$start 00:00:00", "$end 23:59:59"])
         ->groupBy('support_id', 'month')
@@ -304,7 +306,7 @@ class ReportController extends Controller
             $dataMinutes = $labels->map(fn($m) => (int)($mapMonth[$m]['total_minutes'] ?? 0))->values();
 
             return [
-                'support_id'   => (int) $list->first()['support_id'],
+                'support_id'   => (string) $list->first()['support_id'],
                 'support_name' => $name,
                 'data_minutes' => $dataMinutes,
             ];
@@ -336,13 +338,14 @@ class ReportController extends Controller
         $rows = Tickets::query()
             ->selectRaw('
             support_id,
+            MAX(support_name) as support_name,
             COUNT(*) as total_tickets,
             SUM(CASE WHEN status IN ("resolved","feedback") THEN 1 ELSE 0 END) as resolved_tickets,
             SUM(CASE WHEN status NOT IN ("resolved","feedback") THEN 1 ELSE 0 END) as open_tickets,
             SUM(CASE WHEN is_late = 1 THEN 1 ELSE 0 END) as late_tickets,
             COALESCE(SUM(time_spent),0) as total_minutes
             ')
-
+            ->with('support:id,name')
             ->whereNotNull('support_id')
             ->whereBetween('created_at', ["$start 00:00:00", "$end 23:59:59"])
             ->when($status && $status !== 'all', fn($q) => $q->byStatus($status))
@@ -560,7 +563,7 @@ public function exportDataProject(Request $request)
                 'year' => $year,
                 'status' => $status ?? 'all',
                 'q' => $q ?? null,
-                'developer_id' => (int) $developerId,
+                'developer_id' => (string) $developerId,
             ],
             'data' => $data,
         ], 200);

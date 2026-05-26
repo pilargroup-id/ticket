@@ -1,9 +1,41 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 
 import { XClose } from '../template/TemplateIcons.jsx'
 import api from '../../services/api.js'
 import DialogLoading from './DialogLoading.jsx'
+
+const getLocalDatetimeString = (date) => {
+  if (!date) return ''
+  const pad = (num) => String(num).padStart(2, '0')
+  const yyyy = date.getFullYear()
+  const MM = pad(date.getMonth() + 1)
+  const dd = pad(date.getDate())
+  const hh = pad(date.getHours())
+  const mm = pad(date.getMinutes())
+  return `${yyyy}-${MM}-${dd}T${hh}:${mm}`
+}
+
+const formatToDatetimeLocal = (dateStr) => {
+  if (!dateStr) return ''
+  const str = String(dateStr)
+  return str.substring(0, 16).replace(' ', 'T')
+}
+
+const getPriorityLabel = (rawPriority) => {
+  const priorityClean = String(rawPriority || '').trim().toLowerCase()
+  if (priorityClean === 'low') return 'Low'
+  if (priorityClean === 'medium') return 'Medium'
+  if (priorityClean === 'high') return 'High'
+  return 'Medium'
+}
+
+const getStatusLabel = (rawStatus) => {
+  const statusClean = String(rawStatus || '').trim().toLowerCase()
+  if (statusClean === 'in_progress' || statusClean === 'in progress') return 'In Progress'
+  if (statusClean === 'resolved') return 'Resolved'
+  return 'In Progress'
+}
 
 function DialogExecutionTicket({
   isOpen = false,
@@ -29,12 +61,15 @@ function DialogExecutionTicket({
   // Populate form data when ticket changes
   useEffect(() => {
     if (isOpen && ticket) {
+      const nowStr = getLocalDatetimeString(new Date())
+      const rawStatusVal = ticket.rawStatus || ticket.status || ''
+      const rawPriorityVal = ticket.rawPriority || ticket.priority || ''
       setFormData({
-        support_id: ticket.support_id || '',
-        status: ticket.status || 'In Progress',
-        priority: ticket.priority || 'Medium',
-        start_date: ticket.start_date ? ticket.start_date.substring(0, 16).replace(' ', 'T') : '',
-        end_date: ticket.end_date ? ticket.end_date.substring(0, 16).replace(' ', 'T') : '',
+        support_id: ticket.supportId || ticket.support_id || '',
+        status: getStatusLabel(rawStatusVal),
+        priority: getPriorityLabel(rawPriorityVal),
+        start_date: ticket.startDateValue ? formatToDatetimeLocal(ticket.startDateValue) : nowStr,
+        end_date: ticket.endDateValue ? formatToDatetimeLocal(ticket.endDateValue) : '',
         time_spent: ticket.time_spent || 0,
         solution: ticket.solution || '',
       })
@@ -118,7 +153,7 @@ function DialogExecutionTicket({
       }
 
       const response = await api.put(`/ticket/${ticket.id}`, payload)
-      await onConfirm?.(response.data?.data)
+      await onConfirm?.(response?.data?.data || response?.data || response)
     } catch (err) {
       console.error('Failed to update ticket:', err)
       const message = err.data?.message || 'Gagal mengupdate ticket. Silakan coba lagi.'

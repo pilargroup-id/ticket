@@ -92,10 +92,10 @@ class TicketController extends Controller
                 'time_spent', 'is_late',
                 'created_at', 'updated_at',
             ])
-            ->with(['category:id,name', 'assets:id,assets_name', 'feedback']);
+            ->with(['category:id,name', 'assets:id,assets_name', 'feedback', 'support:id,name']);
 
         if ($onlyMine) {
-            $q->where('user_id', auth()->id());
+            $q->where('user_id', \App\Helpers\AuthHelper::userId($request));
         }
 
         $q->when($start && $end, fn($qq) => $qq->betweenRequestDates($start, $end))
@@ -156,6 +156,13 @@ class TicketController extends Controller
         $data = $request->validated();
         $data['request_date'] = $data['request_date'] ?? now($tz);
 
+        if (empty($data['support_name']) && !empty($data['support_id'])) {
+            $supportUser = \App\Models\User::find($data['support_id']);
+            if ($supportUser) {
+                $data['support_name'] = $supportUser->name;
+            }
+        }
+
         do {
             $lastTicket = Tickets::latest('id')->first();
             $nextNumber = $lastTicket ? $lastTicket->id + 1 : 1;
@@ -181,7 +188,7 @@ class TicketController extends Controller
     public function storeByUser(TicketStoreByUserRequest $request)
     {
         $tz     = $this->tz();
-        $userId = auth()->id();
+        $userId = \App\Helpers\AuthHelper::userId($request);
 
         $hasPendingFeedback = Tickets::where('user_id', $userId)
             ->where('status', 'resolved')
@@ -235,6 +242,14 @@ class TicketController extends Controller
     {
         $ticket = Tickets::findOrFail($id);
         $data   = $request->validated();
+
+        if (empty($data['support_name']) && !empty($data['support_id'])) {
+            $supportUser = \App\Models\User::find($data['support_id']);
+            if ($supportUser) {
+                $data['support_name'] = $supportUser->name;
+            }
+        }
+
         $status = $data['status'] ?? null;
 
         if (!$status) return response()->json(['message' => 'status is required'], 422);

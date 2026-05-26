@@ -15,7 +15,7 @@ class TicketUpdateByAdminRequest extends FormRequest
     {
         return [
             'support_id'   => 'sometimes|required|string|max:36',
-            'support_name' => 'sometimes|required|string|max:255',
+            'support_name' => 'sometimes|nullable|string|max:255',
             'assets_id'    => 'sometimes|nullable|exists:assets,id',
             'status'       => 'sometimes|required|string|in:waiting,in_progress,resolved,void',
             'priority'     => 'sometimes|required|string|in:low,medium,high',

@@ -24,8 +24,8 @@ class SupportSummaryResource extends JsonResource
         $avg = $totalTickets > 0 ? (int) round($totalMinutes / $totalTickets) : 0;
 
         return [
-            'support_id'        => (int) $this->support_id,
-            'support_name' => $this->support_name,
+            'support_id'        => (string) $this->support_id,
+            'support_name'      => $this->support_name ?? $this->support?->name,
 
             'total_tickets'     => $totalTickets,
             'resolved_tickets'  => (int) ($this->resolved_tickets ?? 0),

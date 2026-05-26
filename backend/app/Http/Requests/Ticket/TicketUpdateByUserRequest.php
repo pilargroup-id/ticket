@@ -11,7 +11,7 @@ class TicketUpdateByUserRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return auth()->check();
+        return \App\Helpers\AuthHelper::check($this);
     }
 
     /**

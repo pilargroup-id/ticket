@@ -12,6 +12,7 @@ class Tickets extends Model
         'ticket_code',
         'user_id',
         'support_id',
+        'support_name',
         'category_id',
         'assets_id',
         'nama_pembuat',
@@ -41,6 +42,16 @@ class Tickets extends Model
     ];
 
     // ==================== RELATIONSHIPS ====================
+
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function support()
+    {
+        return $this->belongsTo(User::class, 'support_id');
+    }
 
     public function category()
     {
@@ -208,7 +219,8 @@ class Tickets extends Model
 public static function reportBySupport($start = null, $end = null)
 {
     $query = DB::table('tickets as t')
-        ->select('t.*')
+        ->leftJoin('users as u', 't.support_id', '=', 'u.id')
+        ->select('t.*', DB::raw('COALESCE(t.support_name, u.name) as support_name'))
         ->whereNotNull('t.support_id');
 
     if ($start && $end) {
@@ -224,17 +236,18 @@ public static function reportBySupport($start = null, $end = null)
 public static function countByDeveloperPerMonth(int $year)
 {
     $results = DB::table('tickets as t')
+        ->leftJoin('users as u', 't.support_id', '=', 'u.id')
         ->select(
             't.support_id as developer_id',
-            't.support_name as developer_name',
+            DB::raw('COALESCE(t.support_name, u.name) as developer_name'),
             DB::raw('MONTH(t.request_date) as month'),
             DB::raw('COUNT(t.id) as total_tickets')
         )
         ->whereYear('t.request_date', $year)
         ->where('t.status', 'resolved')
         ->whereNotNull('t.support_id')
-        ->groupBy('t.support_id', 't.support_name', DB::raw('MONTH(t.request_date)'))
-        ->orderBy('t.support_name')
+        ->groupBy('t.support_id', 't.support_name', 'u.name', DB::raw('MONTH(t.request_date)'))
+        ->orderBy(DB::raw('COALESCE(t.support_name, u.name)'))
         ->orderBy(DB::raw('MONTH(t.request_date)'))
         ->get();
 
@@ -257,9 +270,10 @@ public static function countByDeveloperPerMonth(int $year)
 public static function timeSpentByDeveloper(int $year)
 {
     return DB::table('tickets as t')
+        ->leftJoin('users as u', 't.support_id', '=', 'u.id')
         ->select(
             't.support_id as developer_id',
-            't.support_name as developer_name',
+            DB::raw('COALESCE(t.support_name, u.name) as developer_name'),
             DB::raw('SUM(t.time_spent) as total_time_spent'),
             DB::raw('COUNT(t.id) as total_tickets'),
             DB::raw('ROUND(AVG(t.time_spent), 2) as avg_time_spent')
@@ -268,14 +282,14 @@ public static function timeSpentByDeveloper(int $year)
         ->where('t.status', 'resolved')
         ->whereNotNull('t.support_id')
         ->whereNotNull('t.time_spent')
-        ->groupBy('t.support_id', 't.support_name')
+        ->groupBy('t.support_id', 't.support_name', 'u.name')
         ->orderBy('total_time_spent', 'DESC')
         ->get();
 }
 
 public function scopeMyTicket($query)
 {
-    $userId = auth()->id();
+    $userId = \App\Helpers\AuthHelper::userId(request());
 
     return $query
         ->with(['category', 'assets', 'feedback'])

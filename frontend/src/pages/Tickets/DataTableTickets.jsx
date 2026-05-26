@@ -6,7 +6,6 @@ import DataTable, { DataTableIdentity, DataTableStatus } from '../../components/
 import { Play, XClose } from '../../components/template/TemplateIcons.jsx'
 import ButtonExecutionTickets from '../../components/button/ButtonExecutionTickets.jsx'
 import ButtonVoidTickets from '../../components/button/ButtonVoidTickets.jsx'
-import ButtonHistoryPrj from '../../components/button/ButtonHistoryPrj.jsx'
 import {
   DEFAULT_PAGE_SIZE,
   EMPTY_DATE_RANGE,
@@ -20,7 +19,7 @@ import {
   getTicketPaginationSummary,
 } from '../../services/my-tickets/DataTableMT.js'
 
-import { formatTicketDate, formatTicketTimeWIB, getFeedbacks } from '../../services/tickets/Tickets.js'
+import { formatTicketDate, formatTicketTimeWIB, getFeedbacks, normalizeTicket } from '../../services/tickets/Tickets.js'
 import FeedbackRating from '../../components/rating/RatingFeedBack.jsx'
 
 export const INITIAL_TICKET_ROWS = DEFAULT_TICKET_ROWS
@@ -203,14 +202,7 @@ function DataTableTickets({
   const handleExecutionConfirm = (updatedData) => {
     // If updatedData is provided (from the API response), use it to update the row
     if (updatedData) {
-      updateTicketStatus(selectedTicket.id, {
-        ...updatedData,
-        // Map raw status to display status if needed, or assume the API returns what we need
-        status: updatedData.status === 'in_progress' ? 'In Progress' :
-          updatedData.status === 'resolved' ? 'Resolved' :
-            updatedData.status === 'waiting' ? 'Waiting' :
-              updatedData.status === 'void' ? 'Void' : updatedData.status
-      })
+      updateTicketStatus(selectedTicket.id, normalizeTicket(updatedData))
     } else {
       // Fallback for manual updates if API didn't return data
       updateTicketStatus(selectedTicket.id, { rawStatus: 'in_progress', status: 'In Progress' })
@@ -219,10 +211,7 @@ function DataTableTickets({
 
   const handleVoidConfirm = (updatedData) => {
     if (updatedData) {
-      updateTicketStatus(selectedTicket.id, {
-        ...updatedData,
-        status: updatedData.status === 'void' ? 'Void' : updatedData.status
-      })
+      updateTicketStatus(selectedTicket.id, normalizeTicket(updatedData))
     } else {
       updateTicketStatus(selectedTicket.id, { rawStatus: 'void', status: 'Void' })
     }
@@ -274,10 +263,12 @@ function DataTableTickets({
           title: (ticket) => ticket.ticketCode || ticket.id,
           description: (ticket) => ticket.problem,
           headerActions: (ticket) => {
-            const { rawStatus } = ticket
-            const isWaiting = rawStatus === 'waiting'
-            const isVoid = rawStatus === 'void'
-            const isResolved = rawStatus === 'resolved'
+            const rawStatusVal = ticket.rawStatus || ticket.status || ''
+            const statusClean = String(rawStatusVal).trim().toLowerCase()
+            const isWaiting = statusClean === 'waiting'
+            const isInProgress = statusClean === 'in_progress' || statusClean === 'in progress'
+            const isVoid = statusClean === 'void'
+            const isResolved = statusClean === 'resolved'
 
             if (isResolved || isVoid) return null
 
@@ -285,7 +276,7 @@ function DataTableTickets({
               <div className="users-table__accordion-actions" style={{ gap: '0.5rem' }}>
                 <ButtonExecutionTickets
                   tone="warning"
-                  disabled={!isWaiting}
+                  disabled={!isWaiting && !isInProgress}
                   onClick={(event) => {
                     event.stopPropagation()
                     openActionDialog('execution', ticket)

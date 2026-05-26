@@ -261,16 +261,22 @@ function DialogCreateTicketAdmin({
     setIsSubmitting(true)
 
     try {
+      const selectedSupport = supports.find((s) => s.id === supportId)
+      const supportName = selectedSupport ? selectedSupport.name : supportSearch
+
       const formData = new FormData()
       formData.append('user_id', userId)
       formData.append('category_id', categoryId)
       formData.append('problem', problem.trim())
       formData.append('status', 'waiting') // default status
       formData.append('support_id', supportId)
+      formData.append('support_name', supportName)
       formData.append('priority', priority)
 
       if (namaPembuat) {
         formData.append('nama_pembuat', namaPembuat)
+      } else {
+        formData.append('nama_pembuat', 'Admin')
       }
 
       if (selectedFile) {

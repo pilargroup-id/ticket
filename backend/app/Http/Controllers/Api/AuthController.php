@@ -61,7 +61,7 @@ class AuthController extends Controller
 public function approveUser($id)
 {
     // optional: admin only
-    if (!auth()->check() || auth()->user()->role !== 'admin') {
+    if (!\App\Helpers\AuthHelper::isAdmin(request())) {
         return response()->json(['message' => 'Unauthorized'], 403);
     }
 

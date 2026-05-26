@@ -17,6 +17,7 @@ class ProjectDetails extends Model
         'status',
         'progress_percent',
         'developer_id',
+        'developer_name',
     ];
 
     public function projectHeader() {

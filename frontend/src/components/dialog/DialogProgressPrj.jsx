@@ -59,6 +59,7 @@ function DialogProgressPrj({
         progress_percent: progressPercent,
         description: description.trim(),
         developer_id: user?.id,
+        developer_name: user?.name,
       }
 
       const response = await api.post(endpoint, payload)

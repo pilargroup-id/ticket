@@ -54,6 +54,11 @@ class ProjectController extends Controller
         return $project->details()->latest('id')->value('developer_id');
     }
 
+    private function lastDeveloperName(ProjectHeaders $project): ?string
+    {
+        return $project->details()->latest('id')->value('developer_name');
+    }
+
     private function computeEffectiveEnd(ProjectHeaders $project, bool $includePending): ?Carbon
     {
         if (empty($project->end_date)) return null;

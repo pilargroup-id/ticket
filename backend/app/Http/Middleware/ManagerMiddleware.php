@@ -15,12 +15,13 @@ class ManagerMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if(!auth()->check()){
+        if (!\App\Helpers\AuthHelper::check($request)) {
             return response()->json(['message' => "Unauthorize"], 401);
         }
 
-        if(auth()->user()->role !== 'manager'){
-              return response()->json(['message' => 'Forbidden'], 403);
+        $user = \App\Models\User::find($request->auth_user_id);
+        if (!$user || $user->role !== 'manager') {
+            return response()->json(['message' => 'Forbidden'], 403);
         }
 
         return $next($request);

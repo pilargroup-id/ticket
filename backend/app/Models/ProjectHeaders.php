@@ -15,6 +15,7 @@ class ProjectHeaders extends Model
         'project_name',
         'request_date',
         'requestor_id',
+        'requestor_name',
         'status', 
         'priority',
         'progress_percent',
@@ -51,6 +52,11 @@ class ProjectHeaders extends Model
     public function pendings()
     {
         return $this->hasMany(Pendings::class, 'project_header_id', 'id');
+    }
+
+    public function requestor()
+    {
+        return $this->belongsTo(User::class, 'requestor_id', 'id');
     }
 
     // ==========================
@@ -366,7 +372,7 @@ public static function developerProjectSummary(array $filters = [])
 
     return $rows->map(function ($r) {
         return [
-            'developer_id' => (int) $r->developer_id,
+            'developer_id' => (string) $r->developer_id,
             'developer_name' => $r->developer_name,
             'projects_count' => (int) $r->projects_count,
             'total_tasks' => (int) $r->total_tasks,
@@ -380,7 +386,7 @@ public static function developerProjectSummary(array $filters = [])
 
 
 
-public static function developerProjectDetail(int $developerId, array $filters = [])
+public static function developerProjectDetail(string $developerId, array $filters = [])
 {
     $year    = isset($filters['year']) ? (int) $filters['year'] : (int) now()->year;
     $status  = $filters['status'] ?? null;

@@ -8,7 +8,7 @@ class UserUpdateRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return auth()->check() && auth()->user()->role === "admin";
+        return \App\Helpers\AuthHelper::isAdmin($this);
     }
 
     public function rules(): array
