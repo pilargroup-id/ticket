@@ -230,7 +230,6 @@ class ReportController extends Controller
 
     $rows = Tickets::query()
         ->selectRaw('support_id, MAX(support_name) as support_name, MONTH(created_at) as month, COUNT(*) as count')
-        ->with('support:id,name')
         ->whereNotNull('support_id')
         ->whereBetween('created_at', ["$start 00:00:00", "$end 23:59:59"])
         ->groupBy('support_id', 'month')
@@ -286,7 +285,6 @@ class ReportController extends Controller
 
     $rows = Tickets::query()
         ->selectRaw('support_id, MAX(support_name) as support_name, MONTH(created_at) as month, COALESCE(SUM(time_spent),0) as total_minutes')
-        ->with('support:id,name')
         ->whereNotNull('support_id')
         ->whereBetween('created_at', ["$start 00:00:00", "$end 23:59:59"])
         ->groupBy('support_id', 'month')
@@ -345,7 +343,6 @@ class ReportController extends Controller
             SUM(CASE WHEN is_late = 1 THEN 1 ELSE 0 END) as late_tickets,
             COALESCE(SUM(time_spent),0) as total_minutes
             ')
-            ->with('support:id,name')
             ->whereNotNull('support_id')
             ->whereBetween('created_at', ["$start 00:00:00", "$end 23:59:59"])
             ->when($status && $status !== 'all', fn($q) => $q->byStatus($status))

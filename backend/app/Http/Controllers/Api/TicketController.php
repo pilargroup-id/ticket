@@ -92,7 +92,7 @@ class TicketController extends Controller
                 'time_spent', 'is_late',
                 'created_at', 'updated_at',
             ])
-            ->with(['category:id,name', 'assets:id,assets_name', 'feedback', 'support:id,name']);
+            ->with(['category:id,name', 'assets:id,assets_name', 'feedback']);
 
         if ($onlyMine) {
             $q->where('user_id', \App\Helpers\AuthHelper::userId($request));
