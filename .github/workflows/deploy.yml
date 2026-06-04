@@ -1,0 +1,92 @@
+name: Deploy ticket
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    name: Build & Deploy Ticket to Windows Server
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        shell: cmd
+        run: C:\nvm4w\nodejs\npm.cmd install
+
+      - name: Build frontend
+        working-directory: frontend
+        shell: cmd
+        run: C:\nvm4w\nodejs\npm.cmd run build
+
+      - name: Ensure backend destination
+        shell: powershell
+        run: |
+          Write-Host ">> Ensuring C:\ticket\backend exists..."
+          if (-not (Test-Path "C:\ticket\backend")) {
+            New-Item -ItemType Directory -Path "C:\ticket\backend" -Force
+          }
+
+      - name: Copy Laravel backend
+        shell: powershell
+        run: |
+          Write-Host ">> Copying backend to C:\ticket\backend..."
+
+          Copy-Item -Path "$env:GITHUB_WORKSPACE\backend\*" `
+            -Destination "C:\ticket\backend" `
+            -Recurse -Force `
+            -Exclude "vendor","storage",".env","node_modules" `
+            -ErrorAction Stop
+
+          Write-Host ">> Done"
+
+      - name: Ensure Laravel writable directories
+        shell: powershell
+        run: |
+          New-Item -ItemType Directory -Force "C:\ticket\backend\storage"
+          New-Item -ItemType Directory -Force "C:\ticket\backend\storage\logs"
+          New-Item -ItemType Directory -Force "C:\ticket\backend\bootstrap\cache"
+
+      - name: Install Laravel dependencies
+        shell: powershell
+        run: |
+          cd C:\ticket\backend
+          composer install --no-dev --optimize-autoloader --no-interaction
+
+      - name: Optimize Laravel
+        shell: powershell
+        run: |
+          cd C:\ticket\backend
+
+          php artisan config:clear
+          php artisan cache:clear
+          php artisan route:clear
+          php artisan view:clear
+
+          php artisan config:cache
+          php artisan route:cache
+          php artisan view:cache
+
+      - name: Run Laravel migrations
+        shell: powershell
+        run: |
+          cd C:\ticket\backend
+          php artisan migrate --force
+
+      - name: Verify deployment
+        shell: powershell
+        run: |
+          if (-not (Test-Path "C:\ticket\backend\artisan")) {
+            throw "Laravel artisan file not found"
+          }
+
+          if (-not (Test-Path "C:\ticket\backend\public")) {
+            throw "Laravel public folder not found"
+          }
+
+          Write-Host ">> Deploy selesai"
