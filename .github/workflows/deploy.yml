@@ -10,83 +10,155 @@ jobs:
     name: Build & Deploy Ticket to Windows Server
     runs-on: self-hosted
 
+    env:
+      PHP_DIR: C:\laragon\bin\php\php-8.4.13-nts-Win32-vs17-x64
+      DEPLOY_PATH: C:\ticket\backend
+
     steps:
+      # -------------------------
+      # 1. Checkout
+      # -------------------------
       - name: Checkout source
         uses: actions/checkout@v4
 
+      # -------------------------
+      # 2. Install frontend dependencies
+      # -------------------------
       - name: Install frontend dependencies
         working-directory: frontend
         shell: cmd
         run: C:\nvm4w\nodejs\npm.cmd install
 
+      # -------------------------
+      # 3. Build frontend
+      # Vite output: ../backend/public
+      # -------------------------
       - name: Build frontend
         working-directory: frontend
         shell: cmd
         run: C:\nvm4w\nodejs\npm.cmd run build
 
+      # -------------------------
+      # 4. Ensure backend destination exists
+      # -------------------------
       - name: Ensure backend destination
         shell: powershell
         run: |
-          Write-Host ">> Ensuring C:\ticket\backend exists..."
-          if (-not (Test-Path "C:\ticket\backend")) {
-            New-Item -ItemType Directory -Path "C:\ticket\backend" -Force
+          Write-Host ">> Ensuring $env:DEPLOY_PATH exists..."
+
+          if (-not (Test-Path $env:DEPLOY_PATH)) {
+            New-Item -ItemType Directory -Path $env:DEPLOY_PATH -Force
           }
 
+          Write-Host ">> Done"
+
+      # -------------------------
+      # 5. Copy Laravel backend
+      # React build already exists in backend/public
+      # -------------------------
       - name: Copy Laravel backend
         shell: powershell
         run: |
-          Write-Host ">> Copying backend to C:\ticket\backend..."
+          Write-Host ">> Copying backend to $env:DEPLOY_PATH..."
 
           Copy-Item -Path "$env:GITHUB_WORKSPACE\backend\*" `
-            -Destination "C:\ticket\backend" `
+            -Destination $env:DEPLOY_PATH `
             -Recurse -Force `
             -Exclude "vendor","storage",".env","node_modules" `
             -ErrorAction Stop
 
           Write-Host ">> Done"
 
+      # -------------------------
+      # 6. Ensure Laravel writable directories
+      # -------------------------
       - name: Ensure Laravel writable directories
         shell: powershell
         run: |
-          New-Item -ItemType Directory -Force "C:\ticket\backend\storage"
-          New-Item -ItemType Directory -Force "C:\ticket\backend\storage\logs"
-          New-Item -ItemType Directory -Force "C:\ticket\backend\bootstrap\cache"
+          Write-Host ">> Ensuring Laravel writable directories..."
 
+          New-Item -ItemType Directory -Force "$env:DEPLOY_PATH\storage"
+          New-Item -ItemType Directory -Force "$env:DEPLOY_PATH\storage\logs"
+          New-Item -ItemType Directory -Force "$env:DEPLOY_PATH\bootstrap\cache"
+
+          Write-Host ">> Done"
+
+      # -------------------------
+      # 7. Install Composer dependencies
+      # -------------------------
       - name: Install Laravel dependencies
         shell: powershell
         run: |
-          cd C:\ticket\backend
+          Write-Host ">> Adding PHP to PATH..."
+          $env:Path = "$env:PHP_DIR;$env:Path"
+
+          Write-Host ">> PHP version:"
+          php -v
+
+          Write-Host ">> Installing Composer dependencies..."
+          cd $env:DEPLOY_PATH
           composer install --no-dev --optimize-autoloader --no-interaction
 
+          Write-Host ">> Done"
+
+      # -------------------------
+      # 8. Optimize Laravel
+      # -------------------------
       - name: Optimize Laravel
         shell: powershell
         run: |
-          cd C:\ticket\backend
+          Write-Host ">> Adding PHP to PATH..."
+          $env:Path = "$env:PHP_DIR;$env:Path"
 
+          cd $env:DEPLOY_PATH
+
+          Write-Host ">> Clearing Laravel cache..."
           php artisan config:clear
           php artisan cache:clear
           php artisan route:clear
           php artisan view:clear
 
+          Write-Host ">> Building Laravel cache..."
           php artisan config:cache
           php artisan route:cache
           php artisan view:cache
 
+          Write-Host ">> Done"
+
+      # -------------------------
+      # 9. Run Laravel migrations
+      # -------------------------
       - name: Run Laravel migrations
         shell: powershell
         run: |
-          cd C:\ticket\backend
+          Write-Host ">> Adding PHP to PATH..."
+          $env:Path = "$env:PHP_DIR;$env:Path"
+
+          cd $env:DEPLOY_PATH
+
+          Write-Host ">> Running migrations..."
           php artisan migrate --force
 
+          Write-Host ">> Done"
+
+      # -------------------------
+      # 10. Verify deployment
+      # -------------------------
       - name: Verify deployment
         shell: powershell
         run: |
-          if (-not (Test-Path "C:\ticket\backend\artisan")) {
-            throw "Laravel artisan file not found"
+          Write-Host ">> Verifying deployed files..."
+
+          if (-not (Test-Path "$env:DEPLOY_PATH\artisan")) {
+            throw "Laravel artisan file not found in $env:DEPLOY_PATH"
           }
 
-          if (-not (Test-Path "C:\ticket\backend\public")) {
-            throw "Laravel public folder not found"
+          if (-not (Test-Path "$env:DEPLOY_PATH\public")) {
+            throw "Laravel public folder not found in $env:DEPLOY_PATH"
+          }
+
+          if (-not (Test-Path "$env:DEPLOY_PATH\.env")) {
+            throw ".env file not found in $env:DEPLOY_PATH"
           }
 
           Write-Host ">> Deploy selesai"
