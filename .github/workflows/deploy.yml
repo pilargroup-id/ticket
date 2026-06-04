@@ -126,23 +126,7 @@ jobs:
           Write-Host ">> Done"
 
       # -------------------------
-      # 9. Run Laravel migrations
-      # -------------------------
-      - name: Run Laravel migrations
-        shell: powershell
-        run: |
-          Write-Host ">> Adding PHP to PATH..."
-          $env:Path = "$env:PHP_DIR;$env:Path"
-
-          cd $env:DEPLOY_PATH
-
-          Write-Host ">> Running migrations..."
-          php artisan migrate --force
-
-          Write-Host ">> Done"
-
-      # -------------------------
-      # 10. Verify deployment
+      # 9. Verify deployment
       # -------------------------
       - name: Verify deployment
         shell: powershell
