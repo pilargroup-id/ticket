@@ -53,7 +53,25 @@ jobs:
           Write-Host ">> Done"
 
       # -------------------------
-      # 5. Copy Laravel backend
+      # 5.a Clean old frontend assets
+      # -------------------------
+      - name: Clean old frontend assets
+        shell: powershell
+        run: |
+          Write-Host ">> Cleaning old frontend build assets..."
+
+          if (Test-Path "$env:DEPLOY_PATH\public\assets") {
+            Remove-Item "$env:DEPLOY_PATH\public\assets" -Recurse -Force
+          }
+
+          if (Test-Path "$env:DEPLOY_PATH\public\index.html") {
+            Remove-Item "$env:DEPLOY_PATH\public\index.html" -Force
+          }
+
+          Write-Host ">> Done"
+
+      # -------------------------
+      # 5.b Copy Laravel backend
       # React build already exists in backend/public
       # -------------------------
       - name: Copy Laravel backend
