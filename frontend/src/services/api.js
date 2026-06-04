@@ -1,5 +1,13 @@
-const DEFAULT_API_BASE_URL = 'http://localhost:8001/api'
+const DEFAULT_API_BASE_URL = '/api'
 const DEFAULT_TOKEN_KEY = 'access_token'
+
+function getPageOrigin() {
+  if (typeof window !== 'undefined' && window.location?.origin) {
+    return window.location.origin
+  }
+
+  return 'http://localhost'
+}
 
 function forceHttpsIfPageIsHttps(urlStr) {
   if (typeof window !== 'undefined' && window.location.protocol === 'https:') {
@@ -9,8 +17,23 @@ function forceHttpsIfPageIsHttps(urlStr) {
 }
 
 function normalizeBaseUrl(baseUrl) {
-  const normalized = String(baseUrl || DEFAULT_API_BASE_URL).replace(/\/+$/, '')
-  return forceHttpsIfPageIsHttps(normalized)
+  const rawBaseUrl = String(baseUrl || DEFAULT_API_BASE_URL).replace(/\/+$/, '')
+
+  if (isAbsoluteUrl(rawBaseUrl)) {
+    return forceHttpsIfPageIsHttps(rawBaseUrl)
+  }
+
+  return rawBaseUrl.startsWith('/') ? rawBaseUrl : `/${rawBaseUrl}`
+}
+
+function resolveBaseUrl(baseUrl) {
+  const normalized = normalizeBaseUrl(baseUrl)
+
+  if (isAbsoluteUrl(normalized)) {
+    return normalized
+  }
+
+  return `${getPageOrigin()}${normalized}`
 }
 
 function isAbsoluteUrl(value) {
@@ -41,7 +64,7 @@ function buildRequestUrl(endpoint, baseUrl, params) {
   const path = String(endpoint || '').trim()
   const url = isAbsoluteUrl(path)
     ? new URL(path)
-    : new URL(path.replace(/^\/+/, ''), `${normalizeBaseUrl(baseUrl)}/`)
+    : new URL(path.replace(/^\/+/, ''), `${resolveBaseUrl(baseUrl)}/`)
 
   appendQueryParams(url, params)
 
