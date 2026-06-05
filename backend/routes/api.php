@@ -91,7 +91,6 @@ Route::middleware('auth.jwt')->group(function () {
     // ADMIN SIDE
     // ===========================
     Route::middleware('admin')->group(function () {
-        // Route::get('/support', [TicketController::class, 'supports']);
 
         // ---------------------------
         // Users / Support / Developer
@@ -99,7 +98,6 @@ Route::middleware('auth.jwt')->group(function () {
         Route::post('/department', [DepartmentController::class, 'store']);
         Route::put('/department/{id}', [DepartmentController::class, 'update']);
         Route::delete('/department/{id}', [DepartmentController::class, 'destroy']);
-        Route::get('/support', [UserController::class, 'supports']);
         Route::get('/developer', [UserController::class, 'developer']);
 
         Route::post('/user', [UserController::class, 'registerByAdmin']);
