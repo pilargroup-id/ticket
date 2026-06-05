@@ -141,7 +141,7 @@ function DialogCreateTicketAdmin({
       try {
         const [catRes, userRes, supportRes] = await Promise.all([
           api.get('/user/category'),
-          api.get('/user'),
+          api.get('/directory/users'),
           api.get('/support'),
         ])
         if (!cancelled) {

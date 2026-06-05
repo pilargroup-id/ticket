@@ -36,9 +36,9 @@ function DialogCreateProjects({
     let cancelled = false
     async function fetchUsers() {
       try {
-        const response = await api.get('/user')
+        const response = await api.get('/directory/users')
         if (!cancelled) {
-          const list = response?.data?.data ?? response?.data ?? []
+          const list = response?.data ?? []
           setUsers(list)
           // Pre-fill search label if requestorId is already set
           const preSelected = list.find((u) => String(u.id) === String(authUser?.id))
