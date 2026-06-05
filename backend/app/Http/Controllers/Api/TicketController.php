@@ -13,6 +13,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class TicketController extends Controller
 {
@@ -441,24 +442,46 @@ class TicketController extends Controller
 
     public function supports()
     {
-        $response = Http::withHeaders([
-            'X-Internal-Secret' => env('INTERNAL_SYNC_SECRET'),
-            'Accept' => 'application/json',
-        ])->get(rtrim(env('SSO_PILARGROUP_URL'), '/') . '/api/internal/directory/users', [
-            'department' => 'IT',
-            'active' => 1,
-        ]);
+        try {
+            $centralUrl = rtrim(env('SSO_PILARGROUP_URL'), '/') . '/api/internal/directory/users';
 
-        if (!$response->successful()) {
+            $response = Http::withHeaders([
+                'X-Internal-Secret' => env('INTERNAL_SYNC_SECRET'),
+                'Accept' => 'application/json',
+            ])->timeout(15)->get($centralUrl, [
+                'department' => 'IT',
+                'active' => 1,
+            ]);
+
+            if (!$response->successful()) {
+                Log::error('Failed to fetch supports from central server', [
+                    'url' => $centralUrl,
+                    'status' => $response->status(),
+                    'body' => $response->body(),
+                ]);
+
+                return response()->json([
+                    'message' => 'Failed to fetch supports from central server',
+                    'status' => $response->status(),
+                    'error' => $response->json() ?? $response->body(),
+                ], $response->status());
+            }
+
             return response()->json([
-                'message' => 'Failed to fetch supports from central server',
-                'error' => $response->json(),
-            ], $response->status());
-        }
+                'message' => 'Supports fetched successfully',
+                'data' => $response->json('data') ?? [],
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('Support endpoint error', [
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ]);
 
-        return response()->json([
-            'message' => 'Supports fetched successfully',
-            'data' => $response->json('data') ?? [],
-        ]);
+            return response()->json([
+                'message' => 'Support endpoint error',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
     }
 }
