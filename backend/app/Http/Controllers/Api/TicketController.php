@@ -444,12 +444,12 @@ class TicketController extends Controller
     {
         try {
             $centralUrl = rtrim(env('SSO_PILARGROUP_URL'), '/') . '/api/internal/directory/users';
-
+            
             $response = Http::withHeaders([
                 'X-Internal-Secret' => env('INTERNAL_SYNC_SECRET'),
                 'Accept' => 'application/json',
             ])->timeout(15)->get($centralUrl, [
-                'department' => 'IT',
+                'department_id' => 8,
                 'active' => 1,
             ]);
 
