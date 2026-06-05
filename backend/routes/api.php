@@ -90,6 +90,7 @@ Route::middleware('auth.jwt')->group(function () {
     // ADMIN SIDE
     // ===========================
     Route::middleware('admin')->group(function () {
+        Route::get('/support', [TicketController::class, 'supports']);
 
         // ---------------------------
         // Users / Support / Developer

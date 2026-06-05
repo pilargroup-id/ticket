@@ -20,6 +20,8 @@ class TicketCollection extends ResourceCollection
                 'user_id'        => $ticket->user_id,
                 'user_name'      => $ticket->nama_pembuat,
                 'nama_pembuat'      => $ticket->nama_pembuat,
+                'dept_id'        => $ticket->dept_id,
+                'dept_name'      => $ticket->dept_name,
                 'support_id'     => $ticket->support_id,
                 'support_name'   => $ticket->support_name,
                 'category_id'    => $ticket->category_id,

@@ -12,6 +12,7 @@ use App\Models\Tickets;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Http;
 
 class TicketController extends Controller
 {
@@ -84,6 +85,7 @@ class TicketController extends Controller
             ->select([
                 'id', 'ticket_code',
                 'user_id', 'support_id', 'support_name',
+                'dept_id', 'dept_name',
                 'category_id', 'assets_id',
                 'nama_pembuat', 'problem', 'status', 'priority',
                 'solution', 'image', 'notes',
@@ -150,6 +152,34 @@ class TicketController extends Controller
         ], 200);
     }
 
+    private function getCentralUserById(?string $userId): ?array
+    {
+        if (!$userId) {
+            return null;
+        }
+
+        $response = Http::withHeaders([
+            'X-Internal-Secret' => env('INTERNAL_SYNC_SECRET'),
+            'Accept' => 'application/json',
+        ])->get(rtrim(env('SSO_PILARGROUP_URL'), '/') . '/api/internal/directory/users', [
+            'active' => 1,
+        ]);
+
+        if (!$response->successful()) {
+            return null;
+        }
+
+        $users = $response->json('data') ?? [];
+
+        foreach ($users as $user) {
+            if (($user['id'] ?? null) === $userId) {
+                return $user;
+            }
+        }
+
+        return null;
+    }
+
     public function storeByAdmin(TicketStoreByAdminRequest $request)
     {
         $tz = $this->tz();
@@ -157,9 +187,10 @@ class TicketController extends Controller
         $data['request_date'] = $data['request_date'] ?? now($tz);
 
         if (empty($data['support_name']) && !empty($data['support_id'])) {
-            $supportUser = \App\Models\User::find($data['support_id']);
+            $supportUser = $this->getCentralUserById($data['support_id']);
+
             if ($supportUser) {
-                $data['support_name'] = $supportUser->name;
+                $data['support_name'] = $supportUser['name'] ?? null;
             }
         }
 
@@ -244,9 +275,10 @@ class TicketController extends Controller
         $data   = $request->validated();
 
         if (empty($data['support_name']) && !empty($data['support_id'])) {
-            $supportUser = \App\Models\User::find($data['support_id']);
+            $supportUser = $this->getCentralUserById($data['support_id']);
+
             if ($supportUser) {
-                $data['support_name'] = $supportUser->name;
+                $data['support_name'] = $supportUser['name'] ?? null;
             }
         }
 
@@ -404,6 +436,29 @@ class TicketController extends Controller
         return response()->json([
             'message' => 'Ticket voided successfully',
             'data'    => new TicketResource($ticket->fresh()->load(['category', 'assets'])),
+        ]);
+    }
+
+    public function supports()
+    {
+        $response = Http::withHeaders([
+            'X-Internal-Secret' => env('INTERNAL_SYNC_SECRET'),
+            'Accept' => 'application/json',
+        ])->get(rtrim(env('SSO_PILARGROUP_URL'), '/') . '/api/internal/directory/users', [
+            'department' => 'IT',
+            'active' => 1,
+        ]);
+
+        if (!$response->successful()) {
+            return response()->json([
+                'message' => 'Failed to fetch supports from central server',
+                'error' => $response->json(),
+            ], $response->status());
+        }
+
+        return response()->json([
+            'message' => 'Supports fetched successfully',
+            'data' => $response->json('data') ?? [],
         ]);
     }
 }

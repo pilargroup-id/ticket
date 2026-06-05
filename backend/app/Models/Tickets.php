@@ -13,6 +13,8 @@ class Tickets extends Model
         'user_id',
         'support_id',
         'support_name',
+        'dept_id',
+        'dept_name',
         'category_id',
         'assets_id',
         'nama_pembuat',
