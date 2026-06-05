@@ -83,10 +83,11 @@ function DialogExecutionTicket({
     async function fetchSupports() {
       setIsLoading(true)
       try {
-        const response = await api.get('/user/supports')
+        const response = await api.get('/support')
         setSupports(response?.data ?? [])
       } catch (err) {
         console.error('Failed to fetch supports:', err)
+        setSupports([])
       } finally {
         setIsLoading(false)
       }
@@ -137,9 +138,12 @@ function DialogExecutionTicket({
     setIsSubmitting(true)
     try {
       const isResolved = formData.status === 'Resolved'
+      const selectedSupport = supports.find((support) => support.id === formData.support_id)
+
       const payload = {
         status: formData.status.toLowerCase().replace(' ', '_'),
         support_id: formData.support_id,
+        support_name: selectedSupport?.name || '',
         priority: formData.priority.toLowerCase(),
         start_date: formData.start_date,
       }
@@ -224,7 +228,10 @@ function DialogExecutionTicket({
                   onChange={handleChange}
                   disabled={isLoading}
                 >
-                  <option value="">Pilih Support</option>
+                  <option value="">
+                    {isLoading ? 'Memuat support...' : 'Pilih Support'}
+                  </option>
+
                   {supports.map((s) => (
                     <option key={s.id} value={s.id}>
                       {s.name}
