@@ -53,6 +53,7 @@ Route::middleware('internal.secret')->group(function () {
 */
 Route::middleware('auth.jwt')->group(function () {
     Route::get('/support', [TicketController::class, 'supports']);
+    Route::get('/directory/users', [TicketController::class, 'directoryUsers']);
 
     // ===========================
     // AUTH / PROFILE

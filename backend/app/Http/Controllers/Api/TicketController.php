@@ -484,4 +484,48 @@ class TicketController extends Controller
             ], 500);
         }
     }
+
+    public function directoryUsers()
+    {
+        try {
+            $centralUrl = rtrim(env('SSO_PILARGROUP_URL'), '/') . '/api/internal/directory/users';
+
+            $response = Http::withHeaders([
+                'X-Internal-Secret' => env('INTERNAL_SYNC_SECRET'),
+                'Accept' => 'application/json',
+            ])->timeout(15)->get($centralUrl, [
+                'active' => 1,
+            ]);
+
+            if (!$response->successful()) {
+                Log::error('Failed to fetch directory users from central server', [
+                    'url' => $centralUrl,
+                    'status' => $response->status(),
+                    'body' => $response->body(),
+                ]);
+
+                return response()->json([
+                    'message' => 'Failed to fetch directory users from central server',
+                    'status' => $response->status(),
+                    'error' => $response->json() ?? $response->body(),
+                ], $response->status());
+            }
+
+            return response()->json([
+                'message' => 'Directory users fetched successfully',
+                'data' => $response->json('data') ?? [],
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('Directory users endpoint error', [
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ]);
+
+            return response()->json([
+                'message' => 'Directory users endpoint error',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
 }
