@@ -79,9 +79,19 @@ public function approveUser($id)
     public function logout(Request $request)
     {
         $user = $request->user();
-        $user->tokens()->delete();
-        $user->remember_token = null;
-        $user->save();
+
+        if ($user) {
+            $currentToken = $request->attributes->get('auth_token_model');
+
+            if ($currentToken) {
+                $currentToken->delete();
+            } else {
+                $user->tokens()->delete();
+            }
+
+            $user->remember_token = null;
+            $user->save();
+        }
 
         return response()->json([
             'message' => 'Logout successful',
