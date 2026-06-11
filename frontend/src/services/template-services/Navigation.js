@@ -17,6 +17,7 @@ export const implementedNavigationPaths = [
   '/Reports/TeamPerformance',
   '/Reports/ExecutiveInsights',
   '/Reports/ProjectPerformance',
+  '/Reports/Pipeline',
   '/Master',
   '/Master/Category',
 ]
@@ -60,7 +61,12 @@ export const primaryNavigationItems = [
         id: 'project-performance',
         label: 'Project Performance',
         href: '/Reports/ProjectPerformance',
-      }
+      },
+      {
+        id: 'pipeline',
+        label: 'Pipeline',
+        href: '/Reports/Pipeline',
+      },
     ]
   },
   {

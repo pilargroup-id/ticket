@@ -26,6 +26,7 @@ import MyTickets from './pages/my-tickets/MyTickets.jsx'
 import TeamPerformence from './pages/reports/team-performence/TeamPerformence.jsx'
 import ExecutiveInsight from './pages/reports/executive-insight/ExecutiveInsight.jsx'
 import ProjectPerformence from './pages/reports/project-performence/ProjectPerformence.jsx'
+import PipeLine from './pages/reports/pipeline-report/PipeLine.jsx'
 import MasterCategory from './pages/master/category/MasterCategory.jsx'
 import SkeletonLoading from './components/template/SkeletonLoading.jsx'
 import { consumeSsoSuccessParams, getStoredUser, loginWithDevCredentials } from './services/auth.js'
@@ -108,6 +109,12 @@ const pageDetails = {
     eyebrow: 'Reports',
     value: '3',
     detail: 'Monitoring performa pengerjaan ticket berdasarkan proyek dan kategori.',
+  },
+  '/Reports/Pipeline': {
+    title: 'Pipeline',
+    eyebrow: 'Reports',
+    value: '5',
+    detail: 'Ringkasan pipeline project dengan status cards dan area detail yang ringkas.',
   },
   '/Master/Category': {
     title: 'Master Category',
@@ -542,6 +549,7 @@ function App() {
   const isTeamPerformancePage = activePath === '/Reports/TeamPerformance'
   const isExecutiveInsightPage = activePath === '/Reports/ExecutiveInsights'
   const isProjectPerformancePage = activePath === '/Reports/ProjectPerformance'
+  const isPipelinePage = activePath === '/Reports/Pipeline'
   const isMasterCategoryPage = activePath === '/Master/Category'
   const isTicketsOverviewPage = activePath === '/TicketsOverview'
   const isProjectsOverviewPage = activePath === '/ProjectsOverview'
@@ -758,15 +766,25 @@ function App() {
         />
 
         <main
-          className={`dashboard-main${isTicketWorkspacePage && !isMobile ? ' dashboard-main--mytickets' : ''}`}
+          className={`dashboard-main${
+            isTicketWorkspacePage && !isMobile ? ' dashboard-main--mytickets' : ''
+          }${isPipelinePage && !isMobile ? ' dashboard-main--pipeline' : ''}`}
           style={isMobile && activePath === '/MyTickets' ? { paddingTop: '8px' } : {}}
         >
           <div
-            className={`dashboard-content${isTicketWorkspacePage && !isMobile ? ' dashboard-content--mytickets' : ''}`}
+            className={`dashboard-content${
+              isTicketWorkspacePage && !isMobile ? ' dashboard-content--mytickets' : ''
+            }${isPipelinePage && !isMobile ? ' dashboard-content--pipeline' : ''}`}
           >
             {isInitializing ? null : (
               <>
-                {activePath !== '/MyTickets' && !isTeamPerformancePage && !isExecutiveInsightPage && !isProjectPerformancePage && !isMasterCategoryPage && !isCustomOverviewPage && (
+                {activePath !== '/MyTickets' &&
+                  !isTeamPerformancePage &&
+                  !isExecutiveInsightPage &&
+                  !isProjectPerformancePage &&
+                  !isPipelinePage &&
+                  !isMasterCategoryPage &&
+                  !isCustomOverviewPage && (
                   <section className="dashboard-overview" aria-label="Ringkasan dashboard">
                     {overviewCards.map((card) => (
                       <article className="dashboard-card" key={card.title}>
@@ -802,6 +820,8 @@ function App() {
                   <ExecutiveInsight />
                 ) : (isProjectPerformancePage && isAdmin) ? (
                   <ProjectPerformence />
+                ) : (isPipelinePage && isAdmin) ? (
+                  <PipeLine activePage={activePage} />
                 ) : (isMasterCategoryPage && isAdmin) ? (
                   <MasterCategory searchQuery={searchQuery} />
                 ) : (isTablePage && isAdmin) ? (
