@@ -262,7 +262,7 @@ function DialogExecutionTicketForm({
                 <label className="register-user-popup__label" htmlFor="support_id">
                   Support
                 </label>
-                <input
+                <select
                   id="support_id"
                   name="support_id"
                   className="register-user-popup__select register-user-popup__select--arrow-offset"
