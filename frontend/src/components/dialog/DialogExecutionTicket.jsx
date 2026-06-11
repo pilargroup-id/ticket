@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom'
 
 import { XClose } from '../template/TemplateIcons.jsx'
 import api from '../../services/api.js'
+import { getStoredUser } from '../../services/auth.js'
 import DialogLoading from './DialogLoading.jsx'
 
 const getLocalDatetimeString = (date) => {
@@ -37,6 +38,34 @@ const getStatusLabel = (rawStatus) => {
   return 'In Progress'
 }
 
+const buildInitialFormData = (ticket, authUser) => {
+  const nowStr = getLocalDatetimeString(new Date())
+  const rawStatusVal = ticket?.rawStatus || ticket?.status || ''
+  const rawPriorityVal = ticket?.rawPriority || ticket?.priority || ''
+
+  return {
+    support_id: authUser?.id || ticket?.supportId || ticket?.support_id || '',
+    support_name: authUser?.name || ticket?.supportName || ticket?.support_name || '',
+    status: getStatusLabel(rawStatusVal),
+    priority: getPriorityLabel(rawPriorityVal),
+    start_date: ticket?.startDateValue ? formatToDatetimeLocal(ticket.startDateValue) : nowStr,
+    end_date: ticket?.endDateValue ? formatToDatetimeLocal(ticket.endDateValue) : '',
+    solution: ticket?.solution || '',
+  }
+}
+
+const calculateTimeSpent = (startDate, endDate) => {
+  if (!startDate || !endDate) return 0
+
+  const start = new Date(startDate)
+  const end = new Date(endDate)
+  const diffMs = end - start
+
+  if (diffMs <= 0) return 0
+
+  return Math.floor(diffMs / 60000)
+}
+
 function DialogExecutionTicket({
   isOpen = false,
   eyebrow = 'Execution Ticket',
@@ -45,17 +74,36 @@ function DialogExecutionTicket({
   onClose,
   onConfirm,
 }) {
-  const [supports, setSupports] = useState([])
+  if (!isOpen) return null
+  if (typeof document === 'undefined') return null
+
+  const authUser = getStoredUser()
+
+  return createPortal(
+    <DialogExecutionTicketForm
+      key={`${ticket?.id ?? 'no-ticket'}-${authUser?.id ?? 'anon'}`}
+      eyebrow={eyebrow}
+      title={title}
+      ticket={ticket}
+      authUser={authUser}
+      onClose={onClose}
+      onConfirm={onConfirm}
+    />,
+    document.body,
+  )
+}
+
+function DialogExecutionTicketForm({
+  eyebrow,
+  title,
+  ticket,
+  authUser,
+  onClose,
+  onConfirm,
+}) {
   const [formData, setFormData] = useState({
-    support_id: '',
-    status: 'In Progress',
-    priority: 'Medium',
-    start_date: '',
-    end_date: '',
-    time_spent: 0,
-    solution: '',
+    ...buildInitialFormData(ticket, authUser),
   })
-  const [isLoading, setIsLoading] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   // Populate form data when ticket changes
@@ -89,7 +137,6 @@ function DialogExecutionTicket({
         setSupports(response?.data ?? [])
       } catch (err) {
         console.error('Failed to fetch supports:', err)
-        setSupports([])
       } finally {
         setIsLoading(false)
       }
@@ -115,8 +162,6 @@ function DialogExecutionTicket({
   }, [formData.start_date, formData.end_date])
 
   useEffect(() => {
-    if (!isOpen) return undefined
-
     const handleKeyDown = (event) => {
       if (event.key === 'Escape') {
         onClose?.()
@@ -127,7 +172,7 @@ function DialogExecutionTicket({
     return () => {
       window.removeEventListener('keydown', handleKeyDown)
     }
-  }, [isOpen, onClose])
+  }, [onClose])
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -140,12 +185,9 @@ function DialogExecutionTicket({
     setIsSubmitting(true)
     try {
       const isResolved = formData.status === 'Resolved'
-      const selectedSupport = supports.find((support) => support.id === formData.support_id)
-
       const payload = {
         status: formData.status.toLowerCase().replace(' ', '_'),
         support_id: formData.support_id,
-        support_name: selectedSupport?.name || '',
         priority: formData.priority.toLowerCase(),
         start_date: formData.start_date,
       }
@@ -153,8 +195,8 @@ function DialogExecutionTicket({
       if (isResolved) {
         payload.solution = formData.solution
         payload.end_date = formData.end_date
-        if (formData.time_spent > 0) {
-          payload.time_spent = formData.time_spent
+        if (computedTimeSpent > 0) {
+          payload.time_spent = computedTimeSpent
         }
       }
 
@@ -169,9 +211,6 @@ function DialogExecutionTicket({
     }
   }
 
-  if (!isOpen) return null
-  if (typeof document === 'undefined') return null
-
   if (isSubmitting) {
     return createPortal(
       <DialogLoading
@@ -184,8 +223,9 @@ function DialogExecutionTicket({
       document.body,
     )
   }
+  const computedTimeSpent = calculateTimeSpent(formData.start_date, formData.end_date)
 
-  return createPortal(
+  return (
     <div className="dashboard-popup-overlay" role="presentation" onClick={onClose}>
       <div
         className="dashboard-popup register-user-popup"
@@ -222,7 +262,7 @@ function DialogExecutionTicket({
                 <label className="register-user-popup__label" htmlFor="support_id">
                   Support
                 </label>
-                <select
+                <input
                   id="support_id"
                   name="support_id"
                   className="register-user-popup__select register-user-popup__select--arrow-offset"
@@ -230,10 +270,7 @@ function DialogExecutionTicket({
                   onChange={handleChange}
                   disabled={isLoading}
                 >
-                  <option value="">
-                    {isLoading ? 'Memuat support...' : 'Pilih Support'}
-                  </option>
-
+                  <option value="">Pilih Support</option>
                   {supports.map((s) => (
                     <option key={s.id} value={s.id}>
                       {s.name}
@@ -317,8 +354,9 @@ function DialogExecutionTicket({
                   name="time_spent"
                   type="number"
                   className="register-user-popup__input"
-                  value={formData.time_spent}
-                  onChange={handleChange}
+                  value={computedTimeSpent}
+                  readOnly
+                  disabled
                   style={{ width: '100%', boxSizing: 'border-box' }}
                 />
                 <p className="register-user-popup__hint" style={{ fontSize: '0.7rem', marginTop: '0.25rem' }}>
@@ -365,8 +403,7 @@ function DialogExecutionTicket({
           </button>
         </div>
       </div>
-    </div>,
-    document.body
+    </div>
   )
 }
 
