@@ -76,14 +76,16 @@ function DialogExecutionTicket({
     }
   }, [isOpen, ticket])
 
-  // Fetch supports when dialog opens
+  // Fetch support list when dialog opens.
+  // Use the admin endpoint so the dialog does not depend on the user-scoped route
+  // that may be proxied differently in production.
   useEffect(() => {
     if (!isOpen) return
 
     async function fetchSupports() {
       setIsLoading(true)
       try {
-        const response = await api.get('/user/supports')
+        const response = await api.get('/support')
         setSupports(response?.data ?? [])
       } catch (err) {
         console.error('Failed to fetch supports:', err)
