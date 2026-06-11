@@ -71,6 +71,7 @@ class UserController extends Controller
                 'is_admin'     => $request->auth_is_admin,
                 'department_id'=> $request->auth_dept_id,
                 'department'   => $request->auth_dept_name,
+                'department_name' => $request->auth_dept_name,
                 'company_id'   => $request->auth_company_id,
                 'company'      => $request->auth_company,
                 'job_position' => $request->auth_job,

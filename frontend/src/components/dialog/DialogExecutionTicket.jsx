@@ -42,10 +42,12 @@ const buildInitialFormData = (ticket, authUser) => {
   const nowStr = getLocalDatetimeString(new Date())
   const rawStatusVal = ticket?.rawStatus || ticket?.status || ''
   const rawPriorityVal = ticket?.rawPriority || ticket?.priority || ''
+  const supportId = authUser?.id || ticket?.supportId || ticket?.support_id || ''
+  const supportName = authUser?.name || ticket?.supportName || ticket?.support_name || ''
 
   return {
-    support_id: authUser?.id || ticket?.supportId || ticket?.support_id || '',
-    support_name: authUser?.name || ticket?.supportName || ticket?.support_name || '',
+    support_id: supportId,
+    support_name: supportName,
     status: getStatusLabel(rawStatusVal),
     priority: getPriorityLabel(rawPriorityVal),
     start_date: ticket?.startDateValue ? formatToDatetimeLocal(ticket.startDateValue) : nowStr,
@@ -94,6 +96,7 @@ function DialogExecutionTicket({
 }
 
 function DialogExecutionTicketForm({
+  isOpen,
   eyebrow,
   title,
   ticket,
@@ -101,49 +104,32 @@ function DialogExecutionTicketForm({
   onClose,
   onConfirm,
 }) {
-  const [formData, setFormData] = useState({
-    ...buildInitialFormData(ticket, authUser),
-  })
+  const [formData, setFormData] = useState(() => buildInitialFormData(ticket, authUser))
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   // Populate form data when ticket changes
   useEffect(() => {
-    if (isOpen && ticket) {
-      const nowStr = getLocalDatetimeString(new Date())
-      const rawStatusVal = ticket.rawStatus || ticket.status || ''
-      const rawPriorityVal = ticket.rawPriority || ticket.priority || ''
-      setFormData({
-        support_id: ticket.supportId || ticket.support_id || '',
-        status: getStatusLabel(rawStatusVal),
-        priority: getPriorityLabel(rawPriorityVal),
-        start_date: ticket.startDateValue ? formatToDatetimeLocal(ticket.startDateValue) : nowStr,
-        end_date: ticket.endDateValue ? formatToDatetimeLocal(ticket.endDateValue) : '',
-        time_spent: ticket.time_spent || 0,
-        solution: ticket.solution || '',
-      })
-    }
-  }, [isOpen, ticket])
-
-  // Fetch support list when dialog opens.
-  // Use the admin endpoint so the dialog does not depend on the user-scoped route
-  // that may be proxied differently in production.
-  useEffect(() => {
-    if (!isOpen) return
-
-    async function fetchSupports() {
-      setIsLoading(true)
-      try {
-        const response = await api.get('/support')
-        setSupports(response?.data ?? [])
-      } catch (err) {
-        console.error('Failed to fetch supports:', err)
-      } finally {
-        setIsLoading(false)
-      }
+    if (!isOpen) {
+      return
     }
 
-    fetchSupports()
-  }, [isOpen])
+    const nowStr = getLocalDatetimeString(new Date())
+    const rawStatusVal = ticket?.rawStatus || ticket?.status || ''
+    const rawPriorityVal = ticket?.rawPriority || ticket?.priority || ''
+    const supportId = authUser?.id || ticket?.supportId || ticket?.support_id || ''
+    const supportName = authUser?.name || ticket?.supportName || ticket?.support_name || ''
+
+    setFormData({
+      support_id: supportId,
+      support_name: supportName,
+      status: getStatusLabel(rawStatusVal),
+      priority: getPriorityLabel(rawPriorityVal),
+      start_date: ticket?.startDateValue ? formatToDatetimeLocal(ticket.startDateValue) : nowStr,
+      end_date: ticket?.endDateValue ? formatToDatetimeLocal(ticket.endDateValue) : '',
+      time_spent: ticket?.time_spent || 0,
+      solution: ticket?.solution || '',
+    })
+  }, [authUser?.id, authUser?.name, isOpen, ticket])
 
   // Calculate time spent whenever dates change
   useEffect(() => {
@@ -188,6 +174,7 @@ function DialogExecutionTicketForm({
       const payload = {
         status: formData.status.toLowerCase().replace(' ', '_'),
         support_id: formData.support_id,
+        support_name: formData.support_name,
         priority: formData.priority.toLowerCase(),
         start_date: formData.start_date,
       }
@@ -259,24 +246,21 @@ function DialogExecutionTicketForm({
             {/* Row 1: Support, Status, Priority */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem' }}>
               <div className="register-user-popup__field">
-                <label className="register-user-popup__label" htmlFor="support_id">
+                <label className="register-user-popup__label" htmlFor="support_name">
                   Support
                 </label>
-                <select
-                  id="support_id"
+                <input
+                  id="support_name"
+                  name="support_name"
+                  className="register-user-popup__input"
+                  value={formData.support_name}
+                  readOnly
+                />
+                <input
+                  type="hidden"
                   name="support_id"
-                  className="register-user-popup__select register-user-popup__select--arrow-offset"
                   value={formData.support_id}
-                  onChange={handleChange}
-                  disabled={isLoading}
-                >
-                  <option value="">Pilih Support</option>
-                  {supports.map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.name}
-                    </option>
-                  ))}
-                </select>
+                />
               </div>
 
               <div className="register-user-popup__field">
