@@ -76,7 +76,9 @@ function DialogExecutionTicket({
     }
   }, [isOpen, ticket])
 
-  // Fetch supports when dialog opens
+  // Fetch support list when dialog opens.
+  // Use the admin endpoint so the dialog does not depend on the user-scoped route
+  // that may be proxied differently in production.
   useEffect(() => {
     if (!isOpen) return
 
