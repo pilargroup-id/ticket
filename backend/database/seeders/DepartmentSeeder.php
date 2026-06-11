@@ -33,10 +33,10 @@ class DepartmentSeeder extends Seeder
 
             if ($location) {
                 $insertData[] = [
-                    'department_name' => $department,
-                    'location_id'     => $location->id,
-                    'created_at'      => now(),
-                    'updated_at'      => now(),
+                    'name'        => $department,
+                    'location_id' => $location->id,
+                    'created_at'  => now(),
+                    'updated_at'  => now(),
                 ];
             }
         }

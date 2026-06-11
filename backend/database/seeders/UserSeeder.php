@@ -190,7 +190,7 @@ class UserSeeder extends Seeder
         // =========================================
         // 2. AMBIL DEPARTMENT ID DARI DATABASE
         // =========================================
-        $departments = DB::table('departments')->pluck('id', 'department_name')->toArray();
+        $departments = DB::table('departments')->pluck('id', 'name')->toArray();
 
         // =========================================
         // 3. INSERT USERS

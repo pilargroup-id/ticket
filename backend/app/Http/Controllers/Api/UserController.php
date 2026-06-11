@@ -52,7 +52,10 @@ class UserController extends Controller
 
     public function supportIndex()
     {
-        $users = User::where('role', 'admin')->where('status', 'active')->get();
+        $users = User::where('role', 'admin')
+            ->where('status', 'active')
+            ->with('department.location')
+            ->get();
 
         return response()->json([
             'message' => 'Support users fetched successfully',
@@ -115,7 +118,9 @@ class UserController extends Controller
 
     public function supports()
     {
-        $users = User::where('role', 'admin')->get();
+        $users = User::where('role', 'admin')
+            ->with('department.location')
+            ->get();
 
         return response()->json([
             'message' => 'Support list',

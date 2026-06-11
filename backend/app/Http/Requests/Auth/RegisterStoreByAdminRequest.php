@@ -26,7 +26,7 @@ class RegisterStoreByAdminRequest extends FormRequest
             'username' => 'required|string|unique:users,username',
             'email' => 'required|string|email|unique:users,email',
             'password' => 'required|string|min:6',
-            'department_id' => 'nullable|exists:departments,id',
+            'department_id' => 'required|exists:departments,id',
             'role' => 'required|string',
             'phone' => 'nullable|string',
             'job_position' => 'nullable|string',
