@@ -751,8 +751,16 @@ function App() {
           ]}
           searchProps={{
             value: searchQuery,
-            placeholder: isTablePage ? 'Cari data table...' : 'Cari tiket...',
-            ariaLabel: isTablePage ? 'Cari data table' : 'Cari tiket legal',
+            placeholder: isPipelinePage
+              ? 'Cari project...'
+              : isTablePage
+                ? 'Cari data table...'
+                : 'Cari tiket...',
+            ariaLabel: isPipelinePage
+              ? 'Cari project pipeline'
+              : isTablePage
+                ? 'Cari data table'
+                : 'Cari tiket legal',
             onChange: (event) => {
               setSearchQuery(event.target.value)
               setUsersPage(1)
@@ -821,7 +829,7 @@ function App() {
                 ) : (isProjectPerformancePage && isAdmin) ? (
                   <ProjectPerformence />
                 ) : (isPipelinePage && isAdmin) ? (
-                  <PipeLine activePage={activePage} />
+                  <PipeLine activePage={activePage} searchQuery={searchQuery} />
                 ) : (isMasterCategoryPage && isAdmin) ? (
                   <MasterCategory searchQuery={searchQuery} />
                 ) : (isTablePage && isAdmin) ? (

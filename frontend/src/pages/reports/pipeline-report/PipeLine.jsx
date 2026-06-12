@@ -9,6 +9,26 @@ import {
   buildPipelineStatusCounts,
 } from './PipeLineStages.js'
 
+function matchesPipelineSearch(project, searchQuery) {
+  const query = searchQuery.trim().toLowerCase()
+
+  if (!query) {
+    return true
+  }
+
+  return [
+    project.title,
+    project.code,
+    project.description,
+    project.owner,
+    project.category,
+    project.statusLabel,
+    project.bucket,
+    project.periodLabel,
+    project.detail,
+  ].some((value) => String(value ?? '').toLowerCase().includes(query))
+}
+
 function getVisibleProjects(projects, activeStatus) {
   if (!activeStatus) {
     return projects
@@ -17,9 +37,77 @@ function getVisibleProjects(projects, activeStatus) {
   return projects.filter((project) => project.bucket === activeStatus)
 }
 
-function PipeLine({ activePage }) {
+function compareCompletionState(leftItem, rightItem) {
+  const leftIsComplete = leftItem.bucket === 'Complete'
+  const rightIsComplete = rightItem.bucket === 'Complete'
+
+  if (leftIsComplete !== rightIsComplete) {
+    return leftIsComplete ? 1 : -1
+  }
+
+  return 0
+}
+
+function getSortedProjects(projects, sortMode) {
+  const list = [...projects]
+
+  switch (sortMode) {
+    case 'progress-desc':
+      return list.sort((leftItem, rightItem) => {
+        const completionOrder = compareCompletionState(leftItem, rightItem)
+        if (completionOrder !== 0) {
+          return completionOrder
+        }
+
+        return rightItem.progress - leftItem.progress
+      })
+    case 'progress-asc':
+      return list.sort((leftItem, rightItem) => {
+        const completionOrder = compareCompletionState(leftItem, rightItem)
+        if (completionOrder !== 0) {
+          return completionOrder
+        }
+
+        return leftItem.progress - rightItem.progress
+      })
+    case 'date-desc':
+      return list.sort((leftItem, rightItem) => {
+        const completionOrder = compareCompletionState(leftItem, rightItem)
+        if (completionOrder !== 0) {
+          return completionOrder
+        }
+
+        return String(rightItem.rawStartDate || rightItem.rawEndDate || '').localeCompare(
+          String(leftItem.rawStartDate || leftItem.rawEndDate || ''),
+        )
+      })
+    case 'date-asc':
+      return list.sort((leftItem, rightItem) => {
+        const completionOrder = compareCompletionState(leftItem, rightItem)
+        if (completionOrder !== 0) {
+          return completionOrder
+        }
+
+        return String(leftItem.rawStartDate || leftItem.rawEndDate || '').localeCompare(
+          String(rightItem.rawStartDate || rightItem.rawEndDate || ''),
+        )
+      })
+    default:
+      return list.sort((leftItem, rightItem) => {
+        const completionOrder = compareCompletionState(leftItem, rightItem)
+        if (completionOrder !== 0) {
+          return completionOrder
+        }
+
+        return rightItem.progress - leftItem.progress
+      })
+  }
+}
+
+function PipeLine({ activePage, searchQuery = '' }) {
   const [activeStatus, setActiveStatus] = useState('')
   const [selectedStage, setSelectedStage] = useState('')
+  const [sortMode, setSortMode] = useState('default')
   const [projects, setProjects] = useState([])
   const [selectedProjectTimeline, setSelectedProjectTimeline] = useState([])
   const [selectedProjectTimelineMeta, setSelectedProjectTimelineMeta] = useState(null)
@@ -72,13 +160,34 @@ function PipeLine({ activePage }) {
     () => buildPipelineStatusCounts(pipelineProjects),
     [pipelineProjects],
   )
-  const visibleProjects = useMemo(
-    () => getVisibleProjects(pipelineProjects, activeStatus),
-    [activeStatus, pipelineProjects],
+  const searchedProjects = useMemo(
+    () => pipelineProjects.filter((project) => matchesPipelineSearch(project, searchQuery)),
+    [pipelineProjects, searchQuery],
   )
+  const visibleProjects = useMemo(
+    () => getVisibleProjects(searchedProjects, activeStatus),
+    [activeStatus, searchedProjects],
+  )
+  const filteredProjects = useMemo(() => {
+    const projectsToFilter = getSortedProjects(visibleProjects, sortMode)
+    return projectsToFilter
+  }, [sortMode, visibleProjects])
+  const effectiveSelectedStage = useMemo(() => {
+    const selectedExists = filteredProjects.some(
+      (project) => String(project.id) === String(selectedStage),
+    )
+
+    if (selectedExists) {
+      return selectedStage
+    }
+
+    return filteredProjects[0]?.id ?? ''
+  }, [filteredProjects, selectedStage])
   const selectedProject = useMemo(
-    () => visibleProjects.find((project) => String(project.id) === String(selectedStage)) || null,
-    [selectedStage, visibleProjects],
+    () =>
+      filteredProjects.find((project) => String(project.id) === String(effectiveSelectedStage)) ||
+      null,
+    [effectiveSelectedStage, filteredProjects],
   )
 
   useEffect(() => {
@@ -134,7 +243,7 @@ function PipeLine({ activePage }) {
         <div className="dashboard-panel__header dashboard-panel__header--split pipeline-report__header">
           <div className="chart-card__header-copy">
             <p className="dashboard-panel__eyebrow">{activePage?.eyebrow ?? 'Reports'}</p>
-          </div>
+        </div>
 {/* 
           <div className="pipeline-report__legend">
             <span className="pipeline-report__legend-item">
@@ -155,13 +264,16 @@ function PipeLine({ activePage }) {
           errorMessage={errorMessage}
           isLoading={isLoading}
           onSelectedStageChange={setSelectedStage}
+          onSortModeChange={setSortMode}
           selectedProject={selectedProject}
           selectedProjectTimeline={selectedProjectTimeline}
           selectedProjectTimelineMeta={selectedProjectTimelineMeta}
           timelineError={timelineError}
           timelineLoading={timelineLoading}
-          selectedStage={selectedStage}
-          visibleProjects={visibleProjects}
+          selectedStage={effectiveSelectedStage}
+          sortMode={sortMode}
+          visibleProjects={filteredProjects}
+          searchQuery={searchQuery}
         />
       </article>
     </section>

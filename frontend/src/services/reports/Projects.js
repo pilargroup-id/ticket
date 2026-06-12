@@ -27,18 +27,30 @@ export async function getProjectTimeline(projectId, options = {}) {
 
   const items = tasks.map((task, index) => {
     const isHeaderTask = task?.type === 'header'
-    const timestamp = task?.start || task?.end || project?.start || project?.end || null
+    const timestamp =
+      task?.progress_date ||
+      task?.progressDate ||
+      task?.start ||
+      task?.end ||
+      project?.start ||
+      project?.end ||
+      null
+    const description = task?.description || task?.detail || ''
+    const developerName = task?.developer_name || task?.developerName || task?.by_name || ''
+    const itemTitle = task?.name || normalizeTimelineStatus(task?.status) || `Progress #${index + 1}`
 
     return {
       id: task?.id ?? `${projectId}-${index}`,
+      developer_id: task?.developer_id ?? null,
+      developer_name: developerName,
       status: isHeaderTask
         ? normalizeTimelineStatus(project?.status_label || project?.status)
         : normalizeTimelineStatus(task?.status),
       timestamp,
-      title: isHeaderTask ? fallbackProjectName : task?.name ?? `Progress #${index + 1}`,
+      title: isHeaderTask ? fallbackProjectName : itemTitle,
       detail: isHeaderTask
         ? `Progress project ${task?.progress ?? 0}%`
-        : `Progress ${task?.progress ?? 0}%${task?.end ? ` - ${task.end}` : ''}`,
+        : description || `Progress ${task?.progress ?? 0}%${task?.end ? ` - ${task.end}` : ''}`,
     }
   })
 

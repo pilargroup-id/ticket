@@ -14,6 +14,13 @@ export const PIPELINE_STATUS_COLORS = {
   Delayed: '#d92d20',
 }
 
+export const PIPELINE_STATUS_LABELS = {
+  Complete: 'Selesai',
+  'On Track': 'Sesuai Rencana',
+  'At Risk': 'Perhatian',
+  Delayed: 'Terlambat',
+}
+
 function getFirstFilledText(...values) {
   for (const value of values) {
     if (value === undefined || value === null) {
@@ -87,8 +94,66 @@ function buildDateRangeLabel(startDate, endDate) {
   return `Mulai ${startLabel} | Selesai ${endLabel}`
 }
 
+function buildCompactPeriodLabel(startDate, endDate) {
+  const startLabel = formatProjectDate(startDate)
+  const endLabel = formatProjectDate(endDate)
+
+  if (startLabel === '-' && endLabel === '-') {
+    return 'Periode belum tersedia'
+  }
+
+  if (startLabel === '-') {
+    return `Selesai ${endLabel}`
+  }
+
+  if (endLabel === '-') {
+    return `Mulai ${startLabel}`
+  }
+
+  return `${startLabel} - ${endLabel}`
+}
+
 function getProjectName(project = {}) {
   return getFirstFilledText(project?.project_name, project?.title, project?.name, project?.projectCode, '-')
+}
+
+function getProjectCode(project = {}, fallbackTitle = '') {
+  return getFirstFilledText(project?.project_code, project?.code, project?.projectCode, project?.id, fallbackTitle)
+}
+
+function getProjectDescription(project = {}) {
+  return (
+    getFirstFilledText(
+      project?.description,
+      project?.summary,
+      project?.notes,
+      project?.problem,
+      project?.scope,
+      project?.detail,
+    ) || 'Deskripsi project belum tersedia.'
+  )
+}
+
+function getProjectOwner(project = {}) {
+  return getFirstFilledText(
+    project?.owner_name,
+    project?.project_owner,
+    project?.owner,
+    project?.pic_name,
+    project?.pic,
+    project?.requestor_name,
+    project?.requestor?.name,
+  )
+}
+
+function getProjectCategory(project = {}) {
+  return getFirstFilledText(
+    project?.category_name,
+    project?.category,
+    project?.system_category,
+    project?.module,
+    project?.domain,
+  )
 }
 
 function getProjectProgressBucket(progressPercent) {
@@ -117,28 +182,42 @@ function getProgressAccent(progressPercent) {
   return PIPELINE_STATUS_COLORS[getProjectProgressBucket(progressPercent)] || PIPELINE_STATUS_COLORS.Delayed
 }
 
+function getPipelineStatusLabel(bucket) {
+  return PIPELINE_STATUS_LABELS[bucket] || bucket || '-'
+}
+
 export function normalizePipelineProject(project = {}, index = 0) {
   const title = getProjectName(project)
+  const projectCode = getProjectCode(project, title)
   const progressValue = clampProgress(project?.progress_percent)
   const progressLabel = progressValue === null ? '-' : `${Math.round(progressValue)}%`
   const bucket = getProjectProgressBucket(progressValue)
   const startDate = project?.start_date || null
   const endDate = project?.end_date || null
+  const owner = getProjectOwner(project)
+  const category = getProjectCategory(project)
+  const description = getProjectDescription(project)
 
   return {
-    id: project?.id ?? `${title}-${index}`,
+    id: project?.id ?? `${projectCode || title}-${index}`,
     title,
     name: title,
+    code: projectCode || '-',
     progress: progressValue ?? 0,
     progressLabel,
     bucket,
+    statusLabel: getPipelineStatusLabel(bucket),
     accent: getProgressAccent(progressValue),
     detail: buildDateRangeLabel(startDate, endDate),
+    periodLabel: buildCompactPeriodLabel(startDate, endDate),
     startDateLabel: formatProjectDate(startDate),
     endDateLabel: formatProjectDate(endDate),
     rawStartDate: startDate,
     rawEndDate: endDate,
     rawProgressPercent: progressValue,
+    description,
+    owner: owner || 'Belum ditentukan',
+    category: category || 'Belum ditentukan',
   }
 }
 

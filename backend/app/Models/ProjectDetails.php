@@ -10,6 +10,10 @@ class ProjectDetails extends Model
     public $timestamps = true;
     protected $table = 'project_details';
 
+    protected $casts = [
+        'progress_date' => 'datetime',
+    ];
+
     protected $fillable = [
         'project_header_id',
         'progress_date',

@@ -252,10 +252,10 @@ class ProjectHeaders extends Model
     }
 
 
-public static function projectGanttDetailReport(int $projectId)
+    public static function projectGanttDetailReport(int $projectId)
 {
     $project = self::query()
-        ->with(['details:id,project_header_id,progress_date,description,status,progress_percent,developer_id'])
+        ->with(['details:id,project_header_id,progress_date,description,status,progress_percent,developer_id,developer_name'])
         ->select([
             'id',
             'project_code',
@@ -286,12 +286,17 @@ public static function projectGanttDetailReport(int $projectId)
         ->values()
         ->map(function ($d, $idx) use ($project) {
             $p = (int) ($d->progress_percent ?? 0);
-            $date = optional($d->progress_date)->format('Y-m-d')
-                ?? optional($project->start_date)->format('Y-m-d');
+            $date = $d->progress_date
+                ? $d->progress_date->format('Y-m-d')
+                : optional($project->start_date)->format('Y-m-d');
 
             return [
                 'id'       => "D-{$d->id}",
                 'name'     => $d->description ?? ("Progress #" . ($idx + 1)),
+                'description' => $d->description,
+                'developer_id' => $d->developer_id,
+                'developer_name' => $d->developer_name,
+                'progress_date' => $d->progress_date ? $d->progress_date->format('Y-m-d\TH:i:sP') : null,
                 'start'    => $date,
                 'end'      => $date,
                 'progress' => $p,

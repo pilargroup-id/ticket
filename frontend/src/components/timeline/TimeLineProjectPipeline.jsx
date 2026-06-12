@@ -4,11 +4,14 @@ function TimeLineProject({
   errorMessage,
   isLoading,
   onSelectedStageChange,
+  onSortModeChange,
+  searchQuery,
   selectedProject,
   selectedProjectTimeline,
   selectedProjectTimelineMeta,
   timelineError,
   timelineLoading,
+  sortMode,
   selectedStage,
   visibleProjects,
 }) {
@@ -23,6 +26,20 @@ function TimeLineProject({
       />
 
       <div className="pipeline-report__timeline-wrap">
+        <div className="pipeline-report__timeline-shell">
+          <div className="pipeline-report__timeline-header">
+            <div className="pipeline-report__timeline-copy">
+              <p className="pipeline-report__timeline-eyebrow">Pipeline</p>
+              <h3 className="pipeline-report__timeline-title">Daftar Project</h3>
+              {/* <p className="pipeline-report__timeline-subtitle">
+                Pantau urutan project aktif dengan status, progres, dan periode kerja yang jelas.
+              </p> */}
+            </div>
+
+            <div className="pipeline-report__timeline-toolbar">
+            </div>
+          </div>
+
         {isLoading ? (
           <div className="pipeline-report__timeline-state" aria-live="polite">
             <div className="pipeline-report__state-card">
@@ -44,7 +61,9 @@ function TimeLineProject({
             <div className="pipeline-report__state-card">
               <p className="pipeline-report__state-title">Tidak ada project yang cocok</p>
               <p className="pipeline-report__state-copy">
-                Ubah filter status atau tunggu data project tersedia di `api/project`.
+                {searchQuery?.trim()
+                  ? 'Periksa kata kunci pencarian atau hapus filter status yang sedang aktif.'
+                  : 'Ubah filter status atau tunggu data project tersedia di `api/project`.'}
               </p>
             </div>
           </div>
@@ -58,18 +77,59 @@ function TimeLineProject({
                   selectedStage === project.id ? ' pipeline-report__stage--active' : ''
                 }`}
                 aria-pressed={selectedStage === project.id}
-                onClick={() =>
-                  onSelectedStageChange((current) =>
-                    String(current) === String(project.id) ? '' : project.id,
-                  )
+                onClick={() => onSelectedStageChange?.(project.id)}
+                style={
+                  selectedStage === project.id
+                    ? {
+                        borderColor: project.accent,
+                        boxShadow: `0 16px 36px ${project.accent}1a`,
+                      }
+                    : undefined
                 }
               >
-                <div className="pipeline-report__stage-index">{String(index + 1).padStart(2, '0')}</div>
+                <div
+                  className="pipeline-report__stage-index"
+                  style={
+                    selectedStage === project.id
+                      ? {
+                          backgroundColor: `${project.accent}14`,
+                          color: project.accent,
+                        }
+                      : undefined
+                  }
+                >
+                  {String(index + 1).padStart(2, '0')}
+                </div>
 
                 <div className="pipeline-report__stage-copy">
                   <div className="pipeline-report__stage-title-row">
-                    <h3 className="pipeline-report__stage-title">{project.title}</h3>
+                    <div className="pipeline-report__stage-title-copy">
+                      <h3 className="pipeline-report__stage-title">{project.title}</h3>
+                      <p className="pipeline-report__stage-meta">
+                        {project.code !== '-' ? project.code : project.periodLabel}
+                      </p>
+                    </div>
+                    <span
+                      className={`pipeline-report__stage-status pipeline-report__stage-status--${project.bucket
+                        .toLowerCase()
+                        .replace(/\s+/g, '-')}`}
+                      style={
+                        selectedStage === project.id
+                          ? {
+                              borderColor: `${project.accent}55`,
+                              backgroundColor: `${project.accent}12`,
+                              color: project.accent,
+                            }
+                          : undefined
+                      }
+                    >
+                      {project.statusLabel}
+                    </span>
+                  </div>
+
+                  <div className="pipeline-report__stage-progress-row">
                     <span className="pipeline-report__stage-percent">{project.progressLabel}</span>
+                    <span className="pipeline-report__stage-date">{project.periodLabel}</span>
                   </div>
 
                   <div className="pipeline-report__stage-progress" aria-hidden="true">
@@ -83,7 +143,7 @@ function TimeLineProject({
                     />
                   </div>
 
-                  <p className="pipeline-report__stage-detail">{project.detail}</p>
+                  <p className="pipeline-report__stage-detail">{project.description}</p>
                 </div>
 
                 <span
@@ -97,6 +157,7 @@ function TimeLineProject({
             ))}
           </div>
         )}
+        </div>
       </div>
     </div>
   )
