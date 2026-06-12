@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 
-import api from '../../services/api.js'
 import { getStoredUser } from '../../services/auth.js'
+import api from '../../services/api.js'
+import { fetchSelectableUsers } from '../../services/user-directory.js'
 import { XClose } from '../template/TemplateIcons.jsx'
 
 function DialogCreateProjects({
@@ -36,16 +37,19 @@ function DialogCreateProjects({
     let cancelled = false
     async function fetchUsers() {
       try {
-        const response = await api.get('/directory/users')
+        const list = await fetchSelectableUsers()
         if (!cancelled) {
-          const list = response?.data ?? []
           setUsers(list)
-          // Pre-fill search label if requestorId is already set
           const preSelected = list.find((u) => String(u.id) === String(authUser?.id))
-          if (preSelected) setRequestorSearch(preSelected.name)
+          const fallbackName = authUser?.name ?? ''
+          setRequestorSearch(preSelected?.name ?? fallbackName)
         }
       } catch (err) {
         console.error('Failed to fetch users:', err)
+        if (!cancelled) {
+          setUsers(authUser?.id ? [{ id: authUser.id, name: authUser?.name ?? 'Current User' }] : [])
+          setRequestorSearch(authUser?.name ?? '')
+        }
       }
     }
 
@@ -54,7 +58,7 @@ function DialogCreateProjects({
     return () => {
       cancelled = true
     }
-  }, [isOpen])
+  }, [isOpen, authUser?.id, authUser?.name])
 
   useEffect(() => {
     if (!isOpen) {

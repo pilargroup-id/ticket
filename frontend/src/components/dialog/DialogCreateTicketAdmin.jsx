@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom'
 
 import { getStoredUser } from '../../services/auth.js'
 import api from '../../services/api.js'
+import { fetchSelectableUsers } from '../../services/user-directory.js'
 import { FileText01, XClose } from '../template/TemplateIcons.jsx'
 
 function SearchableDropdown({
@@ -139,22 +140,31 @@ function DialogCreateTicketAdmin({
 
     async function fetchData() {
       try {
-        const [catRes, userRes, supportRes] = await Promise.all([
+        const [catRes, supportRes] = await Promise.all([
           api.get('/user/category'),
-          api.get('/directory/users'),
           api.get('/support'),
         ])
         if (!cancelled) {
           setCategories(catRes?.data ?? [])
-          setUsers(userRes?.data ?? [])
           setSupports(supportRes?.data ?? [])
         }
       } catch (err) {
         console.error('Failed to fetch form data:', err)
         if (!cancelled) {
           setCategories([])
-          setUsers([])
           setSupports([])
+        }
+      }
+
+      try {
+        const userList = await fetchSelectableUsers()
+        if (!cancelled) {
+          setUsers(userList)
+        }
+      } catch (err) {
+        console.error('Failed to fetch users:', err)
+        if (!cancelled) {
+          setUsers(authUser?.id ? [{ id: authUser.id, name: authUser?.name ?? 'Current User' }] : [])
         }
       }
     }
@@ -164,7 +174,7 @@ function DialogCreateTicketAdmin({
     return () => {
       cancelled = true
     }
-  }, [isOpen])
+  }, [isOpen, authUser?.id, authUser?.name])
 
   // Reset form & handle Escape key
   useEffect(() => {
