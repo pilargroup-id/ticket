@@ -10,8 +10,6 @@ function TimeLineProject({
   timelineError,
   timelineLoading,
   selectedStage,
-  statusCopy,
-  statusCounts,
   visibleProjects,
 }) {
   return (
@@ -22,8 +20,6 @@ function TimeLineProject({
         selectedProjectTimelineMeta={selectedProjectTimelineMeta}
         timelineError={timelineError}
         timelineLoading={timelineLoading}
-        statusCopy={statusCopy}
-        statusCounts={statusCounts}
       />
 
       <div className="pipeline-report__timeline-wrap">

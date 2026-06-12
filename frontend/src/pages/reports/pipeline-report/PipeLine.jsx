@@ -7,7 +7,6 @@ import TimeLineProject from '../../../components/timeline/TimeLineProjectPipelin
 import {
   buildPipelineProjects,
   buildPipelineStatusCounts,
-  getPipelineStatusCopy,
 } from './PipeLineStages.js'
 
 function getVisibleProjects(projects, activeStatus) {
@@ -77,10 +76,6 @@ function PipeLine({ activePage }) {
     () => getVisibleProjects(pipelineProjects, activeStatus),
     [activeStatus, pipelineProjects],
   )
-  const statusCopy = useMemo(
-    () => getPipelineStatusCopy(activeStatus, statusCounts),
-    [activeStatus, statusCounts],
-  )
   const selectedProject = useMemo(
     () => visibleProjects.find((project) => String(project.id) === String(selectedStage)) || null,
     [selectedStage, visibleProjects],
@@ -139,9 +134,8 @@ function PipeLine({ activePage }) {
         <div className="dashboard-panel__header dashboard-panel__header--split pipeline-report__header">
           <div className="chart-card__header-copy">
             <p className="dashboard-panel__eyebrow">{activePage?.eyebrow ?? 'Reports'}</p>
-            <h1 className="dashboard-panel__title">{activePage?.title ?? 'Pipeline'}</h1>
           </div>
-
+{/* 
           <div className="pipeline-report__legend">
             <span className="pipeline-report__legend-item">
               <span className="pipeline-report__legend-dot pipeline-report__legend-dot--blue" />
@@ -155,7 +149,7 @@ function PipeLine({ activePage }) {
               <span className="pipeline-report__legend-dot pipeline-report__legend-dot--amber" />
               Perhatian
             </span>
-          </div>
+          </div> */}
         </div>
         <TimeLineProject
           errorMessage={errorMessage}
@@ -167,8 +161,6 @@ function PipeLine({ activePage }) {
           timelineError={timelineError}
           timelineLoading={timelineLoading}
           selectedStage={selectedStage}
-          statusCopy={statusCopy}
-          statusCounts={statusCounts}
           visibleProjects={visibleProjects}
         />
       </article>

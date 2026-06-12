@@ -146,11 +146,22 @@ export function buildPipelineProjects(projects = []) {
   return (Array.isArray(projects) ? projects : [])
     .map((project, index) => normalizePipelineProject(project, index))
     .sort((leftItem, rightItem) => {
+      const leftIsComplete = leftItem.bucket === 'Complete'
+      const rightIsComplete = rightItem.bucket === 'Complete'
+
+      if (leftIsComplete !== rightIsComplete) {
+        return leftIsComplete ? 1 : -1
+      }
+
       const leftProgress = toFiniteNumber(leftItem.rawProgressPercent) ?? -1
       const rightProgress = toFiniteNumber(rightItem.rawProgressPercent) ?? -1
 
-      if (rightProgress !== leftProgress) {
-        return rightProgress - leftProgress
+      if (leftIsComplete) {
+        if (rightProgress !== leftProgress) {
+          return rightProgress - leftProgress
+        }
+      } else if (leftProgress !== rightProgress) {
+        return leftProgress - rightProgress
       }
 
       return leftItem.title.localeCompare(rightItem.title, 'id-ID')
