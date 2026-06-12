@@ -112,20 +112,20 @@ function getProjectStatusLabel(project = {}) {
   const rawStatus = getFirstFilledText(project?.status_label, project?.status, project?.bucket)
   const normalized = rawStatus.toLowerCase()
 
-  if (normalized.includes('complete') || normalized.includes('selesai')) {
-    return 'Selesai'
+  if (normalized.includes('done') || normalized.includes('complete') || normalized.includes('selesai') || normalized.includes('resolved')) {
+    return 'Done'
   }
 
   if (normalized.includes('on track') || normalized.includes('sesuai')) {
-    return 'Sesuai Rencana'
+    return 'On Track'
   }
 
   if (normalized.includes('at risk') || normalized.includes('perhatian')) {
-    return 'Perhatian'
+    return 'at risk'
   }
 
   if (normalized.includes('delay') || normalized.includes('terlambat')) {
-    return 'Terlambat'
+    return 'delayed'
   }
 
   return rawStatus || '-'
@@ -134,19 +134,19 @@ function getProjectStatusLabel(project = {}) {
 function getProjectStatusTone(project = {}) {
   const statusLabel = getProjectStatusLabel(project).toLowerCase()
 
-  if (statusLabel.includes('selesai')) {
+  if (statusLabel.includes('done')) {
     return 'complete'
   }
 
-  if (statusLabel.includes('sesuai')) {
+  if (statusLabel.includes('on track')) {
     return 'on-track'
   }
 
-  if (statusLabel.includes('perhatian')) {
+  if (statusLabel.includes('at risk')) {
     return 'at-risk'
   }
 
-  if (statusLabel.includes('terlambat')) {
+  if (statusLabel.includes('delay')) {
     return 'delayed'
   }
 

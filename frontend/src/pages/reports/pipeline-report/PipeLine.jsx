@@ -30,7 +30,7 @@ function matchesPipelineSearch(project, searchQuery) {
 }
 
 function getVisibleProjects(projects, activeStatus) {
-  if (!activeStatus) {
+  if (!activeStatus || activeStatus === 'Total Project') {
     return projects
   }
 
@@ -38,11 +38,11 @@ function getVisibleProjects(projects, activeStatus) {
 }
 
 function compareCompletionState(leftItem, rightItem) {
-  const leftIsComplete = leftItem.bucket === 'Complete'
-  const rightIsComplete = rightItem.bucket === 'Complete'
+  const leftIsDone = leftItem.bucket === 'Done'
+  const rightIsDone = rightItem.bucket === 'Done'
 
-  if (leftIsComplete !== rightIsComplete) {
-    return leftIsComplete ? 1 : -1
+  if (leftIsDone !== rightIsDone) {
+    return leftIsDone ? 1 : -1
   }
 
   return 0

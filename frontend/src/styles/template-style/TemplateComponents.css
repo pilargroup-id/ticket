@@ -2341,6 +2341,11 @@ select {
   color: #2f855a;
 }
 
+.pipeline-report__stage-status--done {
+  background: rgba(47, 133, 90, 0.1);
+  color: #2f855a;
+}
+
 .pipeline-report__stage-status--on-track {
   background: rgba(79, 142, 247, 0.1);
   color: #1f4fd5;
@@ -2451,6 +2456,11 @@ select {
 }
 
 .pipeline-report__detail-status--complete {
+  background: rgba(47, 133, 90, 0.12);
+  color: #2f855a;
+}
+
+.pipeline-report__detail-status--done {
   background: rgba(47, 133, 90, 0.12);
   color: #2f855a;
 }

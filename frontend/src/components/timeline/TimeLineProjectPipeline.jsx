@@ -1,5 +1,15 @@
 import PipeLineProject from '../../pages/reports/pipeline-report/PipeLineProject.jsx'
 
+function getStageStatusClass(bucket) {
+  const normalizedBucket = String(bucket || '').trim().toLowerCase()
+
+  if (normalizedBucket === 'done') {
+    return 'complete'
+  }
+
+  return normalizedBucket.replace(/\s+/g, '-')
+}
+
 function TimeLineProject({
   errorMessage,
   isLoading,
@@ -110,9 +120,7 @@ function TimeLineProject({
                       </p>
                     </div>
                     <span
-                      className={`pipeline-report__stage-status pipeline-report__stage-status--${project.bucket
-                        .toLowerCase()
-                        .replace(/\s+/g, '-')}`}
+                      className={`pipeline-report__stage-status pipeline-report__stage-status--${getStageStatusClass(project.bucket)}`}
                       style={
                         selectedStage === project.id
                           ? {

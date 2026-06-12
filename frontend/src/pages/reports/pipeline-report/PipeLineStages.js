@@ -4,21 +4,21 @@ const PIPELINE_DATE_FORMATTER = new Intl.DateTimeFormat('id-ID', {
   year: 'numeric',
 })
 
-export const PIPELINE_STATUS_ORDER = ['Total Project', 'Complete', 'On Track', 'At Risk', 'Delayed']
+export const PIPELINE_STATUS_ORDER = ['Total Project', 'Done', 'On Track', 'at risk', 'delayed']
 
 export const PIPELINE_STATUS_COLORS = {
   'Total Project': '#0275d8',
-  Complete: '#2f855a',
+  Done: '#2f855a',
   'On Track': '#4f8ef7',
-  'At Risk': '#f0ad4e',
-  Delayed: '#d92d20',
+  'at risk': '#f4d03f',
+  delayed: '#d92d20',
 }
 
 export const PIPELINE_STATUS_LABELS = {
-  Complete: 'Selesai',
-  'On Track': 'Sesuai Rencana',
-  'At Risk': 'Perhatian',
-  Delayed: 'Terlambat',
+  Done: 'Done',
+  'On Track': 'On Track',
+  'at risk': 'at risk',
+  delayed: 'delayed',
 }
 
 function getFirstFilledText(...values) {
@@ -61,14 +61,44 @@ function clampProgress(value) {
   return Math.min(100, Math.max(0, numericValue))
 }
 
+function normalizeDateValue(value) {
+  if (typeof value !== 'string') {
+    return value
+  }
+
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return `${value}T00:00:00`
+  }
+
+  if (/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}/.test(value)) {
+    return value.replace(' ', 'T')
+  }
+
+  return value
+}
+
+function parseProjectDate(value) {
+  if (!value) {
+    return null
+  }
+
+  const parsedDate = new Date(normalizeDateValue(value))
+
+  if (Number.isNaN(parsedDate.getTime())) {
+    return null
+  }
+
+  return parsedDate
+}
+
 function formatProjectDate(value) {
   if (!value) {
     return '-'
   }
 
-  const date = new Date(value)
+  const date = parseProjectDate(value)
 
-  if (Number.isNaN(date.getTime())) {
+  if (!date) {
     return '-'
   }
 
@@ -157,29 +187,60 @@ function getProjectCategory(project = {}) {
 }
 
 function getProjectProgressBucket(progressPercent) {
-  const progress = clampProgress(progressPercent)
+  const project = typeof progressPercent === 'object' && progressPercent !== null ? progressPercent : {}
+  const progress = clampProgress(
+    typeof progressPercent === 'object' && progressPercent !== null
+      ? project?.progress_percent ?? project?.progress
+      : progressPercent,
+  )
+  const rawStatus = String(project?.status ?? project?.rawStatus ?? '').trim().toLowerCase()
+  const startDate = parseProjectDate(project?.start_date ?? project?.rawStartDate ?? null)
+  const endDate = parseProjectDate(project?.end_date ?? project?.rawEndDate ?? null)
+  const nowTimestamp = Date.now()
+
+  if (rawStatus === 'resolved' || progress === 100) {
+    return 'Done'
+  }
+
+  if (rawStatus === 'pending' || rawStatus === 'hold') {
+    return 'delayed'
+  }
+
+  if (project?.is_late === true || Number(project?.is_late) === 1) {
+    return 'delayed'
+  }
+
+  if (endDate && nowTimestamp > endDate.getTime()) {
+    return 'delayed'
+  }
 
   if (progress === null) {
-    return 'Delayed'
+    return 'delayed'
   }
 
-  if (progress >= 100) {
-    return 'Complete'
+  if (startDate && endDate) {
+    const totalDuration = endDate.getTime() - startDate.getTime()
+
+    if (totalDuration > 0) {
+      const elapsedDuration = nowTimestamp - startDate.getTime()
+      const elapsedPercent = Math.min(100, Math.max(0, (elapsedDuration / totalDuration) * 100))
+
+      if (elapsedPercent >= 50 && progress < 50) {
+        return 'at risk'
+      }
+    }
   }
 
-  if (progress >= 70) {
-    return 'On Track'
-  }
-
-  if (progress >= 40) {
-    return 'At Risk'
-  }
-
-  return 'Delayed'
+  return 'On Track'
 }
 
-function getProgressAccent(progressPercent) {
-  return PIPELINE_STATUS_COLORS[getProjectProgressBucket(progressPercent)] || PIPELINE_STATUS_COLORS.Delayed
+function getProgressAccent(progressPercent, project = {}) {
+  return (
+    PIPELINE_STATUS_COLORS[getProjectProgressBucket({
+      ...project,
+      progress_percent: progressPercent,
+    })] || PIPELINE_STATUS_COLORS.delayed
+  )
 }
 
 function getPipelineStatusLabel(bucket) {
@@ -191,7 +252,7 @@ export function normalizePipelineProject(project = {}, index = 0) {
   const projectCode = getProjectCode(project, title)
   const progressValue = clampProgress(project?.progress_percent)
   const progressLabel = progressValue === null ? '-' : `${Math.round(progressValue)}%`
-  const bucket = getProjectProgressBucket(progressValue)
+  const bucket = getProjectProgressBucket(project)
   const startDate = project?.start_date || null
   const endDate = project?.end_date || null
   const owner = getProjectOwner(project)
@@ -207,7 +268,7 @@ export function normalizePipelineProject(project = {}, index = 0) {
     progressLabel,
     bucket,
     statusLabel: getPipelineStatusLabel(bucket),
-    accent: getProgressAccent(progressValue),
+    accent: getProgressAccent(progressValue, project),
     detail: buildDateRangeLabel(startDate, endDate),
     periodLabel: buildCompactPeriodLabel(startDate, endDate),
     startDateLabel: formatProjectDate(startDate),
@@ -225,17 +286,17 @@ export function buildPipelineProjects(projects = []) {
   return (Array.isArray(projects) ? projects : [])
     .map((project, index) => normalizePipelineProject(project, index))
     .sort((leftItem, rightItem) => {
-      const leftIsComplete = leftItem.bucket === 'Complete'
-      const rightIsComplete = rightItem.bucket === 'Complete'
+      const leftIsDone = leftItem.bucket === 'Done'
+      const rightIsDone = rightItem.bucket === 'Done'
 
-      if (leftIsComplete !== rightIsComplete) {
-        return leftIsComplete ? 1 : -1
+      if (leftIsDone !== rightIsDone) {
+        return leftIsDone ? 1 : -1
       }
 
       const leftProgress = toFiniteNumber(leftItem.rawProgressPercent) ?? -1
       const rightProgress = toFiniteNumber(rightItem.rawProgressPercent) ?? -1
 
-      if (leftIsComplete) {
+      if (leftIsDone) {
         if (rightProgress !== leftProgress) {
           return rightProgress - leftProgress
         }
@@ -250,14 +311,14 @@ export function buildPipelineProjects(projects = []) {
 export function buildPipelineStatusCounts(projects = []) {
   const counts = {
     'Total Project': 0,
-    Complete: 0,
+    Done: 0,
     'On Track': 0,
-    'At Risk': 0,
-    Delayed: 0,
+    'at risk': 0,
+    delayed: 0,
   }
 
   for (const project of Array.isArray(projects) ? projects : []) {
-    const bucket = project?.bucket || getProjectProgressBucket(project?.progress)
+    const bucket = project?.bucket || getProjectProgressBucket(project)
     counts['Total Project'] += 1
     counts[bucket] += 1
   }
@@ -267,9 +328,10 @@ export function buildPipelineStatusCounts(projects = []) {
 
 export function getPipelineStatusCopy(activeStatus, counts = {}) {
   const totalProjects = counts['Total Project'] ?? 0
-  const activeCount = activeStatus ? counts[activeStatus] ?? 0 : totalProjects
+  const isAllProjectsView = !activeStatus || activeStatus === 'Total Project'
+  const activeCount = isAllProjectsView ? totalProjects : counts[activeStatus] ?? 0
 
-  if (!activeStatus) {
+  if (isAllProjectsView) {
     return {
       title: 'Semua project yang masuk pipeline ditampilkan di sini.',
       subtitle: `${totalProjects} project tersedia`,

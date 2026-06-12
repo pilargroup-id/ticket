@@ -3,16 +3,16 @@ const STATUS_CARD_PIPELINE = [
     title: 'Total Project',
   },
   {
-    title: 'Complete',
+    title: 'Done',
   },
   {
     title: 'On Track',
   },
   {
-    title: 'At Risk',
+    title: 'at risk',
   },
   {
-    title: 'Delayed',
+    title: 'delayed',
   },
 ]
 
@@ -20,13 +20,13 @@ function getColorForStatus(status) {
   switch (status) {
     case 'Total Project':
       return '#0275d8'
-    case 'Complete':
+    case 'Done':
       return '#5cb85c'
     case 'On Track':
       return '#f0ad4e'
-    case 'At Risk':
-      return '#c77d00'
-    case 'Delayed':
+    case 'at risk':
+      return '#f4d03f'
+    case 'delayed':
       return '#6c757d'
     default:
       return '#d1d5db'
