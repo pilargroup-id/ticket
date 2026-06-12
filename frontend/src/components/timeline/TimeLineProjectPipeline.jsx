@@ -5,6 +5,10 @@ function TimeLineProject({
   isLoading,
   onSelectedStageChange,
   selectedProject,
+  selectedProjectTimeline,
+  selectedProjectTimelineMeta,
+  timelineError,
+  timelineLoading,
   selectedStage,
   statusCopy,
   statusCounts,
@@ -14,6 +18,10 @@ function TimeLineProject({
     <div className="pipeline-report__body">
       <PipeLineProject
         selectedProject={selectedProject}
+        selectedProjectTimeline={selectedProjectTimeline}
+        selectedProjectTimelineMeta={selectedProjectTimelineMeta}
+        timelineError={timelineError}
+        timelineLoading={timelineLoading}
         statusCopy={statusCopy}
         statusCounts={statusCounts}
       />

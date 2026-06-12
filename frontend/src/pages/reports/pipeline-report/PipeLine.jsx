@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 
 import api from '../../../services/api.js'
+import { getProjectTimeline } from '../../../services/reports/Projects.js'
 import CardStatusPipeline from './CardStatusPipeLine.jsx'
 import TimeLineProject from '../../../components/timeline/TimeLineProjectPipeline.jsx'
 import {
@@ -21,6 +22,10 @@ function PipeLine({ activePage }) {
   const [activeStatus, setActiveStatus] = useState('')
   const [selectedStage, setSelectedStage] = useState('')
   const [projects, setProjects] = useState([])
+  const [selectedProjectTimeline, setSelectedProjectTimeline] = useState([])
+  const [selectedProjectTimelineMeta, setSelectedProjectTimelineMeta] = useState(null)
+  const [timelineLoading, setTimelineLoading] = useState(false)
+  const [timelineError, setTimelineError] = useState('')
   const [isLoading, setIsLoading] = useState(true)
   const [errorMessage, setErrorMessage] = useState('')
 
@@ -82,10 +87,45 @@ function PipeLine({ activePage }) {
   )
 
   useEffect(() => {
-    if (selectedStage && !visibleProjects.some((project) => String(project.id) === String(selectedStage))) {
-      setSelectedStage('')
+    const controller = new AbortController()
+
+    async function loadSelectedProjectTimeline() {
+      if (!selectedProject?.id) {
+        setSelectedProjectTimeline([])
+        setSelectedProjectTimelineMeta(null)
+        setTimelineError('')
+        setTimelineLoading(false)
+        return
+      }
+
+      setTimelineLoading(true)
+      setTimelineError('')
+
+      try {
+        const response = await getProjectTimeline(selectedProject.id, { signal: controller.signal })
+        setSelectedProjectTimeline(Array.isArray(response?.items) ? response.items : [])
+        setSelectedProjectTimelineMeta(response?.project ?? null)
+      } catch (error) {
+        if (error?.name === 'AbortError') {
+          return
+        }
+
+        setSelectedProjectTimeline([])
+        setSelectedProjectTimelineMeta(null)
+        setTimelineError(error?.message || 'Gagal memuat timeline project.')
+      } finally {
+        if (!controller.signal.aborted) {
+          setTimelineLoading(false)
+        }
+      }
     }
-  }, [selectedStage, visibleProjects])
+
+    loadSelectedProjectTimeline()
+
+    return () => {
+      controller.abort()
+    }
+  }, [selectedProject?.id])
 
   return (
     <section className="pipeline-report" aria-label="Pipeline report">
@@ -122,6 +162,10 @@ function PipeLine({ activePage }) {
           isLoading={isLoading}
           onSelectedStageChange={setSelectedStage}
           selectedProject={selectedProject}
+          selectedProjectTimeline={selectedProjectTimeline}
+          selectedProjectTimelineMeta={selectedProjectTimelineMeta}
+          timelineError={timelineError}
+          timelineLoading={timelineLoading}
           selectedStage={selectedStage}
           statusCopy={statusCopy}
           statusCounts={statusCounts}
