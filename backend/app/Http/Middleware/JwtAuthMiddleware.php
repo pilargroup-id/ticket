@@ -78,8 +78,23 @@ class JwtAuthMiddleware
             return null;
         }
 
-        $userId = $payload->get('sub');
-        $user = $userId ? User::with('department.location')->find($userId) : null;
+        $user = null;
+
+        try {
+            $username = $payload->get('username');
+
+            if ($username) {
+                $user = User::with('department.location')
+                    ->where('username', $username)
+                    ->first();
+            }
+        } catch (\Throwable $e) {
+            \Log::warning('Local ticket user lookup failed, fallback to PG payload', [
+                'error' => $e->getMessage(),
+                'sub' => $payload->get('sub'),
+                'username' => $payload->get('username'),
+            ]);
+        }
 
         return [
             'user' => $user,
