@@ -9,11 +9,18 @@ class SlaReportResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
-        // $this itu array dari scopeSlaReport()
+        $resolved = (int) ($this['resolved'] ?? 0);
+        $resolvedInSla = (int) ($this['resolved_in_sla'] ?? 0);
+        $late = max($resolved - $resolvedInSla, 0);
+        $slaPercent = (float) ($this['sla_percent'] ?? 0);
+
         return [
-            'resolved'         => (int) ($this['resolved'] ?? 0),
-            'resolved_in_sla'  => (int) ($this['resolved_in_sla'] ?? 0),
-            'sla_percent'      => (float) ($this['sla_percent'] ?? 0),
+            'resolved'           => $resolved,
+            'resolved_in_sla'    => $resolvedInSla,
+            'on_time'            => $resolvedInSla,
+            'late'               => $late,
+            'sla_percent'        => $slaPercent,
+            'percentage_on_time' => $slaPercent,
         ];
     }
 }

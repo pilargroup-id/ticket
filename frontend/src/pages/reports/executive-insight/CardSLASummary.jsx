@@ -31,6 +31,38 @@ function getColorForStatus(status) {
   }
 }
 
+function toSafeNumber(value) {
+  const parsedValue = Number(value)
+
+  return Number.isFinite(parsedValue) ? parsedValue : 0
+}
+
+function formatPercentage(value) {
+  const parsedValue = toSafeNumber(value)
+
+  return Number.isInteger(parsedValue)
+    ? String(parsedValue)
+    : parsedValue.toFixed(2).replace(/\.?0+$/, '')
+}
+
+function buildSlaSummary(reportData = {}) {
+  const status = reportData?.status ?? {}
+  const sla = reportData?.sla ?? {}
+
+  const resolved =
+    sla?.resolved ?? (toSafeNumber(status?.resolved) + toSafeNumber(status?.feedback))
+  const inSla = sla?.on_time ?? sla?.resolved_in_sla ?? 0
+  const breached = sla?.late ?? Math.max(toSafeNumber(resolved) - toSafeNumber(inSla), 0)
+  const percentage = sla?.percentage_on_time ?? sla?.sla_percent ?? 0
+
+  return {
+    'Resolve': toSafeNumber(resolved),
+    'In SLA': toSafeNumber(inSla),
+    'Breached': toSafeNumber(breached),
+    'SLA%': `${formatPercentage(percentage)}%`,
+  }
+}
+
 function CardSLASummary({ filters, activeStatus = '', onStatusChange }) {
   const [statusCounts, setStatusCounts] = useState({
     'Resolve': 0,
@@ -50,24 +82,17 @@ function CardSLASummary({ filters, activeStatus = '', onStatusChange }) {
           startDate: filters?.startDate,
           endDate: filters?.endDate
         })
-        if (response.data) {
-          const { status, sla } = response.data
-          setStatusCounts({
-            'Resolve': (status?.resolved || 0) + (status?.feedback || 0),
-            'In SLA': sla?.on_time || 0,
-            'Breached': sla?.late || 0,
-            'SLA%': `${sla?.percentage_on_time || 0}%`,
-          })
-        }
+        setStatusCounts(buildSlaSummary(response?.data))
       } catch (error) {
         console.error('Error fetching SLA data:', error)
+        setStatusCounts(buildSlaSummary())
       } finally {
         setLoading(false)
       }
     }
 
     fetchSLAData()
-  }, [filters])
+  }, [filters?.startDate, filters?.endDate])
 
   const handleCardClick = (status) => {
     onStatusChange?.(activeStatus === status ? '' : status)
