@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
 import CreateButton from "../../../components/button/CreateButton.jsx";
-import { ChevronDown } from "../../../components/template/TemplateIcons.jsx";
+import ButtonExport from "../../../components/button/ButtonExport.jsx";
+import ButtonFilterPreset from "../../../components/button/ButtonFilterPreset.jsx";
+import { ChevronDown, FileText01 } from "../../../components/template/TemplateIcons.jsx";
 import DataTableDetailTP from "./DataTableDetailTP.jsx";
 import SupportReports from "../../../services/reports/SupportReports.js";
-import ButtonFilterPreset from "../../../components/button/ButtonFilterPreset.jsx";
 
 const styles = {
   list: {
@@ -144,43 +145,59 @@ const AgentCard = ({ agent, isExpanded, onToggle }) => {
   );
 };
 
-const SupportPerformence = ({ filters: initialFilters = {} }) => {
+const SupportPerformence = ({
+  filters = {},
+  onFiltersChange,
+  onOpenExport,
+  exporting = false,
+}) => {
   const [agents, setAgents] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
   const [expandedId, setExpandedId] = useState(null);
-  const [localFilters, setLocalFilters] = useState(initialFilters);
-
-  // Sync with initialFilters if they change from parent
-  useEffect(() => {
-    if (initialFilters.startDate || initialFilters.endDate) {
-      setLocalFilters(initialFilters);
-    }
-  }, [initialFilters]);
 
   useEffect(() => {
+    let isCurrent = true
+
     async function fetchSummary() {
       setLoading(true);
+      setErrorMessage('');
+
       try {
         const response = await SupportReports.getSupportSummary({
-          startDate: localFilters.startDate,
-          endDate: localFilters.endDate,
+          startDate: filters.startDate,
+          endDate: filters.endDate,
         });
+
+        if (!isCurrent) {
+          return;
+        }
+
         setAgents(response.data);
       } catch (error) {
+        if (!isCurrent) {
+          return;
+        }
+
+        setAgents([]);
+        setErrorMessage(error?.message || 'Gagal memuat support summary.');
         console.error("Failed to fetch support summary:", error);
       } finally {
-        setLoading(false);
+        if (isCurrent) {
+          setLoading(false);
+        }
       }
     }
+
     fetchSummary();
-  }, [localFilters.startDate, localFilters.endDate]);
+
+    return () => {
+      isCurrent = false
+    }
+  }, [filters.endDate, filters.startDate]);
 
   const handleToggle = (id) => {
     setExpandedId(expandedId === id ? null : id);
-  };
-
-  const handlePresetChange = (newRange) => {
-    setLocalFilters(newRange);
   };
 
   return (
@@ -192,13 +209,24 @@ const SupportPerformence = ({ filters: initialFilters = {} }) => {
         </div>
 
         <div className="chart-card__header-actions" style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-          <ButtonFilterPreset onChange={handlePresetChange} />
+          <ButtonFilterPreset onChange={onFiltersChange} />
+          <ButtonExport
+            variant="action"
+            aria-label="Export support team performance detail"
+            onClick={onOpenExport}
+            disabled={loading || exporting}
+          >
+            <FileText01 size={18} aria-hidden="true" />
+            <span>{exporting ? "Exporting..." : "Export"}</span>
+          </ButtonExport>
         </div>
       </div>
 
       <div className="chart-card__body">
         {loading ? (
           <p className="users-table-card__description">Loading support summary...</p>
+        ) : errorMessage ? (
+          <p className="users-table-card__description">{errorMessage}</p>
         ) : agents.length === 0 ? (
           <p className="users-table-card__description">Belum ada data performa untuk periode ini.</p>
         ) : (
@@ -230,7 +258,7 @@ const SupportPerformence = ({ filters: initialFilters = {} }) => {
                     <DataTableDetailTP 
                       supportId={agent.support_id}
                       agentName={agent.support_name}
-                      filters={localFilters}
+                      filters={filters}
                     />
                   </div>
                 )}

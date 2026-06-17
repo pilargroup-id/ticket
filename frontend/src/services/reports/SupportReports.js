@@ -1,15 +1,42 @@
 import api from '../api.js'
 
+function isTransientFetchError(error) {
+  return error instanceof TypeError && /Failed to fetch/i.test(error.message || '')
+}
+
+async function withRetry(requestFn, options = {}) {
+  const { retries = 1, retryDelayMs = 400 } = options
+
+  try {
+    return await requestFn()
+  } catch (error) {
+    if (retries <= 0 || !isTransientFetchError(error)) {
+      throw error
+    }
+
+    await new Promise((resolve) => {
+      window.setTimeout(resolve, retryDelayMs)
+    })
+
+    return withRetry(requestFn, {
+      retries: retries - 1,
+      retryDelayMs,
+    })
+  }
+}
+
 export async function getSupportSummary(options = {}) {
   const { startDate, endDate, status = 'all' } = options
   
-  const response = await api.get('/reports/supports/summary', {
-    params: {
-      start_date: startDate || undefined,
-      end_date: endDate || undefined,
-      status: status,
-    },
-  })
+  const response = await withRetry(() =>
+    api.get('/reports/supports/summary', {
+      params: {
+        start_date: startDate || undefined,
+        end_date: endDate || undefined,
+        status: status,
+      },
+    }),
+  )
 
   return {
     message: response?.message ?? '',
