@@ -8,18 +8,6 @@ function formatDateForFileName(value) {
   return String(value).replace(/[^0-9]/g, '') || 'all'
 }
 
-function formatMinutesToHuman(minutes) {
-  const totalMinutes = Number(minutes) || 0
-  const hours = Math.floor(totalMinutes / 60)
-  const remainingMinutes = totalMinutes % 60
-
-  if (hours > 0) {
-    return `${hours}j ${remainingMinutes}m`
-  }
-
-  return `${remainingMinutes}m`
-}
-
 function escapeCsvValue(value) {
   if (value === null || value === undefined) {
     return ''
@@ -78,6 +66,13 @@ export async function exportSupportPerformanceDetailsReport(filters = {}) {
     }),
   )
 
+  const flattenedDetails = supportDetails.flatMap(({ support, details }) =>
+    details.map((detail) => ({
+      ...detail,
+      support_name: detail.support_name || support.support_name || '-',
+    })),
+  )
+
   const csvLines = [
     buildCsvRow(['Support Team Performance Detail']),
     buildCsvRow(['Start Date', startDate || 'All']),
@@ -86,44 +81,15 @@ export async function exportSupportPerformanceDetailsReport(filters = {}) {
     buildCsvRow(['Total Support', supports.length]),
   ]
 
-  if (!supportDetails.length) {
+  if (!flattenedDetails.length) {
     csvLines.push('')
     csvLines.push(buildCsvRow(['Belum ada data support untuk periode ini.']))
-  }
-
-  supportDetails.forEach(({ support, details }) => {
-    const averageMinutes =
-      Number(support.total_tickets) > 0
-        ? Math.round((Number(support.total_minutes) || 0) / Number(support.total_tickets))
-        : 0
-
+  } else {
     csvLines.push('')
-    csvLines.push(buildCsvRow([`Support: ${support.support_name}`]))
-    csvLines.push(buildCsvRow(['Support ID', support.support_id]))
-    csvLines.push(
-      buildCsvRow([
-        'Total Tickets',
-        support.total_tickets ?? 0,
-        'Resolved Tickets',
-        support.resolved_tickets ?? 0,
-        'Open Tickets',
-        support.open_tickets ?? 0,
-      ]),
-    )
-    csvLines.push(
-      buildCsvRow([
-        'Late Tickets',
-        support.late_tickets ?? 0,
-        'Total Minutes',
-        support.total_minutes ?? 0,
-        'Total Time',
-        formatMinutesToHuman(support.total_minutes),
-      ]),
-    )
-    csvLines.push(buildCsvRow(['Average Minutes per Ticket', averageMinutes]))
     csvLines.push(
       buildCsvRow([
         'Code',
+        'Support',
         'User',
         'Category',
         'Status',
@@ -135,15 +101,11 @@ export async function exportSupportPerformanceDetailsReport(filters = {}) {
       ]),
     )
 
-    if (!details.length) {
-      csvLines.push(buildCsvRow(['No detail data', '', '', '', '', '', '', '', '']))
-      return
-    }
-
-    details.forEach((detail) => {
+    flattenedDetails.forEach((detail) => {
       csvLines.push(
         buildCsvRow([
           detail.ticket_code,
+          detail.support_name,
           detail.user_name,
           detail.category_name,
           detail.status,
@@ -155,11 +117,10 @@ export async function exportSupportPerformanceDetailsReport(filters = {}) {
         ]),
       )
     })
-  })
+  }
 
   downloadCsvFile(
     csvLines.join('\n'),
     `support-team-performance-${formatDateForFileName(startDate)}-${formatDateForFileName(endDate)}.csv`,
   )
 }
-
