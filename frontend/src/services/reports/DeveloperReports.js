@@ -54,7 +54,39 @@ export async function getDeveloperProjects(developerId, options = {}) {
   }
 }
 
+export async function exportProjectReport(options = {}) {
+  const { startDate, endDate, year, status } = options
+  const token = api.getToken?.()
+  const url = api.buildUrl('/reports/projects/export', {
+    start_date: startDate || undefined,
+    end_date: endDate || undefined,
+    year: year || undefined,
+    status: status && status !== 'all' ? status : undefined,
+  })
+
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: {
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+  })
+
+  if (!response.ok) {
+    throw new Error(`Failed to export project report with status ${response.status}`)
+  }
+
+  const blob = await response.blob()
+  const contentDisposition = response.headers.get('content-disposition') || ''
+  const fileNameMatch = contentDisposition.match(/filename="?([^"]+)"?/)
+
+  return {
+    blob,
+    fileName: fileNameMatch?.[1] || 'projects_report.xlsx',
+  }
+}
+
 export default {
   getDeveloperProjectSummary,
   getDeveloperProjects,
+  exportProjectReport,
 }

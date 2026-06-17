@@ -2,6 +2,7 @@ import { useEffect, useState, useMemo } from 'react';
 import Box from '@mui/material/Box';
 import { PieChart } from '@mui/x-charts/PieChart';
 import TicketReports from '../../../services/reports/TicketReports.js';
+import { reportItemTooltipProps } from '../reportTooltipConfig.js'
 
 const palette = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d', '#ffc658'];
 
@@ -132,6 +133,9 @@ export default function DoughnutChartEiCategory({ filters = {} }) {
             width={600}
             height={500}
             hideLegend
+            slotProps={{
+              tooltip: reportItemTooltipProps,
+            }}
           />
         ) : (
           <div className="team-performance-chart__empty" style={{ alignSelf: 'center' }}>

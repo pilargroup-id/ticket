@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 
 import Box from '@mui/material/Box'
 import { BarChart } from '@mui/x-charts/BarChart'
+import { reportAxisTooltipProps } from '../reportTooltipConfig.js'
 
 const palette = ['#2a9d8f', '#e9c46a', '#f4a261', '#457b9d', '#e76f51', '#8d99ae']
 
@@ -207,9 +208,7 @@ export default function GroupBarChartTP({
               margin={{ top: 24, right: 18, bottom: 34, left: 0 }}
               slotProps={{
                 tooltip: {
-                  trigger: 'axis',
-                  anchor: 'pointer',
-                  placement: 'top-end',
+                  ...reportAxisTooltipProps,
                   sort: 'none',
                 },
               }}

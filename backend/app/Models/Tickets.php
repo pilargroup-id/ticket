@@ -99,6 +99,11 @@ class Tickets extends Model
 
     // ==================== STATIC FUNCTIONS (BUSINESS LOGIC) ====================
 
+    //resolve = total tickets resolved
+    //resolved_in_sla = total tickets resolved within SLA (time_spent <= 480 minutes)
+    //breached = total tickets resolved after SLA (time_spent > 480 minutes)
+    //sla_precent = (resolved_in_sla / resolved) * 100
+
     public static function generateTicketCode()
     {
         $lastTicket = DB::table('tickets')
@@ -171,7 +176,6 @@ class Tickets extends Model
             Carbon::parse($end)->endOfDay(),
         ]);
     }
-
     $totalResolved = (clone $query)->count();
     $resolvedInSLA = (clone $query)->where('time_spent', '<=', 480)->count();
 

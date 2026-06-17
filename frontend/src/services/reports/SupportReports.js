@@ -71,9 +71,40 @@ export async function getSupportTicketsDetail(supportId, options = {}) {
   }
 }
 
+export async function exportSupportTickets(options = {}) {
+  const { startDate, endDate, status = 'all' } = options
+  const token = api.getToken?.()
+  const url = api.buildUrl('/reports/tickets/export', {
+    start_date: startDate || undefined,
+    end_date: endDate || undefined,
+    status: status || undefined,
+  })
+
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: {
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+  })
+
+  if (!response.ok) {
+    throw new Error(`Failed to export support tickets with status ${response.status}`)
+  }
+
+  const blob = await response.blob()
+  const contentDisposition = response.headers.get('content-disposition') || ''
+  const fileNameMatch = contentDisposition.match(/filename="?([^"]+)"?/)
+
+  return {
+    blob,
+    fileName: fileNameMatch?.[1] || 'tickets_export.xlsx',
+  }
+}
+
 export default {
   getSupportSummary,
   getSupportTicketsPerMonth,
   getSupportTimeSpentPerMonth,
   getSupportTicketsDetail,
+  exportSupportTickets,
 }

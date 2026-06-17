@@ -1,11 +1,12 @@
 import React, { useEffect, useState, useMemo } from 'react'
 import DataTableAction, { DataTableIdentity } from './DataTablePrjPerform.jsx'
 import ButtonRangeDate from '../../../components/button/ButtonRangeDate.jsx'
+import ButtonExport from '../../../components/button/ButtonExport.jsx'
 import { EMPTY_DATE_RANGE, getTicketPageRows, getPaginationItems, PAGE_SIZE_OPTIONS, DEFAULT_PAGE_SIZE } from '../../../services/my-tickets/DataTableMT.js'
-import { getDeveloperProjectSummary } from '../../../services/reports/DeveloperReports.js'
+import { FileText01 } from '../../../components/template/TemplateIcons.jsx'
+import { getDeveloperProjectSummary, exportProjectReport } from '../../../services/reports/DeveloperReports.js'
 import FilterStatus from '../../../components/dropdown/filter/HeaderStatusPrjPerform.jsx'
 import FilterYear from '../../../components/dropdown/filter/YearPrjPerform.jsx'
-import ExportPrjPerform from './ExportPrjPerform.jsx'
 import DialogTimelinePrjPerf from '../../../components/dialog/DialogTimelinePrjPerf.jsx'
 
 const columns = [
@@ -61,6 +62,7 @@ const ProjectPerformence = () => {
   const [year, setYear] = useState('2026')
   const [status, setStatus] = useState('all')
   const [isLoading, setIsLoading] = useState(false)
+  const [isExporting, setIsExporting] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE)
   const [selectedDeveloper, setSelectedDeveloper] = useState(null)
@@ -90,6 +92,33 @@ const ProjectPerformence = () => {
   const handleDetailClick = (row) => {
     setSelectedDeveloper(row)
     setIsTimelineOpen(true)
+  }
+
+  const handleExport = async () => {
+    setIsExporting(true)
+
+    try {
+      const exportedFile = await exportProjectReport({
+        startDate: selectedRange.startDate,
+        endDate: selectedRange.endDate,
+        year,
+        status,
+      })
+
+      const url = URL.createObjectURL(exportedFile.blob)
+      const link = document.createElement('a')
+
+      link.href = url
+      link.download = exportedFile.fileName
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      URL.revokeObjectURL(url)
+    } catch (error) {
+      console.error('Failed to export project performance report:', error)
+    } finally {
+      setIsExporting(false)
+    }
   }
 
   const { totalPages, safeCurrentPage, rows: pageRows, firstItem, lastItem } = useMemo(
@@ -155,7 +184,15 @@ const ProjectPerformence = () => {
             <FilterStatus value={status} onChange={setStatus} />
             <ButtonRangeDate label="Periode" onChange={setSelectedRange} />
             <div style={{ height: '32px', width: '1px', backgroundColor: '#e2e8f0', margin: '0 0.25rem' }}></div>
-            <ExportPrjPerform />
+            <ButtonExport
+              variant="action"
+              aria-label="Export project performance report"
+              onClick={handleExport}
+              disabled={isExporting}
+            >
+              <FileText01 size={18} aria-hidden="true" />
+              <span>{isExporting ? 'Exporting...' : 'Export'}</span>
+            </ButtonExport>
           </div>
         </div>
 

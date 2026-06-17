@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import Box from '@mui/material/Box';
 import { LineChart } from '@mui/x-charts/LineChart';
 import { getTicketsPerMonth } from '../../../services/reports/TicketReports'
+import { reportAxisTooltipProps } from '../reportTooltipConfig.js'
 
 const margin = { right: 24, top: 40 };
 const xLabels = [
@@ -74,6 +75,9 @@ export default function LineChartMonthly({ year = new Date().getFullYear() }) {
         margin={margin}
         slots={{
           mark: CustomMark,
+        }}
+        slotProps={{
+          tooltip: reportAxisTooltipProps,
         }}
         skipAnimation={true}
       />

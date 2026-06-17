@@ -3547,6 +3547,29 @@ select {
   overflow: hidden;
 }
 
+.chart-page .chart-card,
+.chart-page .chart-card__body,
+.chart-page .MuiChartsSurface-root,
+.chart-page .MuiChartsWrapper-root {
+  overflow: visible;
+}
+
+.chart-page .MuiChartsTooltip-paper {
+  border-radius: 16px;
+  border-color: rgba(148, 163, 184, 0.4);
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.14);
+  backdrop-filter: blur(10px);
+}
+
+.chart-page .MuiChartsTooltip-table caption {
+  color: var(--primary-blue);
+  font-weight: 700;
+}
+
+.chart-page .MuiChartsTooltip-cell {
+  line-height: 1.35;
+}
+
 .chart-card--wide {
   grid-column: 1 / -1;
 }
