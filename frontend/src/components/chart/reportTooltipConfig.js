@@ -2,14 +2,20 @@ const reportTooltipModifiers = [
   {
     name: 'offset',
     options: {
-      offset: [0, 4],
+      offset: [0, 2],
     },
   },
   {
     name: 'flip',
     enabled: true,
     options: {
-      fallbackPlacements: ['right-start', 'left-start', 'top-start', 'bottom-end'],
+      fallbackPlacements: [
+        'right-start',
+        'left-start',
+        'top-start',
+        'top-end',
+        'bottom-end',
+      ],
     },
   },
   {
@@ -17,8 +23,9 @@ const reportTooltipModifiers = [
     enabled: true,
     options: {
       altAxis: true,
+      tether: true,
       rootBoundary: 'viewport',
-      padding: 12,
+      padding: 8,
     },
   },
 ]
@@ -29,6 +36,7 @@ function buildReportTooltipProps(trigger) {
     anchor: 'pointer',
     placement: 'bottom-start',
     popperOptions: {
+      strategy: 'fixed',
       modifiers: reportTooltipModifiers,
     },
   }

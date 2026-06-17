@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import Box from '@mui/material/Box'
 import { BarChart } from '@mui/x-charts/BarChart'
 import TicketReports from '../../../services/reports/TicketReports.js'
-import { reportAxisTooltipProps } from '../reportTooltipConfig.js'
+import { reportItemTooltipProps } from '../reportTooltipConfig.js'
 
 const palette = ['#2a9d8f', '#e9c46a', '#f4a261', '#457b9d', '#e76f51', '#8d99ae']
 
@@ -195,7 +195,7 @@ export default function BarChartTimeSpendCtr({ year = new Date().getFullYear() }
               hideLegend
               margin={{ top: 24, right: 30, bottom: 34, left: 50 }}
               slotProps={{
-                tooltip: reportAxisTooltipProps,
+                tooltip: reportItemTooltipProps,
               }}
             />
           </Box>
