@@ -31,16 +31,8 @@ const getPriorityLabel = (rawPriority) => {
   return 'Medium'
 }
 
-const getStatusLabel = (rawStatus) => {
-  const statusClean = String(rawStatus || '').trim().toLowerCase()
-  if (statusClean === 'in_progress' || statusClean === 'in progress') return 'In Progress'
-  if (statusClean === 'resolved') return 'Resolved'
-  return 'In Progress'
-}
-
 const buildInitialFormData = (ticket, authUser) => {
   const nowStr = getLocalDatetimeString(new Date())
-  const rawStatusVal = ticket?.rawStatus || ticket?.status || ''
   const rawPriorityVal = ticket?.rawPriority || ticket?.priority || ''
   const supportId = authUser?.id || ticket?.supportId || ticket?.support_id || ''
   const supportName = authUser?.name || ticket?.supportName || ticket?.support_name || ''
@@ -48,7 +40,7 @@ const buildInitialFormData = (ticket, authUser) => {
   return {
     support_id: supportId,
     support_name: supportName,
-    status: getStatusLabel(rawStatusVal),
+    status: 'Resolved',
     priority: getPriorityLabel(rawPriorityVal),
     start_date: ticket?.startDateValue ? formatToDatetimeLocal(ticket.startDateValue) : nowStr,
     end_date: ticket?.endDateValue ? formatToDatetimeLocal(ticket.endDateValue) : '',
@@ -114,7 +106,6 @@ function DialogExecutionTicketForm({
     }
 
     const nowStr = getLocalDatetimeString(new Date())
-    const rawStatusVal = ticket?.rawStatus || ticket?.status || ''
     const rawPriorityVal = ticket?.rawPriority || ticket?.priority || ''
     const supportId = authUser?.id || ticket?.supportId || ticket?.support_id || ''
     const supportName = authUser?.name || ticket?.supportName || ticket?.support_name || ''
@@ -122,7 +113,7 @@ function DialogExecutionTicketForm({
     setFormData({
       support_id: supportId,
       support_name: supportName,
-      status: getStatusLabel(rawStatusVal),
+      status: 'Resolved',
       priority: getPriorityLabel(rawPriorityVal),
       start_date: ticket?.startDateValue ? formatToDatetimeLocal(ticket.startDateValue) : nowStr,
       end_date: ticket?.endDateValue ? formatToDatetimeLocal(ticket.endDateValue) : '',
@@ -170,21 +161,18 @@ function DialogExecutionTicketForm({
 
     setIsSubmitting(true)
     try {
-      const isResolved = formData.status === 'Resolved'
       const payload = {
-        status: formData.status.toLowerCase().replace(' ', '_'),
+        status: 'resolved',
         support_id: formData.support_id,
         support_name: formData.support_name,
         priority: formData.priority.toLowerCase(),
         start_date: formData.start_date,
       }
 
-      if (isResolved) {
-        payload.solution = formData.solution
-        payload.end_date = formData.end_date
-        if (computedTimeSpent > 0) {
-          payload.time_spent = computedTimeSpent
-        }
+      payload.solution = formData.solution
+      payload.end_date = formData.end_date
+      if (computedTimeSpent > 0) {
+        payload.time_spent = computedTimeSpent
       }
 
       const response = await api.put(`/ticket/${ticket.id}`, payload)
@@ -274,7 +262,6 @@ function DialogExecutionTicketForm({
                   value={formData.status}
                   onChange={handleChange}
                 >
-                  <option value="In Progress">In Progress</option>
                   <option value="Resolved">Resolved</option>
                 </select>
               </div>
