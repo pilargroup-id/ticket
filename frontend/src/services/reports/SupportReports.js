@@ -82,19 +82,61 @@ export async function getSupportTimeSpentPerMonth(options = {}) {
 }
 
 export async function getSupportTicketsDetail(supportId, options = {}) {
-  const { startDate, endDate, status = 'all' } = options
+  const { startDate, endDate, status = 'all', page, perPage } = options
   
   const response = await api.get(`/reports/supports/${supportId}/tickets`, {
     params: {
       start_date: startDate || undefined,
       end_date: endDate || undefined,
       status: status,
+      page: page || undefined,
+      per_page: perPage || undefined,
     },
   })
 
   return {
     message: response?.message ?? '',
     data: Array.isArray(response?.data) ? response.data : [],
+    meta: response?.meta ?? null,
+  }
+}
+
+export async function getAllSupportTicketsDetail(supportId, options = {}) {
+  const { expectedTotal = 0, perPage = 100, ...filters } = options
+  const firstPage = await getSupportTicketsDetail(supportId, {
+    ...filters,
+    page: 1,
+    perPage,
+  })
+  const lastPage = Number(
+    firstPage.meta?.last_page || Math.ceil(Number(expectedTotal) / perPage) || 1,
+  )
+
+  if (lastPage <= 1) {
+    return firstPage
+  }
+
+  const data = [...firstPage.data]
+
+  for (let page = 2; page <= lastPage; page += 1) {
+    const response = await getSupportTicketsDetail(supportId, {
+      ...filters,
+      page,
+      perPage,
+    })
+
+    data.push(...response.data)
+  }
+
+  return {
+    ...firstPage,
+    data,
+    meta: firstPage.meta
+      ? {
+          ...firstPage.meta,
+          current_page: lastPage,
+        }
+      : null,
   }
 }
 
@@ -133,5 +175,6 @@ export default {
   getSupportTicketsPerMonth,
   getSupportTimeSpentPerMonth,
   getSupportTicketsDetail,
+  getAllSupportTicketsDetail,
   exportSupportTickets,
 }

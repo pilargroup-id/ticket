@@ -364,8 +364,8 @@ class ReportController extends Controller
 
     public function ticketsDetailBySupport(Request $request, $supportId)
     {
-        $start  = $request->query('start_date') ?: now()->startOfDay()->toDateString();
-        $end    = $request->query('end_date')   ?: now()->endOfDay()->toDateString();
+        $start  = $request->query('start_date') ?: now()->startOfMonth()->toDateString();
+        $end    = $request->query('end_date')   ?: now()->endOfMonth()->toDateString();
         $status = $request->query('status');
 
         $tickets = Tickets::query()
@@ -379,6 +379,12 @@ class ReportController extends Controller
         return response()->json([
             'message' => 'Ticket detail by support fetched successfully',
             'data'    => new TicketCollection($tickets),
+            'meta'    => [
+                'current_page' => $tickets->currentPage(),
+                'last_page'    => $tickets->lastPage(),
+                'per_page'     => $tickets->perPage(),
+                'total'        => $tickets->total(),
+            ],
         ], 200);
     }
 

@@ -49,15 +49,21 @@ export async function exportSupportPerformanceDetailsReport(filters = {}) {
     endDate,
     status,
   })
+  const resolvedStartDate = summaryResponse.meta?.start_date || startDate
+  const resolvedEndDate = summaryResponse.meta?.end_date || endDate
 
   const supports = Array.isArray(summaryResponse.data) ? summaryResponse.data : []
   const supportDetails = await Promise.all(
     supports.map(async (support) => {
-      const detailResponse = await SupportReports.getSupportTicketsDetail(support.support_id, {
-        startDate,
-        endDate,
-        status,
-      })
+      const detailResponse = await SupportReports.getAllSupportTicketsDetail(
+        support.support_id,
+        {
+          startDate: resolvedStartDate,
+          endDate: resolvedEndDate,
+          status,
+          expectedTotal: support.total_tickets,
+        },
+      )
 
       return {
         support,
@@ -75,8 +81,8 @@ export async function exportSupportPerformanceDetailsReport(filters = {}) {
 
   const csvLines = [
     buildCsvRow(['Support Team Performance Detail']),
-    buildCsvRow(['Start Date', startDate || 'All']),
-    buildCsvRow(['End Date', endDate || 'All']),
+    buildCsvRow(['Start Date', resolvedStartDate || 'All']),
+    buildCsvRow(['End Date', resolvedEndDate || 'All']),
     buildCsvRow(['Status', status]),
     buildCsvRow(['Total Support', supports.length]),
   ]
@@ -125,6 +131,6 @@ export async function exportSupportPerformanceDetailsReport(filters = {}) {
 
   downloadCsvFile(
     csvLines.join('\n'),
-    `support-team-performance-${formatDateForFileName(startDate)}-${formatDateForFileName(endDate)}.csv`,
+    `support-team-performance-${formatDateForFileName(resolvedStartDate)}-${formatDateForFileName(resolvedEndDate)}.csv`,
   )
 }
