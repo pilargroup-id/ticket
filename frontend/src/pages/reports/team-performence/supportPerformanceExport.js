@@ -93,13 +93,13 @@ export async function exportSupportPerformanceDetailsReport(filters = {}) {
         'User',
         'Category',
         'Status',
-        'Time (Minutes)',
-        'Tanggal dan jam mulai dikerjakan oleh support',
-        'Tanggal dan jam selesai dikerjakan oleh support',
         'Problem',
         'Solution',
         'Late',
         'Created',
+        'Tanggal dan jam mulai dikerjakan oleh support',
+        'Tanggal dan jam selesai dikerjakan oleh support',
+        'Time (Minutes)',
       ]),
     )
 
@@ -111,13 +111,13 @@ export async function exportSupportPerformanceDetailsReport(filters = {}) {
           detail.user_name,
           detail.category_name,
           detail.status,
-          detail.time_spent ?? 0,
-          detail.start_date,
-          detail.end_date,
           detail.problem,
           detail.solution,
           detail.is_late ? 'Late' : 'On Time',
           detail.created_at,
+          detail.start_date,
+          detail.end_date,
+          detail.time_spent ?? 0,
         ]),
       )
     })
