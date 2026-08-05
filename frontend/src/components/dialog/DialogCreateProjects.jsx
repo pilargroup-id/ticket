@@ -37,7 +37,9 @@ function DialogCreateProjects({
     let cancelled = false
     async function fetchUsers() {
       try {
-        const list = await fetchSelectableUsers()
+        // requestor_id is a hard FK to the local users table, so the SSO-wide
+        // directory (fetchSelectableUsers' default) can't be used here.
+        const list = await fetchSelectableUsers({ localOnly: true })
         if (!cancelled) {
           setUsers(list)
           const preSelected = list.find((u) => String(u.id) === String(authUser?.id))
