@@ -43,14 +43,18 @@ function DialogCreateProjects({
         if (!cancelled) {
           setUsers(list)
           const preSelected = list.find((u) => String(u.id) === String(authUser?.id))
-          const fallbackName = authUser?.name ?? ''
-          setRequestorSearch(preSelected?.name ?? fallbackName)
+          // authUser.id can be an SSO id that doesn't exist in the local users
+          // table (the one requestor_id's FK points to) — only trust it as the
+          // default requestor once it's confirmed present in the local list.
+          setRequestorId(preSelected?.id ?? '')
+          setRequestorSearch(preSelected?.name ?? '')
         }
       } catch (err) {
         console.error('Failed to fetch users:', err)
         if (!cancelled) {
-          setUsers(authUser?.id ? [{ id: authUser.id, name: authUser?.name ?? 'Current User' }] : [])
-          setRequestorSearch(authUser?.name ?? '')
+          setUsers([])
+          setRequestorId('')
+          setRequestorSearch('')
         }
       }
     }
