@@ -54,11 +54,6 @@ class ProjectHeaders extends Model
         return $this->hasMany(Pendings::class, 'project_header_id', 'id');
     }
 
-    public function requestor()
-    {
-        return $this->belongsTo(User::class, 'requestor_id', 'id');
-    }
-
     // ==========================
     // CONSTANTS STATUS (biar konsisten)
     // ==========================

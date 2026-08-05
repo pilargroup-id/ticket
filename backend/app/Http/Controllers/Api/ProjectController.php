@@ -173,7 +173,7 @@ class ProjectController extends Controller
 
             return response()->json([
                 'message' => 'Project created successfully',
-                'data'    => new ProjectResource($project->fresh()->load(['details', 'requestor', 'pendings'])),
+                'data'    => new ProjectResource($project->fresh()->load(['details', 'pendings'])),
             ], 201);
         });
     }

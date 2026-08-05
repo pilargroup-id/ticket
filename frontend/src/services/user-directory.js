@@ -30,9 +30,9 @@ function extractUserList(payload) {
   return rawList.map(normalizeUser).filter(Boolean)
 }
 
-export async function fetchSelectableUsers({ localOnly = false } = {}) {
+export async function fetchSelectableUsers() {
   const fallbackUser = normalizeUser(getStoredUser())
-  const attempts = localOnly ? ['/user'] : ['/directory/users', '/user']
+  const attempts = ['/directory/users', '/user']
   let lastError = null
 
   for (const endpoint of attempts) {

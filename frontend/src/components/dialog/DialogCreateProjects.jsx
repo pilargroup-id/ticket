@@ -37,15 +37,10 @@ function DialogCreateProjects({
     let cancelled = false
     async function fetchUsers() {
       try {
-        // requestor_id is a hard FK to the local users table, so the SSO-wide
-        // directory (fetchSelectableUsers' default) can't be used here.
-        const list = await fetchSelectableUsers({ localOnly: true })
+        const list = await fetchSelectableUsers()
         if (!cancelled) {
           setUsers(list)
           const preSelected = list.find((u) => String(u.id) === String(authUser?.id))
-          // authUser.id can be an SSO id that doesn't exist in the local users
-          // table (the one requestor_id's FK points to) — only trust it as the
-          // default requestor once it's confirmed present in the local list.
           setRequestorId(preSelected?.id ?? '')
           setRequestorSearch(preSelected?.name ?? '')
         }
