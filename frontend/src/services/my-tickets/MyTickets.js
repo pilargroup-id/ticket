@@ -186,6 +186,8 @@ export function normalizeMyTicket(ticket = {}) {
     supportName,
     solution: getFirstFilledText(ticket?.solution) || '-',
     notes: getFirstFilledText(ticket?.notes) || '-',
+    feedbackRating: ticket?.feedback?.rating ? Number(ticket.feedback.rating) : null,
+    feedbackComment: getFirstFilledText(ticket?.feedback?.description),
     requestDate: formatTicketDateTime(requestDateValue),
     requestDateValue,
     startDate: formatTicketDateTime(startDateValue),

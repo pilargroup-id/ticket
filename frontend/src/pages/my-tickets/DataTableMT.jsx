@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 
 import DialogEditTicket from '../../components/dialog/DialogEditMT.jsx'
 import DialogFeedbackUser from '../../components/dialog/DialogFeedbackUser.jsx'
+import FeedbackRating from '../../components/rating/RatingFeedBack.jsx'
 import MobileCardMT from './MobileCardMT.jsx'
 
 import DataTable, {
@@ -71,6 +72,24 @@ const columns = [
     cellStyle: { minWidth: '220px' },
     render: (ticket) =>
       ticket.supportName ? <DataTableIdentity title={ticket.supportName} /> : '-',
+  },
+  {
+    key: 'feedback',
+    header: 'Feedback',
+    cellStyle: { minWidth: '220px' },
+    render: (ticket) =>
+      ticket.feedbackRating || ticket.feedbackComment ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          {ticket.feedbackRating ? (
+            <FeedbackRating value={ticket.feedbackRating} size="small" />
+          ) : null}
+          {ticket.feedbackComment ? (
+            <span style={{ fontSize: '0.85em', opacity: 0.8 }}>{ticket.feedbackComment}</span>
+          ) : null}
+        </div>
+      ) : (
+        '-'
+      ),
   },
 ]
 

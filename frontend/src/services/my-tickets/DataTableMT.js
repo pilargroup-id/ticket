@@ -1,7 +1,7 @@
 import { Edit03, FileText01, Trash03 } from '../../components/template/TemplateIcons.jsx'
 
-export const PAGE_SIZE_OPTIONS = [5, 10, 15]
-export const DEFAULT_PAGE_SIZE = PAGE_SIZE_OPTIONS[0]
+export const PAGE_SIZE_OPTIONS = [5, 10, 15, 50]
+export const DEFAULT_PAGE_SIZE = 50
 export const EMPTY_DATE_RANGE = {
   startDate: '',
   endDate: '',
