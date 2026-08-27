@@ -19,7 +19,7 @@ import {
   getTicketPaginationSummary,
 } from '../../services/my-tickets/DataTableMT.js'
 
-import { formatTicketDate, formatTicketTimeWIB, getFeedbacks, normalizeTicket } from '../../services/tickets/Tickets.js'
+import { formatTicketDate, formatTicketTimeWIB, normalizeTicket } from '../../services/tickets/Tickets.js'
 import FeedbackRating from '../../components/rating/RatingFeedBack.jsx'
 
 export const INITIAL_TICKET_ROWS = DEFAULT_TICKET_ROWS
@@ -86,54 +86,48 @@ const columns = [
         ? <DataTableIdentity title={ticket.supportName} />
         : '-',
   },
+  {
+    key: 'feedback',
+    header: 'feedback',
+    cellStyle: { minWidth: '220px' },
+    render: (ticket) =>
+      ticket.feedbackRating || ticket.feedbackComment ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          {ticket.feedbackRating ? (
+            <FeedbackRating value={ticket.feedbackRating} size="small" />
+          ) : null}
+          {ticket.feedbackComment ? (
+            <span style={{ fontSize: '0.85em', opacity: 0.8 }}>{ticket.feedbackComment}</span>
+          ) : null}
+        </div>
+      ) : (
+        '-'
+      ),
+  },
 ]
 
 function TicketFeedbackPanel({ ticket }) {
-  const [feedback, setFeedback] = useState(null)
-  const [isLoading, setIsLoading] = useState(true)
-
-  useEffect(() => {
-    async function loadFeedback() {
-      try {
-        const data = await getFeedbacks()
-        const list = data?.list || []
-        // Use a more flexible match: check ticket_id (number/string) and ticket_code
-        const found = list.find(
-          (f) =>
-            String(f.ticket_id) === String(ticket.id) ||
-            f.ticket_code === ticket.ticketCode ||
-            f.ticket_code === ticket.id,
-        )
-        setFeedback(found)
-      } catch (error) {
-        console.error('Failed to load feedback:', error)
-      } finally {
-        setIsLoading(false)
-      }
-    }
-    loadFeedback()
-  }, [ticket.id, ticket.ticketCode])
+  const hasFeedback = Boolean(ticket.feedbackRating || ticket.feedbackComment)
 
   return (
     <section className="users-table__detail-section users-table__detail-section--wide">
       <div className="users-table__detail-section-header">
         <p className="users-table__detail-section-eyebrow">Feedback</p>
       </div>
-      {isLoading ? (
-        <p className="users-table__detail-empty">Memuat feedback...</p>
-      ) : feedback ? (
+      {hasFeedback ? (
         <div
           className="ticket-feedback"
           style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}
         >
-          <div className="ticket-feedback__item" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <strong style={{ color: 'var(--template-fg-muted)' }}>Rating:</strong>{' '}
-            <FeedbackRating value={Number(feedback.rating)} />
-          </div>
+          {ticket.feedbackRating ? (
+            <div className="ticket-feedback__item" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <strong style={{ color: 'var(--template-fg-muted)' }}>Rating:</strong>{' '}
+              <FeedbackRating value={ticket.feedbackRating} />
+            </div>
+          ) : null}
           <div className="ticket-feedback__item">
-            {/* <strong style={{ color: 'var(--template-fg-muted)' }}></strong>{' '} */}
             <p style={{ marginTop: '0.25rem', color: 'var(--template-fg-primary)' }}>
-              {feedback.description || feedback.comment || '-'}
+              {ticket.feedbackComment || '-'}
             </p>
           </div>
         </div>

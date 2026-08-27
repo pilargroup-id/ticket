@@ -3202,6 +3202,32 @@ select {
   flex-shrink: 0;
 }
 
+.users-table-card__action--secondary {
+  background: rgba(42, 157, 143, 0.08);
+  color: #18786e;
+  border: 1px solid rgba(42, 157, 143, 0.25);
+  box-shadow: none;
+}
+
+.users-table-card__action--secondary:hover {
+  background: rgba(42, 157, 143, 0.14);
+  border-color: rgba(42, 157, 143, 0.4);
+  box-shadow: 0 8px 18px rgba(26, 42, 87, 0.08);
+}
+
+.users-table-card__action--secondary:focus-visible {
+  box-shadow:
+    0 0 0 4px rgba(42, 157, 143, 0.14),
+    0 8px 18px rgba(26, 42, 87, 0.08);
+}
+
+.users-table-card__action:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
 .range-date-button {
   position: relative;
   display: inline-flex;

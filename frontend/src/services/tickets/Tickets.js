@@ -202,6 +202,8 @@ export function normalizeTicket(ticket = {}) {
     supportName: supportName || '-',
     solution: getFirstFilledText(ticket?.solution) || '-',
     notes: getFirstFilledText(ticket?.notes) || '-',
+    feedbackRating: ticket?.feedback?.rating ? Number(ticket.feedback.rating) : null,
+    feedbackComment: getFirstFilledText(ticket?.feedback?.description),
     requestDate: formatTicketDateTime(requestDateValue),
     requestDateValue,
     startDate: formatTicketDateTime(startDateValue),
@@ -319,6 +321,37 @@ export async function postFeedback(ticketId, { rating, comment }) {
   return response?.data ?? {}
 }
 
+export async function exportTicketsByStatus(status, options = {}) {
+  const { startDate, endDate } = options
+  const normalizedStatus = getTicketStatusQueryValue(status)
+  const token = api.getToken?.()
+  const url = api.buildUrl('/reports/tickets/export', {
+    status: normalizedStatus,
+    start_date: startDate || undefined,
+    end_date: endDate || undefined,
+  })
+
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: {
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+  })
+
+  if (!response.ok) {
+    throw new Error(`Failed to export ${normalizedStatus} tickets with status ${response.status}`)
+  }
+
+  const blob = await response.blob()
+  const contentDisposition = response.headers.get('content-disposition') || ''
+  const fileNameMatch = contentDisposition.match(/filename="?([^"]+)"?/)
+
+  return {
+    blob,
+    fileName: fileNameMatch?.[1] || `tickets_${normalizedStatus}_export.xlsx`,
+  }
+}
+
 export default {
   formatTicketDate,
   formatTicketDateTime,
@@ -330,6 +363,7 @@ export default {
   getMyTickets,
   getFeedbacks,
   postFeedback,
+  exportTicketsByStatus,
   normalizeMyTicket,
   normalizeTicket,
   normalizeTicketStatusCounts,

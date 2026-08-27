@@ -2,8 +2,10 @@ import { useEffect, useState } from 'react'
 import SkeletonLoading from '../../components/template/SkeletonLoading.jsx'
 
 import ButtonRangeDate from '../../components/button/ButtonRangeDate.jsx'
-import { Ticket01 } from '../../components/template/TemplateIcons.jsx'
+import ButtonExport from '../../components/button/ButtonExport.jsx'
+import { FileText01, Ticket01 } from '../../components/template/TemplateIcons.jsx'
 import {
+  exportTicketsByStatus,
   getTicketReport,
   getTicketStatusQueryValue,
   getTickets,
@@ -24,6 +26,7 @@ function TicketsOverview({ activePage, searchQuery, onLoadingChange }) {
     startDate: '',
     endDate: '',
   })
+  const [exportingStatus, setExportingStatus] = useState(null)
 
   useEffect(() => {
     let isMounted = true
@@ -94,6 +97,31 @@ function TicketsOverview({ activePage, searchQuery, onLoadingChange }) {
     }
   }, [dateRange.endDate, dateRange.startDate, ticketRefreshVersion])
 
+  const handleExportTickets = async (status) => {
+    setExportingStatus(status)
+
+    try {
+      const exportedFile = await exportTicketsByStatus(status, {
+        startDate: dateRange.startDate,
+        endDate: dateRange.endDate,
+      })
+
+      const url = URL.createObjectURL(exportedFile.blob)
+      const link = document.createElement('a')
+
+      link.href = url
+      link.download = exportedFile.fileName
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      URL.revokeObjectURL(url)
+    } catch (error) {
+      console.error(`Failed to export ${status} tickets:`, error)
+    } finally {
+      setExportingStatus(null)
+    }
+  }
+
   const isPageLoading = isLoadingTickets && ticketRows.length === 0 && !ticketsError
 
   useEffect(() => {
@@ -129,6 +157,28 @@ function TicketsOverview({ activePage, searchQuery, onLoadingChange }) {
 
           <div className="users-table-card__actions">
             <ButtonRangeDate label="Request Date" onChange={setDateRange} />
+
+            <ButtonExport
+              variant="action"
+              className="users-table-card__action--secondary"
+              onClick={() => handleExportTickets('feedback')}
+              disabled={Boolean(exportingStatus)}
+              aria-label="Export tickets dengan status feedback"
+            >
+              <FileText01 size={18} aria-hidden="true" />
+              <span>{exportingStatus === 'feedback' ? 'Exporting...' : 'Export Feedback'}</span>
+            </ButtonExport>
+
+            <ButtonExport
+              variant="action"
+              className="users-table-card__action--secondary"
+              onClick={() => handleExportTickets('waiting')}
+              disabled={Boolean(exportingStatus)}
+              aria-label="Export tickets dengan status waiting"
+            >
+              <FileText01 size={18} aria-hidden="true" />
+              <span>{exportingStatus === 'waiting' ? 'Exporting...' : 'Export Waiting'}</span>
+            </ButtonExport>
 
             <button
               type="button"
