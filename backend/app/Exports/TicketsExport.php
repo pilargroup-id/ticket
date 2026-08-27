@@ -34,15 +34,17 @@ public function __construct(?string $status = null, ?string $start = null, ?stri
     // jangan buang "resolved" ya, karena resolved itu special mapping
     $this->status = $status && $status !== 'all' ? $status : null;
 
-    $this->start = $start ?: now()->startOfDay()->toDateString();
-    $this->end   = $end   ?: now()->endOfDay()->toDateString();
+    // kosongin start/end = ga difilter tanggal (samain sama daftar ticket di tabel)
+    $this->start = $start ?: null;
+    $this->end   = $end ?: null;
 }
 
 public function query()
 {
     return Tickets::query()
         ->with(['user:id,name','support:id,name','category:id,name','assets:id,assets_name'])
-        ->whereBetween('created_at', ["{$this->start} 00:00:00", "{$this->end} 23:59:59"])
+        // pakai request_date biar konsisten sama filter "Request Date" di tabel ticket
+        ->when($this->start && $this->end, fn($q) => $q->betweenRequestDates($this->start, $this->end))
         ->when($this->status, fn($q) => $q->byStatus($this->status)) // ✅ resolved auto include feedback
         ->latest();
 }
