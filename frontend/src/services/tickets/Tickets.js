@@ -339,7 +339,15 @@ export async function exportTicketsByStatus(status, options = {}) {
   })
 
   if (!response.ok) {
-    throw new Error(`Failed to export ${normalizedStatus} tickets with status ${response.status}`)
+    const contentType = response.headers.get('content-type') || ''
+    const errorBody = contentType.includes('application/json')
+      ? await response.json().catch(() => null)
+      : null
+
+    throw new Error(
+      errorBody?.message ||
+        `Failed to export ${normalizedStatus} tickets with status ${response.status}`,
+    )
   }
 
   const blob = await response.blob()

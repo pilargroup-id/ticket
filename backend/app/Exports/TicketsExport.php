@@ -10,6 +10,7 @@ use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use Maatwebsite\Excel\Concerns\WithColumnFormatting;
+use Maatwebsite\Excel\Concerns\WithChunkReading;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
@@ -20,7 +21,8 @@ class TicketsExport implements
     WithHeadings,
     ShouldAutoSize,
     WithStyles,
-    WithColumnFormatting
+    WithColumnFormatting,
+    WithChunkReading
 {
     private ?string $status;
     private ?string $start;
@@ -109,6 +111,11 @@ public function query()
             $this->fmtDateTime($ticket->created_at),
             $this->fmtDateTime($ticket->updated_at),
         ];
+    }
+
+    public function chunkSize(): int
+    {
+        return 500;
     }
 
     private function fmtDateTime($dt): ?string

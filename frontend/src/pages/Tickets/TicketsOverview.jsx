@@ -13,6 +13,8 @@ import {
 import CardStatusTickets from './CardStatusTickets.jsx'
 import DataTableTickets, { INITIAL_TICKET_ROWS } from './DataTableTickets.jsx'
 import DialogCreateTicketAdmin from '../../components/dialog/DialogCreateTicketAdmin.jsx'
+import DialogAlert from '../../components/dialog/DialogAlert.jsx'
+import { useAlert } from '../../hooks/useAlert.js'
 
 function TicketsOverview({ activePage, searchQuery, onLoadingChange }) {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
@@ -27,6 +29,7 @@ function TicketsOverview({ activePage, searchQuery, onLoadingChange }) {
     endDate: '',
   })
   const [exportingStatus, setExportingStatus] = useState(null)
+  const { alertState, showError, closeAlert } = useAlert()
 
   useEffect(() => {
     let isMounted = true
@@ -117,6 +120,7 @@ function TicketsOverview({ activePage, searchQuery, onLoadingChange }) {
       URL.revokeObjectURL(url)
     } catch (error) {
       console.error(`Failed to export ${status} tickets:`, error)
+      showError(error?.message || 'Gagal export data ticket.', 'Export Gagal')
     } finally {
       setExportingStatus(null)
     }
@@ -218,6 +222,14 @@ function TicketsOverview({ activePage, searchQuery, onLoadingChange }) {
           }
           setTicketRefreshVersion((currentVersion) => currentVersion + 1)
         }}
+      />
+
+      <DialogAlert
+        open={alertState.open}
+        onClose={closeAlert}
+        title={alertState.title}
+        message={alertState.message}
+        severity={alertState.severity}
       />
     </>
   )

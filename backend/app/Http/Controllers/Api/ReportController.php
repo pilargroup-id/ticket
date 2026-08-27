@@ -22,7 +22,7 @@ use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\DB;
 use App\Models\ProjectDetails;
 use App\Exports\ProjectsDetailsExport;
-use Illuminate\Container\Attributes\Log;
+use Illuminate\Support\Facades\Log;
 
 class ReportController extends Controller
 {
@@ -210,10 +210,24 @@ class ReportController extends Controller
 
         $filename = 'tickets_export_' . now()->format('Ymd_His') . '.xlsx';
 
-        return Excel::download(
-            new TicketsExport($status, $start, $end),
-            $filename
-        );
+        try {
+            return Excel::download(
+                new TicketsExport($status, $start, $end),
+                $filename
+            );
+        } catch (\Throwable $e) {
+            Log::error('exportDataTicket error', [
+                'status' => $status,
+                'start'  => $start,
+                'end'    => $end,
+                'error'  => $e->getMessage(),
+                'trace'  => $e->getTraceAsString(),
+            ]);
+
+            return response()->json([
+                'message' => 'Failed to export tickets: ' . $e->getMessage(),
+            ], 500);
+        }
     }
 
     public function ticketsPerMonthBySupport(Request $request)
