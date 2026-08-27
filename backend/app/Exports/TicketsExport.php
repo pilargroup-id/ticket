@@ -4,6 +4,8 @@ namespace App\Exports;
 
 use App\Models\Tickets;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Concerns\FromQuery;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithHeadings;
@@ -28,6 +30,7 @@ class TicketsExport implements
     private ?string $start;
     private ?string $end;
     private int $rowNumber = 0;
+    private ?array $centralUserMap = null;
 
     // App/Exports/TicketsExport.php
 
@@ -43,12 +46,52 @@ public function __construct(?string $status = null, ?string $start = null, ?stri
 
 public function query()
 {
+    // user/support name diambil dari direktori pusat pilargroup (lihat centralUserMap()),
+    // bukan dari tabel lokal `users`, biar export ga ikut down kalau tabel users lokal bermasalah.
     return Tickets::query()
-        ->with(['user:id,name','support:id,name','category:id,name','assets:id,assets_name'])
+        ->with(['category:id,name','assets:id,assets_name'])
         // pakai request_date biar konsisten sama filter "Request Date" di tabel ticket
         ->when($this->start && $this->end, fn($q) => $q->betweenRequestDates($this->start, $this->end))
         ->when($this->status, fn($q) => $q->byStatus($this->status)) // ✅ resolved auto include feedback
         ->latest();
+}
+
+/**
+ * Map user_id/support_id -> name, diambil sekali dari direktori pusat pilargroup
+ * (SSO_PILARGROUP_URL) supaya export ga bergantung ke tabel `users` lokal.
+ */
+private function centralUserMap(): array
+{
+    if ($this->centralUserMap !== null) {
+        return $this->centralUserMap;
+    }
+
+    $this->centralUserMap = [];
+
+    try {
+        $response = Http::withHeaders([
+            'X-Internal-Secret' => env('INTERNAL_SYNC_SECRET'),
+            'Accept' => 'application/json',
+        ])->timeout(15)->get(rtrim(env('SSO_PILARGROUP_URL'), '/') . '/api/internal/directory/users');
+
+        if ($response->successful()) {
+            foreach ($response->json('data') ?? [] as $user) {
+                if (!empty($user['id'])) {
+                    $this->centralUserMap[$user['id']] = $user['name'] ?? null;
+                }
+            }
+        } else {
+            Log::warning('TicketsExport: failed to fetch central user directory', [
+                'status' => $response->status(),
+            ]);
+        }
+    } catch (\Throwable $e) {
+        Log::warning('TicketsExport: central user directory error', [
+            'error' => $e->getMessage(),
+        ]);
+    }
+
+    return $this->centralUserMap;
 }
 
 
@@ -84,13 +127,14 @@ public function query()
         $this->rowNumber++;
 
         $timeSpentMinutes = (int) ($ticket->time_spent ?? 0);
+        $userMap = $this->centralUserMap();
 
         return [
             $this->rowNumber,
             $ticket->id,
             $ticket->ticket_code,
-            $ticket->user?->name,
-            $ticket->support?->name,
+            $userMap[$ticket->user_id] ?? null,
+            $ticket->support_name ?: ($userMap[$ticket->support_id] ?? null),
             $ticket->category?->name,
             $ticket->assets?->assets_name,
             $ticket->nama_pembuat,
