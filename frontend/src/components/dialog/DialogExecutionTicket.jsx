@@ -5,6 +5,7 @@ import { XClose } from '../template/TemplateIcons.jsx'
 import api from '../../services/api.js'
 import { getStoredUser } from '../../services/auth.js'
 import DialogLoading from './DialogLoading.jsx'
+import InputDateTime from '../datepicker/InputDateTime.jsx'
 
 const getLocalDatetimeString = (date) => {
   if (!date) return ''
@@ -290,14 +291,12 @@ function DialogExecutionTicketForm({
                 <label className="register-user-popup__label" htmlFor="start_date">
                   Start Date & Clock
                 </label>
-                <input
+                <InputDateTime
                   id="start_date"
                   name="start_date"
-                  type="datetime-local"
-                  className="register-user-popup__input"
                   value={formData.start_date}
                   onChange={handleChange}
-                  style={{ width: '100%', boxSizing: 'border-box', fontSize: '0.8rem' }}
+                  style={{ fontSize: '0.8rem' }}
                 />
               </div>
 
@@ -305,14 +304,12 @@ function DialogExecutionTicketForm({
                 <label className="register-user-popup__label" htmlFor="end_date">
                   End Date & Clock
                 </label>
-                <input
+                <InputDateTime
                   id="end_date"
                   name="end_date"
-                  type="datetime-local"
-                  className="register-user-popup__input"
                   value={formData.end_date}
                   onChange={handleChange}
-                  style={{ width: '100%', boxSizing: 'border-box', fontSize: '0.8rem' }}
+                  style={{ fontSize: '0.8rem' }}
                 />
               </div>
 

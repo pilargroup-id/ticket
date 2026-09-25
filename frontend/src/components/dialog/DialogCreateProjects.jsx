@@ -5,6 +5,7 @@ import { getStoredUser } from '../../services/auth.js'
 import api from '../../services/api.js'
 import { fetchSelectableUsers } from '../../services/user-directory.js'
 import { XClose } from '../template/TemplateIcons.jsx'
+import InputDateTime from '../datepicker/InputDateTime.jsx'
 
 function DialogCreateProjects({
   isOpen = false,
@@ -303,10 +304,8 @@ function DialogCreateProjects({
                 <label className="register-user-popup__label" htmlFor="project-request-date">
                   Request Date
                 </label>
-                <input
+                <InputDateTime
                   id="project-request-date"
-                  type="datetime-local"
-                  className="register-user-popup__input"
                   value={requestDate}
                   onChange={(e) => setRequestDate(e.target.value)}
                 />
@@ -316,10 +315,8 @@ function DialogCreateProjects({
                 <label className="register-user-popup__label" htmlFor="project-start-date">
                   Start Plan
                 </label>
-                <input
+                <InputDateTime
                   id="project-start-date"
-                  type="datetime-local"
-                  className="register-user-popup__input"
                   value={startDate}
                   onChange={(e) => setStartDate(e.target.value)}
                 />
@@ -329,10 +326,8 @@ function DialogCreateProjects({
                 <label className="register-user-popup__label" htmlFor="project-end-date">
                   End Planned
                 </label>
-                <input
+                <InputDateTime
                   id="project-end-date"
-                  type="datetime-local"
-                  className="register-user-popup__input"
                   value={endDate}
                   onChange={(e) => setEndDate(e.target.value)}
                 />
