@@ -223,6 +223,7 @@ function DataTableMT({
           getRowId={(ticket) => ticket.id ?? ticket.ticketCode}
           tableLabel={tableLabel}
           detail={{
+            position: 'start',
             columnLabel: 'Detail',
             buttonLabel: 'Detail',
             eyebrow: 'Ticket Code',

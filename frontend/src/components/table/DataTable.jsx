@@ -215,6 +215,17 @@ function DataTable({
 }) {
   const [expandedRowKey, setExpandedRowKey] = useState(null)
   const hasDetail = Boolean(detail)
+  const isDetailAtStart = hasDetail && detail.position === 'start'
+  const detailHeader = hasDetail ? (
+    <th
+      scope="col"
+      className={`users-table__detail-header${
+        isDetailAtStart ? ' users-table__detail-header--start' : ''
+      }`}
+    >
+      {detail.columnLabel ?? 'Detail'}
+    </th>
+  ) : null
   const visibleExpandedRowKey = rows.some(
     (row, index) => String(getRowId(row, index)) === expandedRowKey,
   )
@@ -268,6 +279,8 @@ function DataTable({
         <table className="users-table" aria-label={tableLabel}>
           <thead>
             <tr>
+              {isDetailAtStart ? detailHeader : null}
+
               {columns.map((column) => (
                 <th
                   key={column.key}
@@ -279,11 +292,7 @@ function DataTable({
                 </th>
               ))}
 
-              {hasDetail ? (
-                <th scope="col" className="users-table__detail-header">
-                  {detail.columnLabel ?? 'Detail'}
-                </th>
-              ) : null}
+              {hasDetail && !isDetailAtStart ? detailHeader : null}
             </tr>
           </thead>
 
@@ -309,6 +318,36 @@ function DataTable({
                   .filter(Boolean)
                   .join(' ')
 
+                const detailCell = hasDetail ? (
+                  <td
+                    className={`users-table__detail-cell${
+                      isDetailAtStart ? ' users-table__detail-cell--start' : ''
+                    }`}
+                  >
+                    <CreateButton
+                      variant="detail"
+                      type="button"
+                      hasIndicator={resolveTemplateValue(detail?.hasIndicator, row, index)}
+                      onClick={(event) => {
+                        event.stopPropagation()
+                        handleToggleRow(rowKey)
+                      }}
+                      aria-expanded={isExpanded}
+                      aria-controls={accordionId}
+                      title={isExpanded ? 'Tutup detail' : 'Buka detail'}
+                    >
+                      <span>{detail.buttonLabel ?? 'Detail'}</span>
+                      <ChevronDown
+                        size={16}
+                        aria-hidden="true"
+                        className={`users-table__detail-icon${
+                          isExpanded ? ' users-table__detail-icon--open' : ''
+                        }`}
+                      />
+                    </CreateButton>
+                  </td>
+                ) : null
+
                 return (
                   <Fragment key={rowKey}>
                     <tr
@@ -321,6 +360,8 @@ function DataTable({
                       aria-expanded={hasDetail ? isExpanded : undefined}
                       aria-controls={hasDetail ? accordionId : undefined}
                     >
+                      {isDetailAtStart ? detailCell : null}
+
                       {columns.map((column) => (
                         <td
                           key={column.key}
@@ -331,31 +372,7 @@ function DataTable({
                         </td>
                       ))}
 
-                      {hasDetail ? (
-                        <td className="users-table__detail-cell">
-                          <CreateButton
-                            variant="detail"
-                            type="button"
-                            hasIndicator={resolveTemplateValue(detail?.hasIndicator, row, index)}
-                            onClick={(event) => {
-                              event.stopPropagation()
-                              handleToggleRow(rowKey)
-                            }}
-                            aria-expanded={isExpanded}
-                            aria-controls={accordionId}
-                            title={isExpanded ? 'Tutup detail' : 'Buka detail'}
-                          >
-                            <span>{detail.buttonLabel ?? 'Detail'}</span>
-                            <ChevronDown
-                              size={16}
-                              aria-hidden="true"
-                              className={`users-table__detail-icon${
-                                isExpanded ? ' users-table__detail-icon--open' : ''
-                              }`}
-                            />
-                          </CreateButton>
-                        </td>
-                      ) : null}
+                      {hasDetail && !isDetailAtStart ? detailCell : null}
                     </tr>
 
                     {hasDetail && isExpanded ? (
@@ -428,7 +445,11 @@ function DataTable({
                             ) : null}
 
                             {actions.length > 0 ? (
-                              <div className="users-table__accordion-actions">
+                              <div
+                                className={`users-table__accordion-actions${
+                                  isDetailAtStart ? ' users-table__accordion-actions--start' : ''
+                                }`}
+                              >
                                 {actions.map((action) => {
                                   if (resolveActionValue(action.hidden, row, index)) {
                                     return null

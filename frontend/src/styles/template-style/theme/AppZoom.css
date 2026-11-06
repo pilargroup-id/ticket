@@ -1,0 +1,47 @@
+/*
+ * AppZoom.css — skala tampilan global untuk seluruh aplikasi.
+ *
+ * Cara pakai: ubah nilai --app-zoom di bawah.
+ *   1     = ukuran asli (100%)
+ *   1.1   = 110% (lebih besar)
+ *   0.9   = 90%  (lebih kecil / lebih banyak konten terlihat)
+ *
+ * Zoom diterapkan ke <html>, jadi semua halaman, sidebar, header,
+ * tabel, dan dialog (portal ke <body>) ikut ter-skala.
+ */
+
+:root {
+  --app-zoom: 1.1;
+}
+
+/* Layar kecil (mobile) tetap 100% supaya layout mobile tidak kepotong. */
+@media (max-width: 767px) {
+  :root {
+    --app-zoom: 1;
+  }
+}
+
+html {
+  zoom: var(--app-zoom);
+}
+
+/*
+ * Unit vh/dvh ikut ter-zoom, sehingga elemen setinggi 100vh akan
+ * melebihi layar. Tinggi-tinggi layout utama dikompensasi di sini.
+ * (Selector diawali `html` supaya menang dari TemplateComponents.css.)
+ */
+html body,
+html #root {
+  min-height: calc(100vh / var(--app-zoom));
+}
+
+html .dashboard-shell {
+  height: calc(100dvh / var(--app-zoom));
+  min-height: calc(100vh / var(--app-zoom));
+  max-height: calc(100dvh / var(--app-zoom));
+}
+
+html .sidebar {
+  height: calc(100dvh / var(--app-zoom));
+  min-height: calc(100vh / var(--app-zoom));
+}

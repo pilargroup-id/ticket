@@ -4011,6 +4011,11 @@ select {
   text-align: right;
 }
 
+.users-table__detail-header--start,
+.users-table__detail-cell--start {
+  text-align: left;
+}
+
 .users-table__action-header,
 .users-table__action-cell {
   width: 1%;
@@ -4377,6 +4382,10 @@ select {
   justify-content: flex-end;
   gap: 0.75rem;
   flex-wrap: wrap;
+}
+
+.users-table__accordion-actions--start {
+  justify-content: flex-start;
 }
 
 .users-table__accordion-button {
