@@ -37,13 +37,14 @@ const buildInitialFormData = (ticket, authUser) => {
   const rawPriorityVal = ticket?.rawPriority || ticket?.priority || ''
   const supportId = authUser?.id || ticket?.supportId || ticket?.support_id || ''
   const supportName = authUser?.name || ticket?.supportName || ticket?.support_name || ''
+  const defaultStartDate = ticket?.startDateValue || ticket?.requestDateValue || null
 
   return {
     support_id: supportId,
     support_name: supportName,
     status: 'Resolved',
     priority: getPriorityLabel(rawPriorityVal),
-    start_date: ticket?.startDateValue ? formatToDatetimeLocal(ticket.startDateValue) : nowStr,
+    start_date: defaultStartDate ? formatToDatetimeLocal(defaultStartDate) : nowStr,
     end_date: ticket?.endDateValue ? formatToDatetimeLocal(ticket.endDateValue) : '',
     solution: ticket?.solution || '',
   }
@@ -110,13 +111,14 @@ function DialogExecutionTicketForm({
     const rawPriorityVal = ticket?.rawPriority || ticket?.priority || ''
     const supportId = authUser?.id || ticket?.supportId || ticket?.support_id || ''
     const supportName = authUser?.name || ticket?.supportName || ticket?.support_name || ''
+    const defaultStartDate = ticket?.startDateValue || ticket?.requestDateValue || null
 
     setFormData({
       support_id: supportId,
       support_name: supportName,
       status: 'Resolved',
       priority: getPriorityLabel(rawPriorityVal),
-      start_date: ticket?.startDateValue ? formatToDatetimeLocal(ticket.startDateValue) : nowStr,
+      start_date: defaultStartDate ? formatToDatetimeLocal(defaultStartDate) : nowStr,
       end_date: ticket?.endDateValue ? formatToDatetimeLocal(ticket.endDateValue) : '',
       time_spent: ticket?.time_spent || 0,
       solution: ticket?.solution || '',
