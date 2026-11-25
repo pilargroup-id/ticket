@@ -4,6 +4,8 @@ import Rating from '@mui/material/Rating'
 import { XClose } from '../template/TemplateIcons.jsx'
 import { postFeedback } from '../../services/tickets/Tickets.js'
 
+const MIN_COMMENT_LENGTH = 6
+
 function DialogFeedbackUser({
   isOpen = false,
   eyebrow = 'Feedback Ticket',
@@ -44,14 +46,17 @@ function DialogFeedbackUser({
     }
   }, [isOpen, onClose])
 
+  const trimmedCommentLength = comment.trim().length
+  const isCommentValid = trimmedCommentLength >= MIN_COMMENT_LENGTH
+
   const handleSubmit = async () => {
-    if (!ticket?.id) return
+    if (!ticket?.id || !isCommentValid) return
 
     setIsSubmitting(true)
     setError('')
 
     try {
-      const result = await postFeedback(ticket.id, { rating, comment })
+      const result = await postFeedback(ticket.id, { rating, comment: comment.trim() })
       onConfirm?.(result)
     } catch (err) {
       console.error('Failed to submit feedback:', err)
@@ -115,7 +120,7 @@ function DialogFeedbackUser({
 
             <div className="register-user-popup__field">
               <label htmlFor="feedback-comment" className="register-user-popup__label">
-                Komentar (Opsional)
+                Komentar
               </label>
               <textarea
                 id="feedback-comment"
@@ -125,6 +130,17 @@ function DialogFeedbackUser({
                 value={comment}
                 onChange={(e) => setComment(e.target.value)}
               />
+              <p
+                style={{
+                  margin: '0.25rem 0 0',
+                  fontSize: '0.8rem',
+                  color: isCommentValid ? 'var(--color-text-secondary)' : 'var(--template-fg-danger)',
+                }}
+              >
+                {isCommentValid
+                  ? `${trimmedCommentLength} karakter`
+                  : `Minimal ${MIN_COMMENT_LENGTH} karakter (${trimmedCommentLength}/${MIN_COMMENT_LENGTH})`}
+              </p>
             </div>
 
             {error && (
@@ -148,7 +164,7 @@ function DialogFeedbackUser({
             type="button"
             className="dashboard-popup__button dashboard-popup__button--primary"
             onClick={handleSubmit}
-            disabled={isSubmitting || !rating}
+            disabled={isSubmitting || !rating || !isCommentValid}
           >
             {isSubmitting ? 'Mengirim...' : 'Kirim Feedback'}
           </button>

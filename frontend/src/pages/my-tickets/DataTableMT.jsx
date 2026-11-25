@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 
 import DialogEditTicket from '../../components/dialog/DialogEditMT.jsx'
 import DialogFeedbackUser from '../../components/dialog/DialogFeedbackUser.jsx'
@@ -160,6 +160,32 @@ function DataTableMT({
     closeActionDialog()
   }
 
+  // Auto-open feedback dialog when there's a Resolved ticket that still needs feedback.
+  // Tickets the user dismissed (closed without submitting) won't pop up again in this session.
+  const dismissedFeedbackIdsRef = useRef(new Set())
+
+  useEffect(() => {
+    if (isLoading || activeActionDialog) {
+      return
+    }
+
+    const pendingTicket = ticketRows.find(
+      (ticket) =>
+        ticket.status === 'Resolved' && !dismissedFeedbackIdsRef.current.has(ticket.id ?? ticket.ticketCode),
+    )
+
+    if (pendingTicket) {
+      openActionDialog('feedback', pendingTicket)
+    }
+  }, [activeActionDialog, isLoading, ticketRows])
+
+  const closeFeedbackDialog = () => {
+    if (selectedTicket) {
+      dismissedFeedbackIdsRef.current.add(selectedTicket.id ?? selectedTicket.ticketCode)
+    }
+    closeActionDialog()
+  }
+
   const tableActions = getTicketTableActions({
     onEdit: (ticket) => openActionDialog('edit', ticket),
     onFeedback: (ticket) => openActionDialog('feedback', ticket),
@@ -248,7 +274,7 @@ function DataTableMT({
         eyebrow="Feedback Ticket"
         title={`Give Feedback for ${selectedTicketName}`}
         ticket={selectedTicket}
-        onClose={closeActionDialog}
+        onClose={closeFeedbackDialog}
         onConfirm={handleFeedbackConfirm}
       />
     </div>
